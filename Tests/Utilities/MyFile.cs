@@ -1,4 +1,6 @@
-﻿using Newtonsoft.Json;
+﻿using System.Globalization;
+using CsvHelper;
+using Newtonsoft.Json;
 
 namespace Tests.Utilities;
 
@@ -22,6 +24,12 @@ public static class MyFile
     public static async Task SaveJson<T>(this string file, T obj)
     {
         await WriteAllTextAsync(file, JsonConvert.SerializeObject(obj, CommonSettings.Json));
+    }
+    public static async Task SaveCsv<T>(this string file, IEnumerable<T> records)
+    {
+        await using var writer = new StreamWriter(file);
+        await using var csv = new CsvWriter(writer, CultureInfo.InvariantCulture);
+        await csv.WriteRecordsAsync(records);
     }
     public static async Task WriteAllTextAsync(this string file, string text)
     {

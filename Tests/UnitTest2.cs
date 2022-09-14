@@ -17,7 +17,7 @@ public class UnitTest2
             var collector = new Collector();
             collector.Parse(htmlNode.ChildNodes[0]);
             //collector.Sections.Should().NotBeEmpty();
-            await $@"C:\temp\TorrentsExplorerData\Extract\{collector.ThreadId:D8}.json"
+            await $@"C:\temp\TorrentsExplorerData\Extract\{collector.TopicId:D8}.json"
                 .SaveJson(collector.Elements);
         }
     }
@@ -26,26 +26,27 @@ public class UnitTest2
 public abstract record Style;
 
 public sealed record FontSize(int Value) : Style;
-public sealed record Color(string Value) : Style;
+public sealed record Color : Style;
 public sealed record Bold : Style;
 public sealed record Center : Style;
 public sealed record FontFamily : Style;
 public sealed record LineBreak : Style;
 public sealed record Italics : Style;
-
-public sealed record Element(string Tags, string Value);
+public sealed record Underline : Style;
+public sealed record Normal : Style;
 
 public sealed class Collector
 {
-    public List<Element> Elements { get; }= new();
+    public List<string> Elements { get; } = new();
     private readonly StringBuilder _buffer = new();
     private readonly HashSet<string> _tags = new();
-    public int ThreadId { get; private set; }
+    public int TopicId { get; private set; }
     public void Parse(HtmlNode htmlNode)
     {
         var attributeValue = htmlNode.GetAttributeValue("data-ext_link_data", null);
         var jObject = JObject.Parse(attributeValue);
-        ThreadId = jObject["t"]!.Value<int>();
+        TopicId = jObject["t"]!.Value<int>();
+        Elements.Add($"https://rutracker.org/forum/viewtopic.php?t={TopicId}");
         ParseRoot(htmlNode);
         PushTheBuffer();
     }
@@ -57,14 +58,16 @@ public sealed class Collector
             switch (n.Name)
             {
                 case "a":
-                    Elements.Add(new Element("link", n.InnerText));
+                    Elements.Add("<link> " + n.InnerText);
                     break;
                 case "br":
                     _buffer.AppendLine();
                     break;
                 case "var":
-                    Elements.Add(new Element("image", "..."));
+                case "img":
+                    // image. skip
                     break;
+                case "ol":
                 case "ul":
                     PushTheBuffer();
                     break;
@@ -72,25 +75,49 @@ public sealed class Collector
                     PushTheBuffer();
                     break;
                 case "div":
-                    if (GetAttributesSnapshot(n) == "class='sp-wrap'")
+                    var attributesSnapshot = GetAttributesSnapshot(n);
+                    switch (n.GetAttributeValue("class", null))
                     {
-                        var head = n.SelectSingleNode("div[@class='sp-head folded']");
-                        Elements.Add(new Element("Spoiler", head.InnerText));
-                        break;
+                        case "post-box": 
+                        case "post-box-right":
+                        case "c-wrap":
+                        case "c-head":
+                        case "q": // quote
+                        case "q-wrap": // quote
+                        case "q-head": // quote                         
+                        case "post-ul": // ul
+                            ParseRoot(n);
+                            return;
                     }
-                    throw new Exception(n.InnerText);
-                case "span":
-                    var tag = Classify(n) switch
+                    switch (attributesSnapshot)
                     {
-                        FontSize(> 20) => "<Header>",
-                        Bold => "<B>",
-                        Center or FontFamily or Color or FontSize or LineBreak or Italics=> null,
+                        case "class='sp-wrap'": // spoiler
+                            var head = n.SelectSingleNode("div[@class='sp-head folded']");
+                            Elements.Add("<Spoiler> " + head.InnerText);
+                            break;
+                        case "style='margin-left: 2em' type='1'":
+                            break;
+                        case "class='post-box-default'":
+                            Elements.Add("<post-box-default> " + n.InnerText);
+                            break;
+                        default:
+                            throw new Exception(attributesSnapshot + "\n" + n.InnerText);
+                    }
+                    break;
+                case "span":
+                    var tag = ClassifySpan(n) switch
+                    {
+                        FontSize(> 20) => "Header",
+                        Bold or LineBreak => "",
+                        Center or FontFamily or Color or FontSize or
+                            Italics or Underline or Normal
+                            => null,
                         var x => throw new ArgumentOutOfRangeException(x.ToString())
                     };
                     if (tag != null)
                     {
                         PushTheBuffer();
-                        _tags.Add(tag);
+                        if (tag != "") _tags.Add(tag);
                     }
                     ParseRoot(n);
                     if (tag != null)
@@ -98,6 +125,14 @@ public sealed class Collector
                         PushTheBuffer();
                         _tags.Remove(tag);
                     }
+                    break;
+                case "b":
+                    PushTheBuffer();
+                    ParseRoot(n);
+                    PushTheBuffer();
+                    break;
+                case "u":
+                    ParseRoot(n);
                     break;
                 case "#text":
                     _buffer.Append(n.InnerText);
@@ -109,17 +144,35 @@ public sealed class Collector
 
     }
 
-    private static Style Classify(HtmlNode node)
+    private static Style ClassifySpan(HtmlNode node)
     {
         var snapshot = GetAttributesSnapshot(node);
-        if (snapshot == "class='post-align' style='text-align: center;'")
-            return new Center();
-        if (snapshot == "class='post-font-serif1'")
-            return new FontFamily();
-        if (snapshot == "class='post-br'")
-            return new LineBreak();
-        if (snapshot == "class='post-i'")
-            return new Italics();
+        switch (snapshot)
+        {
+            case "":
+                return new Normal();
+            case "class='post-align' style='text-align: center;'":
+                return new Center();
+            case "class='post-font-serif1'":
+            case "class='post-font-serif2'":
+            case "class='post-font-impact'":
+            case "class='post-font-mono1'":
+            case "class='post-font-mono2'":
+            case "class='post-font-cursive1'":
+            case "class='post-font-cursive2'":
+            case "class='post-font-sans1'":
+            case "class='post-font-sans2'":
+            case "class='post-font-sans3'":
+                return new FontFamily();
+            case "class='post-br'":
+                return new LineBreak();
+            case "class='post-i'":
+                return new Italics();
+            case "class='post-u'":
+                return new Underline();
+            case "class='post-s'":
+                return new Bold();
+        }
 
         var keys = node.Attributes.Select(a => a.Name).OrderBy(x => x).StrJoin();
         if (keys == "style")
@@ -142,13 +195,11 @@ public sealed class Collector
             {
                 var style = GetStyle(node);
                 if (style?.Keys.StrJoin() == "color")
-                    return new Color(style["color"]);
+                    return new Color();
             }
 
             return new Bold();
         }
-        //   <span class='p-color' style='color: green;'>
-
         throw new InvalidOperationException(
             $"<{node.Name} {node.Attributes.Select(a => a.Name + "=" + a.Value.Quote()).StrJoin(" ")}>");
     }
@@ -169,7 +220,14 @@ public sealed class Collector
     private void PushTheBuffer()
     {
         if (_buffer.Length > 0)
-            Elements.Add(new Element(_tags.StrJoin(), _buffer.ToString()));
+        {
+            var value = _buffer.ToString().Trim();
+            if (!string.IsNullOrWhiteSpace(value))
+                Elements.Add(_tags.Count > 0 ?
+                    $"<{_tags.StrJoin()}> {value}"
+                    : value);
+        }
+
         _buffer.Clear();
     }
 
