@@ -1,10 +1,7 @@
 using System.Text;
-using FluentAssertions;
 using HtmlAgilityPack;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Tests.Utilities;
-using Xunit.Abstractions;
 
 namespace Tests;
 
@@ -21,19 +18,28 @@ public class UnitTest2
             collector.Parse(htmlNode.ChildNodes[0]);
             //collector.Sections.Should().NotBeEmpty();
             await $@"C:\temp\TorrentsExplorerData\Extract\{collector.ThreadId:D8}.json"
-                .SaveJson(collector.Sections);
+                .SaveJson(collector.Elements);
         }
     }
 }
 
+public abstract record Style;
+
+public sealed record FontSize(int Value) : Style;
+public sealed record Color(string Value) : Style;
+public sealed record Bold : Style;
+public sealed record Center : Style;
+public sealed record FontFamily : Style;
+public sealed record LineBreak : Style;
+public sealed record Italics : Style;
+
+public sealed record Element(string Tags, string Value);
+
 public sealed class Collector
 {
-    public List<Dictionary<string, string>> Sections { get; } = new();
-    private Dictionary<string, string> _currentSection = new();
-    bool _isHeaderSize;
-    private string? _currentKey;
-    private bool _colon;
-    private readonly StringBuilder _currentValue = new();
+    public List<Element> Elements { get; }= new();
+    private readonly StringBuilder _buffer = new();
+    private readonly HashSet<string> _tags = new();
     public int ThreadId { get; private set; }
     public void Parse(HtmlNode htmlNode)
     {
@@ -41,142 +47,130 @@ public sealed class Collector
         var jObject = JObject.Parse(attributeValue);
         ThreadId = jObject["t"]!.Value<int>();
         ParseRoot(htmlNode);
-        FinishKey();
-        if (_currentSection.Count > 0)
-            PushCurrentSection();
+        PushTheBuffer();
     }
+
     public void ParseRoot(HtmlNode htmlNode)
     {
         foreach (var n in htmlNode.ChildNodes)
         {
-            var innerText = n.InnerText.Trim();
             switch (n.Name)
             {
                 case "a":
-                    if (_colon)
-                    {
-                        ParseRoot(n);
-                        break;
-                    }
-                    FinishKey();
-                    _currentSection.Add(n.InnerText, n.GetAttributeValue("href", null));
+                    Elements.Add(new Element("link", n.InnerText));
                     break;
                 case "br":
-                    if (_currentValue.Length > 0)
-                    {
-                        _currentKey.Should().NotBeNull();
-                        _currentSection.Add(_currentKey!, _currentValue.ToString());
-                        _colon = false;
-                        _currentKey = null;
-                        _currentValue.Clear();
-                    }
-                    if (!_colon)
-                    {
-                        if (_currentKey?.Length > 100)
-                        {
-                            _currentKey = null;
-                            break;
-                        }
-                        _currentKey.Should().BeNull();
-                    }
+                    _buffer.AppendLine();
                     break;
                 case "var":
-                    // Image. Skip
+                    Elements.Add(new Element("image", "..."));
+                    break;
+                case "ul":
+                    PushTheBuffer();
                     break;
                 case "hr":
-                    // Horizontal line. Skip
+                    PushTheBuffer();
                     break;
                 case "div":
-                    if (n.GetAttributeValue("class", null) == "post_body")
-                        ParseRoot(n);
-                    break;
-                case "span":
-                    var style = n
-                        .GetAttributeValue("style", null)?
-                        .Split("; ")
-                        .ToDictionary(x => x.Split(": ")[0], x => x.Split(": ")[1]);
-
-                    _isHeaderSize =
-                        style?.TryGetValue("font-size", out var fontSize) == true &&
-                        fontSize.RemovePostfix("px")?.ParseIntOrNull() > 20;
-                    if (_isHeaderSize)
+                    if (GetAttributesSnapshot(n) == "class='sp-wrap'")
                     {
-                        if (_currentSection.ContainsKey("<HEADER-SIZE>"))
-                            PushCurrentSection();
-                        _currentSection["<HEADER-SIZE>"] = n.InnerText;
+                        var head = n.SelectSingleNode("div[@class='sp-head folded']");
+                        Elements.Add(new Element("Spoiler", head.InnerText));
                         break;
                     }
-
-                    //var @class = n.GetAttributeValue("class", null).Split(' ');
-                    //if (@class.Contains("post-b"))
-                    //{
-                    //    _currentKey = innerText;
-                    //    break;
-                    //}
-                    // assume it's just some additional style  
+                    throw new Exception(n.InnerText);
+                case "span":
+                    var tag = Classify(n) switch
+                    {
+                        FontSize(> 20) => "<Header>",
+                        Bold => "<B>",
+                        Center or FontFamily or Color or FontSize or LineBreak or Italics=> null,
+                        var x => throw new ArgumentOutOfRangeException(x.ToString())
+                    };
+                    if (tag != null)
+                    {
+                        PushTheBuffer();
+                        _tags.Add(tag);
+                    }
                     ParseRoot(n);
-                    //throw new ArgumentOutOfRangeException(n.NodeType + ": " + n.Name);
+                    if (tag != null)
+                    {
+                        PushTheBuffer();
+                        _tags.Remove(tag);
+                    }
                     break;
                 case "#text":
-                    if (innerText == "")
-                        break;
-                    if (_currentKey == null)
-                    {
-                        if (innerText.EndsWith(":"))
-                        {
-                            _currentKey = innerText.TrimEnd(':');
-                            _colon = true;
-                        }
-                        else _currentKey = innerText;
-                        break;
-                    }
-                    if (_currentKey != null)
-                    {
-                        if (_colon)
-                        {
-                           // _currentSection.Add(_currentKey, innerText);
-                           // _colon = false;
-                           // _currentKey = null;
-                           _currentValue.Append(n.InnerText);
-                            break;
-
-                        }
-                        else if (innerText == ":")
-                        {
-                            _colon = true;
-                            break;
-                        }
-                        else if (innerText.StartsWith(":"))
-                        {
-                           // _currentSection.Add(_currentKey, innerText.TrimStart(':', ' '));
-                           // _colon = false;
-                           // _currentKey = null;
-                           _currentValue.Append(n.InnerText.TrimStart(':', ' '));
-
-                            break;
-                        }
-                    }
-
-                    _currentValue.Append(n.InnerText);
+                    _buffer.Append(n.InnerText);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(n.NodeType + ": " + n.Name);
-
             }
         }
+
     }
 
-    private void FinishKey()
+    private static Style Classify(HtmlNode node)
     {
-        _colon.Should().BeFalse();
-        if (_currentKey != null)
-            _currentSection[_currentKey] = "<TAG>";
-        _currentKey = null;
+        var snapshot = GetAttributesSnapshot(node);
+        if (snapshot == "class='post-align' style='text-align: center;'")
+            return new Center();
+        if (snapshot == "class='post-font-serif1'")
+            return new FontFamily();
+        if (snapshot == "class='post-br'")
+            return new LineBreak();
+        if (snapshot == "class='post-i'")
+            return new Italics();
+
+        var keys = node.Attributes.Select(a => a.Name).OrderBy(x => x).StrJoin();
+        if (keys == "style")
+        {
+            var style = GetStyle(node);
+            if (style?.Keys.StrJoin() == "font-size, line-height")
+                if (style["line-height"] == "normal")
+                    return new FontSize(style["font-size"].RemovePostfix("px")!.ParseInt());
+        }
+        else if (keys == "class")
+        {
+            var @class = node.GetAttributeValue("class", null);
+            if (@class == "post-b")
+                return new Bold();
+        }
+        else if (keys == "class, style")
+        {
+            var @class = node.GetAttributeValue("class", null);
+            if (@class == "p-color")
+            {
+                var style = GetStyle(node);
+                if (style?.Keys.StrJoin() == "color")
+                    return new Color(style["color"]);
+            }
+
+            return new Bold();
+        }
+        //   <span class='p-color' style='color: green;'>
+
+        throw new InvalidOperationException(
+            $"<{node.Name} {node.Attributes.Select(a => a.Name + "=" + a.Value.Quote()).StrJoin(" ")}>");
     }
 
-    private void PushCurrentSection()
+    private static Dictionary<string, string>? GetStyle(HtmlNode node)
     {
-        Sections.Add(_currentSection);
-        _currentSection = new();
+        return node
+            .GetAttributeValue("style", null)?
+            .Split(";", StringSplitOptions.RemoveEmptyEntries)
+            .Select(x => x.Split(": "))
+            .ToDictionary(x => x[0].Trim(), x => x[1].Trim());
     }
+    private static string GetAttributesSnapshot(HtmlNode node)
+    {
+        return node.Attributes.Select(a => a.Name + "=" + a.Value.Quote()).StrJoin(" ");
+    }
+
+    private void PushTheBuffer()
+    {
+        if (_buffer.Length > 0)
+            Elements.Add(new Element(_tags.StrJoin(), _buffer.ToString()));
+        _buffer.Clear();
+    }
+
 }
