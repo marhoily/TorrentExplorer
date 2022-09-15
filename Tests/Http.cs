@@ -12,14 +12,13 @@ public class Http
     public Http(HtmlCache cache)
     {
         _cache = cache;
-        var baseAddress = new Uri("https://rutracker.org");
         var handler = new HttpClientHandler
         {
             UseCookies = false,
             AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate,
 
         };
-        _client = new HttpClient(handler) { BaseAddress = baseAddress };
+        _client = new HttpClient(handler);
     }
 
     static Http()

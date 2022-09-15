@@ -75,6 +75,10 @@ public static class HtmlExtensions
 
     public static int ParseIntAttribute(this HtmlNode node, string attributeName)
         => node.GetAttributeValue(attributeName, null).ParseInt();
+    public static string? Href(this HtmlNode node, string skipPrefix = "")
+    {
+        return node.GetAttributeValue("href", null)?[skipPrefix.Length..];
+    }
 
     public static DateOnly ParseDate(this HtmlNode node) =>
         DateOnly.Parse(node.InnerText.Replace("&nbsp;", ""));

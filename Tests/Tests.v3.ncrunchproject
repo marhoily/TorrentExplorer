@@ -4,6 +4,12 @@
       <NamedTestSelector>
         <TestName>Tests.UnitTest1.Test1</TestName>
       </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Tests.UnitTest2.Test1</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Tests.Step2.Test1</TestName>
+      </NamedTestSelector>
     </IgnoredTests>
   </Settings>
 </ProjectConfiguration>
