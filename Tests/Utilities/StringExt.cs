@@ -6,6 +6,11 @@ public static class StringExt
     {
         return string.Join(separator, values);
     }
+    public static string StrJoin<T>(this IEnumerable<T> values,
+        Func<T, string> selector, string separator = ", ")
+    {
+        return string.Join(separator, values.Select(selector));
+    }
 
     public static string? NullifyWhenEmpty(this string x) => x == "" ? null : x;
     public static int ParseHtmlInt(this string s)

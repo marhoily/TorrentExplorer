@@ -76,7 +76,7 @@ public class Search
             $"https://vse-audioknigi.com/search?text={HttpUtility.UrlEncode(q)}");
         var vseAudioknigiCom = html.ParseHtml()
             .SelectSingleNode("//li[@class='b-statictop__items_item']//a")?
-            .InnerHtml;
+            .InnerText;
         return vseAudioknigiCom;
     }
 
@@ -109,9 +109,13 @@ public class Search
                 }
             }
         );
-        var selectSingleNode = html.ParseHtml()
-            .SelectSingleNode("//div[@id='books']/article//img");
-        return selectSingleNode?.GetAttributeValue("alt", null);
+        var article = html.ParseHtml()
+            .SelectSingleNode("//div[@id='books']/article");
+        if (article == null) return null;
+        var title = article.SelectSingleNode("//h4[@class='book__title']/a").InnerText;
+        var authors = article.SelectSubNodes("//p[@class='book__authors']/a")
+            .StrJoin(a => a.InnerText);
+        return title + " - " + authors;
     }
 
     private static async Task<string?> FanlabRu(Story topic, string q)
@@ -140,10 +144,11 @@ public class Search
             });
         if (html.Contains("Ничего не найдено."))
             return null;
-        var selectSingleNode = html.ParseHtml()
-            .SelectSingleNode("//div[@class='one']/div[@class='title']/a")?
-            .InnerHtml;
-        return selectSingleNode;
+        var article = html.ParseHtml().SelectSingleNode("//div[@class='one']");
+        if (article == null) return null;
+        var title = article.SelectSingleNode("//div[@class='title']/a").InnerText;
+        var authors = article.SelectSubNodes("//div[@class='autor']/a").StrJoin(a => a.InnerText);
+        return title + " - " + authors;
     }
 
     private static async Task<string?> AuthorToday(Story topic, string q)
@@ -165,8 +170,10 @@ public class Search
             });
 
 
-        var singleNode = html.ParseHtml()
-            .SelectSingleNode("//div[@class='book-row']//div[@class='book-title']");
-        return singleNode?.InnerText.Trim();
+        var article = html.ParseHtml().SelectSingleNode("//div[@class='book-row']");
+        if (article == null) return null;
+        var title = article.SelectSingleNode("//div[@class='book-title']").InnerText.Trim();
+        var authors = article.SelectSubNodes("//div[@class='book-author']/a").StrJoin(a => a.InnerText.Trim());
+        return title + " - " + authors;
     }
 }

@@ -21,4 +21,10 @@ public static class HtmlExtensions
         htmlDocument.LoadHtml(html);
         return htmlDocument.DocumentNode;
     }
+    public static IEnumerable<HtmlNode> SelectSubNodes(this HtmlNode node, string xpath)
+    {
+        var parentXPath = node.XPath;
+        return (node.SelectNodes(xpath) ?? Enumerable.Empty<HtmlNode>())
+            .Where(y => y.XPath.StartsWith(parentXPath));
+    }
 }
