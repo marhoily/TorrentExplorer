@@ -13,7 +13,9 @@ public class CherryPick
         var result = new List<Topic>();
         foreach (var htmlNode in htmlList!)
         {
-            result.Add(htmlNode.ParseHtml().ParseRussianFantasyTopic());
+            var russianFantasyTopic = htmlNode.ParseHtml().ParseRussianFantasyTopic();
+            if (russianFantasyTopic != null)
+                result.Add(russianFantasyTopic);
         }
 
         await Output.SaveJson(result);

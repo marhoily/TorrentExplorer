@@ -1,4 +1,5 @@
-﻿using HtmlAgilityPack;
+﻿using System.Text.RegularExpressions;
+using HtmlAgilityPack;
 using Newtonsoft.Json.Linq;
 using RegExtract;
 using Tests.Utilities;
@@ -13,7 +14,7 @@ public abstract record Topic;
 public sealed record Story(
     int TopicId,
     string? Title,
-    string? AuthorSecondName,
+    string? Author,
     string? Performer,
     string? Year,
     string? Series,
@@ -36,7 +37,7 @@ public static class Parser
         return node.SelectSingleNode("//div[@class='post_body']");
     }
 
-    public static Topic ParseRussianFantasyTopic(this HtmlNode node)
+    public static Topic? ParseRussianFantasyTopic(this HtmlNode node)
     {
         var attributeValue = node.FirstChild.GetAttributeValue("data-ext_link_data", null);
         var jObject = JObject.Parse(attributeValue);
@@ -46,19 +47,22 @@ public static class Parser
         if (post.FindTags("Год выпуска").Count() > 1)
             return new Series();
         var title =
-            post.SelectSingleNode("//span[@style='font-size: 24px; line-height: normal;']") ??
+            (post.SelectSingleNode("//span[@style='font-size: 24px; line-height: normal;']") ??
             post.SelectSingleNode("//span[@style='font-size: 23px; line-height: normal;']") ??
             post.SelectSingleNode("//span[@style='font-size: 28px; line-height: normal;']") ??
             post.SelectSingleNode("//span[@style='font-size: 27px; line-height: normal;']") ??
-            post.SelectSingleNode("//span[@style='font-size: 26px; line-height: normal;']");
+            post.SelectSingleNode("//span[@style='font-size: 26px; line-height: normal;']"))?.InnerText;
 
         var year = post.FindTag("Год выпуска")?.TagValue().TrimEnd('.', 'г');
 
-        var author = post.FindTag("Фамилия автора") ??
+        var s = post.FindTag("Фамилия автора") ??
                      post.FindTag("Фамилии авторов") ??
                      post.FindTag("Автор") ??
                      post.FindTag("Автора") ??
                      post.FindTag("Авторы");
+        var f = post.FindTag("Имя автора") ??
+                     post.FindTag("Имена авторов");
+        var author = s?.TagValue() + " " + f?.TagValue();
         var htmlNode = post.FindTag("Исполнитель") ??
                        post.FindTag("Исполнители") ??
                        post.FindTag("Исполнитель и звукорежиссёр");
@@ -70,7 +74,18 @@ public static class Parser
 
         var genre = post.FindTag("Жанр")?.TagValue();
         var playTime = post.FindTag("Время звучания")?.TagValue();
-        return new Story(topicId, title?.InnerText, author?.TagValue(),
+        
+        if (title == "Рассказы")
+            return null;
+        
+        if (title?.Contains('[') == true)
+            title = Regex.Replace(title, "\\[.*\\]", "");  
+        if (title?.Contains('(') == true)
+            title = Regex.Replace(title, "\\(.*\\)", "");
+        if (title?.StartsWith("Рассказ") == true)
+            title = title["Рассказ".Length..].Trim(' ', '\"');
+
+        return new Story(topicId, title, author.Trim(),
             performer, year, series, genre, playTime);
     }
 
