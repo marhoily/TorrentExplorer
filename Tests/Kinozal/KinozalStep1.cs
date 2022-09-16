@@ -1,25 +1,27 @@
 using System.Text;
+using System.Xml.Linq;
 using HtmlAgilityPack;
-using Newtonsoft.Json.Linq;
 using Tests.Utilities;
 
-namespace Tests.Rutracker;
+namespace Tests.Kinozal;
 
-public class UnitTest2
+public class KinozalStep1
 {
-
     [Fact]
-    public async Task Test1()
+    public async Task Convert()
     {
-        var htmlList = await @"c:\temp\kinozal-bulk.json".ReadJson<string[]>();
-        foreach (var htmlNode in htmlList!.Select(html => html.ParseHtml()))
+        await using var fileStream = File.OpenRead(@"c:\temp\kinozal-bulk.xml");
+        var xml = await XDocument.LoadAsync(fileStream, LoadOptions.None, CancellationToken.None);
+        var result = new List<List<string>>();
+        foreach (var htmlNode in xml.Root!.Elements())
         {
             var collector = new Collector();
-            collector.Parse(htmlNode.ChildNodes[0]);
-            //collector.Sections.Should().NotBeEmpty();
-            await $@"C:\temp\TorrentsExplorerData\KinozalExtract\{collector.TopicId:D8}.json"
-                .SaveJson(collector.Elements);
+            var s = htmlNode.ToString();
+            collector.Parse(s.ParseHtml());
+            result.Add(collector.Elements);
         }
+        await @"C:\temp\TorrentsExplorerData\KinozalExtract\Step1.json"
+            .SaveJson(result);
     }
 }
 
@@ -40,13 +42,8 @@ public sealed class Collector
     public List<string> Elements { get; } = new();
     private readonly StringBuilder _buffer = new();
     private readonly HashSet<string> _tags = new();
-    public int TopicId { get; private set; }
     public void Parse(HtmlNode htmlNode)
     {
-        var attributeValue = htmlNode.GetAttributeValue("data-ext_link_data", null);
-        var jObject = JObject.Parse(attributeValue);
-        TopicId = jObject["t"]!.Value<int>();
-        Elements.Add($"https://rutracker.org/forum/viewtopic.php?t={TopicId}");
         ParseRoot(htmlNode);
         PushTheBuffer();
     }
@@ -78,6 +75,7 @@ public sealed class Collector
                     var attributesSnapshot = GetAttributesSnapshot(n);
                     switch (n.GetAttributeValue("class", null))
                     {
+                        case "bx1 justify": 
                         case "post-box": 
                         case "post-box-right":
                         case "c-wrap":
@@ -132,6 +130,7 @@ public sealed class Collector
                     PushTheBuffer();
                     break;
                 case "u":
+                case "h2":
                     ParseRoot(n);
                     break;
                 case "#text":

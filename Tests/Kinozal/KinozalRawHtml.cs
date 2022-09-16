@@ -2,7 +2,6 @@
 using System.Xml;
 using System.Xml.Linq;
 using Tests.Html;
-using Tests.Rutracker;
 
 namespace Tests.Kinozal;
 
@@ -19,7 +18,7 @@ public class KinozalRawHtml
                 var page = await http.DownloadKinozalFantasyHeaders(i);
                 return page.ParseKinozalFantasyHeaders();
             }));
-        var xmlWriterSettings = new XmlWriterSettings()
+        var settings = new XmlWriterSettings()
         {
             OmitXmlDeclaration = true,
             Async = true
@@ -31,18 +30,16 @@ public class KinozalRawHtml
                 var topic = await http.DownloadKinozalFantasyTopic(header);
                 var kinozalForumPost = topic.GetKinozalForumPost();
                 var sb = new StringBuilder();
-                await using var xmlTextWriter = XmlWriter.Create(sb, xmlWriterSettings);
-                kinozalForumPost.WriteTo(xmlTextWriter);
-                xmlTextWriter.Flush();
-                //var s = PrettyXml(sb.ToString());
+                await using var writer = XmlWriter.Create(sb, settings);
+                kinozalForumPost.WriteTo(writer);
+                await writer.FlushAsync();
                 return sb.ToString();
             });
         var htmlNodes = await Task.WhenAll(headers);
-        PrettyXml(@"c:\temp\kinozal-bulk.json", htmlNodes);
-        //await @"c:\temp\kinozal-bulk.json".SaveJson(htmlNodes.Select(x => x.OuterHtml));
+        PrettyXml(@"c:\temp\kinozal-bulk.xml", htmlNodes);
     }
 
-    static void PrettyXml(string file, string[] xmlList)
+    private static void PrettyXml(string file, string[] xmlList)
     {
         var settings = new XmlWriterSettings
         {

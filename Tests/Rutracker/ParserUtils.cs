@@ -4,7 +4,7 @@ namespace Tests.Rutracker;
 
 public sealed record Spoiler(string Header, HtmlNode Body);
 
-public static class RutrackerParsers
+public static class ParserUtils
 {
     public static IEnumerable<Spoiler> GetSpoilers(this HtmlNode node)
     {
