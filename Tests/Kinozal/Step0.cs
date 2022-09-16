@@ -5,20 +5,21 @@ using Tests.Html;
 
 namespace Tests.Kinozal;
 
-public class KinozalRawHtml
+public class Step0
 {
     [Fact]
-    public async Task Download()
+    public async Task DownloadRawHtml()
     {
+        Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
         var htmlCache = new HtmlCache(CacheLocation.Temp, CachingStrategy.Normal);
-        var http = new Http(htmlCache);
+        var http = new Http(htmlCache, Encoding.GetEncoding(1251));
         var headerPages = await Task.WhenAll(Enumerable.Range(0, 60)
             .Select(async i =>
             {
                 var page = await http.DownloadKinozalFantasyHeaders(i);
                 return page.ParseKinozalFantasyHeaders();
             }));
-        var settings = new XmlWriterSettings()
+        var settings = new XmlWriterSettings
         {
             OmitXmlDeclaration = true,
             Async = true
@@ -36,10 +37,10 @@ public class KinozalRawHtml
                 return sb.ToString();
             });
         var htmlNodes = await Task.WhenAll(headers);
-        PrettyXml(@"c:\temp\kinozal-bulk.xml", htmlNodes);
+        SavePrettyXml(@"C:\temp\TorrentsExplorerData\Extract\kinozal\step0.xml ", htmlNodes);
     }
 
-    private static void PrettyXml(string file, string[] xmlList)
+    private static void SavePrettyXml(string file, string[] xmlList)
     {
         var settings = new XmlWriterSettings
         {

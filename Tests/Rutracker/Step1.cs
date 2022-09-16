@@ -3,13 +3,14 @@ using Tests.Utilities;
 
 namespace Tests.Rutracker;
 
-public class Step2
+public class Step1
 {
+    public const string Output = @"C:\temp\TorrentsExplorerData\Extract\Rutracker\step1.json";
+
     [Fact]
     public async Task Test1()
     {
-        var htmlList = await @"C:\temp\TorrentsExplorerData\step1.json"
-            .ReadJson<string[][]>();
+        var htmlList = await Step0.Output.ReadJson<string[][]>();
         var result = new List<Dictionary<string, string>>();
         foreach (var htmlNode in htmlList!)
         {
@@ -18,7 +19,7 @@ public class Step2
             result.AddRange(collider.Sections);
         }
 
-        await @"C:\temp\TorrentsExplorerData\Step2.json".SaveJson(result);
+        await Output.SaveJson(result);
     }
 }
 

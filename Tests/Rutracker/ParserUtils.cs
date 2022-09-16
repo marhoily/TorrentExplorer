@@ -39,7 +39,9 @@ public static class ParserUtils
         {
             if (d.NodeType == HtmlNodeType.Text && d.ParentNode.Name == "span")
             {
-                var trimEnd = d.InnerText.TrimStart('�', ' ').TrimEnd(':', ' ');
+                var trimEnd = d.InnerText
+                    .TrimStart('�', ' ', '•')
+                    .TrimEnd(':', ' ');
                 if (trimEnd == value)
                     yield return d;
             }
@@ -50,8 +52,8 @@ public static class ParserUtils
     {
         var htmlNodes = node.FindTags(value).ToList();
         if (htmlNodes.Count == 0) return null;
-        if (htmlNodes.Count > 1)
-            throw new InvalidOperationException("blah");
+       // if (htmlNodes.Count > 1)
+       //     throw new InvalidOperationException("blah");
         return htmlNodes[0];
     }
     public static HtmlNode FindTagB(this HtmlNode node, string value)
@@ -65,11 +67,14 @@ public static class ParserUtils
     }
     public static string TagValue(this HtmlNode node)
     {
-        while (node.NextSibling == null)
-            node = node.ParentNode;
-        if (node.NextSibling.InnerText.Trim() == ":")
-            node = node.NextSibling;
+        var n = node;
+        while (n.NextSibling == null)
+            n = n.ParentNode;
+        if (n.NextSibling.InnerText.Trim() == ":")
+            n = n.NextSibling;
+        if (n.InnerText.StartsWith(":"))
+            return n.InnerText.TrimStart(':', ' ');
 
-        return node.NextSibling.InnerText.TrimStart(':', ' ');
+        return n.NextSibling.InnerText.TrimStart(':', ' ');
     }
 }
