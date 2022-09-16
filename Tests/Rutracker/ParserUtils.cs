@@ -67,14 +67,30 @@ public static class ParserUtils
     }
     public static string TagValue(this HtmlNode node)
     {
-        var n = node;
-        while (n.NextSibling == null)
-            n = n.ParentNode;
-        if (n.NextSibling.InnerText.Trim() == ":")
-            n = n.NextSibling;
-        if (n.InnerText.StartsWith(":"))
-            return n.InnerText.TrimStart(':', ' ');
+        var seenComma = node.InnerText.TrimEnd().EndsWith(":");
+        var moved = false;
+        while (!seenComma)
+        {
+            if (node.NextSibling != null)
+            {
+                moved = true;
+                node = node.NextSibling;
+            }
+            else node = node.ParentNode;
+            var text = node.InnerText.Trim();
+            seenComma = text.EndsWith(":") || text.StartsWith(":");
+        }
 
-        return n.NextSibling.InnerText.TrimStart(':', ' ');
+        while (!moved || node.InnerText.Trim() == ":")
+        {
+            if (node.NextSibling != null)
+            {
+                moved = true;
+                node = node.NextSibling;
+            }
+            else node = node.ParentNode;
+        }
+
+        return node.InnerText.TrimStart(':', ' ').TrimEnd();
     }
 }

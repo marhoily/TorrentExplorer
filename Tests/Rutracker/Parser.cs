@@ -55,37 +55,65 @@ public static class Parser
 
         var year = post.FindTag("Год выпуска")?.TagValue().TrimEnd('.', 'г');
 
-        var s = post.FindTag("Фамилия автора") ??
+        var s = (post.FindTag("Фамилия автора") ??
                      post.FindTag("Фамилии авторов") ??
+                     post.FindTag("Aвтор") ?? // different "A"?
                      post.FindTag("Автор") ??
                      post.FindTag("Автора") ??
-                     post.FindTag("Авторы");
-        var f = post.FindTag("Имя автора") ??
-                     post.FindTag("Имена авторов");
-        var author = s?.TagValue() + " " + f?.TagValue();
+                     post.FindTag("Авторы"))?.TagValue().Trim();
+        var f = (post.FindTag("Имя автора") ??
+                     post.FindTag("Имена авторов"))?.TagValue().Trim();
+        var author = (s + " " + f).Trim();
+        if (string.IsNullOrWhiteSpace(author))
+            author = null;
         var htmlNode = post.FindTag("Исполнитель") ??
                        post.FindTag("Исполнители") ??
                        post.FindTag("Исполнитель и звукорежиссёр");
 
         var performer = htmlNode?.TagValue();
-        var series = (post.FindTag("Цикл") ??
-                      post.FindTag("Цикл/серия"))?.TagValue() ??
-                     Mmm(post);
+        var rawSeries = (post.FindTag("Цикл") ??
+                        post.FindTag("Цикл/серия"))?.TagValue();
+        if (rawSeries != null && string.IsNullOrWhiteSpace(rawSeries))
+            rawSeries = "<YES>";
+        var series = rawSeries ?? Mmm(post);
 
         var genre = post.FindTag("Жанр")?.TagValue();
         var playTime = post.FindTag("Время звучания")?.TagValue();
-        
+
+        if (title == null)
+            return null;
+
         if (title == "Рассказы")
             return null;
         
-        if (title?.Contains('[') == true)
-            title = Regex.Replace(title, "\\[.*\\]", "");  
-        if (title?.Contains('(') == true)
-            title = Regex.Replace(title, "\\(.*\\)", "");
-        if (title?.StartsWith("Рассказ") == true)
-            title = title["Рассказ".Length..].Trim(' ', '\"');
+        if (title.Contains('['))
+        {
+            var trim = Regex.Replace(title, "\\[.*\\]", "").Trim();
+            title = trim != "" ? trim : title.TrimStart('[').TrimEnd(']');
+        }
 
-        return new Story(topicId, title, author.Trim(),
+        if (title.Contains('('))
+            title = Regex.Replace(title, "\\(.*\\)", "").Trim();
+        if (title.StartsWith("Рассказ"))
+            title = title["Рассказ".Length..].Trim(' ', '\"');
+        if (series != null && title.Contains(series) && title != series && title != series+".")
+        {
+            title = Regex.Replace(title, series + " (\\d)*\\.", "").Trim();
+            title = title.Replace(series + ".", "").Trim();
+        }
+
+        if (string.IsNullOrWhiteSpace(title))
+            throw new Exception();
+
+        if (author != null)
+        {
+            if (title.Contains(f + " " + s))
+                title = title.Replace(f + " " + s, "").Trim('-', '–', ' ');
+            else if (title.Contains(s + " " + f))
+                title = title.Replace(s + " " + f, "").Trim('-', '–',  ' ');
+        }
+
+        return new Story(topicId, title, author,
             performer, year, series, genre, playTime);
     }
 
