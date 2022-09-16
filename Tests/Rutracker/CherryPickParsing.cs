@@ -8,18 +8,13 @@ public class CherryPickParsing
     public const string Output = @"C:\temp\TorrentsExplorerData\Extract\Rutracker\cherry-pick.json";
 
     [Fact]
-    public async Task Test1()
+    public async Task Do()
     {
         var htmlList = await Step0.Output.ReadJson<string[]>();
-        var result = new List<Topic>();
-        foreach (var htmlNode in htmlList!)
-        {
-            var russianFantasyTopic = htmlNode.ParseHtml().ParseRussianFantasyTopic();
-            if (russianFantasyTopic != null)
-                result.Add(russianFantasyTopic);
-        }
-
-        await Output.SaveJson(result);
+        await Output.SaveJson(htmlList!
+            .Select(n => n.ParseHtml().ParseRussianFantasyTopic())
+            .Where(topic => topic != null)
+            .ToList());
     }
 
     [Theory]

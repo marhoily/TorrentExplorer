@@ -9,35 +9,9 @@ public sealed record SearchResult(
     string Title,
     string Author,
     string? SeriesName,
-    int? NumberInSeries);
+    int? NumberInSeries,
+    string Source);
 
-public sealed class CircuitBreaker
-{
-    private int _successCount = 0;
-    private int _millisecondsDelay = 100;
-
-    public async Task<TResult?> X<TResult>(Func<Task<TResult>> action)
-    {
-        try
-        {
-            var result = await action();
-            _successCount++;
-            return result;
-        }
-        catch (Exception)
-        {
-            await Task.Delay(_millisecondsDelay = _successCount switch
-            {
-                < 2 => 1000 + _millisecondsDelay * 2,
-                < 5 => _millisecondsDelay * 2,
-                > 20 => _millisecondsDelay / 2,
-                _ => _millisecondsDelay
-            });
-            _successCount = 0;
-        }
-        return default;
-    }
-}
 public class Search
 {
     private static readonly Http Html = new(
@@ -172,7 +146,7 @@ public class Search
             .InnerText;
         if (vseAudioknigiCom == null) return null;
         var strings = vseAudioknigiCom.Split(" - ");
-        return new SearchResult(strings[0], strings[1], null, null);
+        return new SearchResult(strings[0], strings[1], null, null, "vse-audioknigi.com");
     }
 
     private static async Task<SearchResult?> ReadliNet(Story topic, string q)
@@ -202,7 +176,7 @@ public class Search
             .StrJoin(a => a.InnerText);
         if (string.IsNullOrWhiteSpace(authors))
             return null;
-        return new SearchResult(title, authors, null, null);
+        return new SearchResult(title, authors, null, null, "readli.net");
     }
 
     private static async Task<SearchResult?> FanlabRu(Story topic, string q)
@@ -237,7 +211,7 @@ public class Search
         var authors = article.SelectSubNodes("//div[@class='autor']/a").StrJoin(a => a.InnerText);
         if (string.IsNullOrWhiteSpace(authors))
             return null;
-        return new SearchResult(title, authors, null, null);
+        return new SearchResult(title, authors, null, null, "fantlab.ru");
     }
 
     private static async Task<SearchResult?> AuthorToday(Story topic, string q)
@@ -263,6 +237,6 @@ public class Search
         if (article == null) return null;
         var title = article.SelectSingleNode("//div[@class='book-title']").InnerText.Trim();
         var authors = article.SelectSubNodes("//div[@class='book-author']/a").StrJoin(a => a.InnerText.Trim());
-        return new SearchResult(title, authors, null, null);
+        return new SearchResult(title, authors, null, null, "author.today");
     }
 }

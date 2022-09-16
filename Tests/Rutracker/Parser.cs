@@ -85,6 +85,10 @@ public static class Parser
         if (title == "Рассказы")
             return null;
 
+
+        if (title.StartsWith("\"") && title.EndsWith("\""))
+            title = title.Trim('\"');
+
         if (title.Contains('['))
         {
             var trim = Regex.Replace(title, "\\[.*\\]", "").Trim();
@@ -95,10 +99,21 @@ public static class Parser
             title = Regex.Replace(title, "\\(.*\\)", "").Trim();
         if (title.StartsWith("Рассказ"))
             title = title["Рассказ".Length..].Trim(' ', '\"');
-        if (series != null && title.Contains(series) && title != series && title != series + ".")
+
+        if (series != null)
         {
-            title = Regex.Replace(title, series + " (\\d)*\\.", "").Trim();
-            title = title.Replace(series + ".", "").Trim();
+            if (title.Contains(series) && title != series && title != series + ".")
+            {
+                title = Regex.Replace(title, series + " (\\d)*\\.", "").Trim();
+                title = Regex.Replace(title, series + "-(\\d)*\\.", "").Trim();
+                title = title.Replace(series + ".", "").Trim();
+            }
+        }
+        else
+        {
+            var idx = title.IndexOf(" серия ", StringComparison.InvariantCulture);
+            if (idx != -1)
+                title = title[..idx].Trim('.', '-').Trim();
         }
 
         if (string.IsNullOrWhiteSpace(title))
