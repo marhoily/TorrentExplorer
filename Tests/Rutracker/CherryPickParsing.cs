@@ -3,7 +3,7 @@ using Tests.Utilities;
 
 namespace Tests.Rutracker;
 
-public class CherryPick
+public class CherryPickParsing
 {
     public const string Output = @"C:\temp\TorrentsExplorerData\Extract\Rutracker\cherry-pick.json";
 

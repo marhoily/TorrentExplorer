@@ -6,7 +6,6 @@ using Tests.Utilities;
 
 namespace Tests.Rutracker;
 
-
 public record Header(int Id);
 
 public abstract record Topic;
@@ -48,21 +47,21 @@ public static class Parser
             return new Series();
         var title =
             (post.SelectSingleNode("//span[@style='font-size: 24px; line-height: normal;']") ??
-            post.SelectSingleNode("//span[@style='font-size: 23px; line-height: normal;']") ??
-            post.SelectSingleNode("//span[@style='font-size: 28px; line-height: normal;']") ??
-            post.SelectSingleNode("//span[@style='font-size: 27px; line-height: normal;']") ??
-            post.SelectSingleNode("//span[@style='font-size: 26px; line-height: normal;']"))?.InnerText;
+             post.SelectSingleNode("//span[@style='font-size: 23px; line-height: normal;']") ??
+             post.SelectSingleNode("//span[@style='font-size: 28px; line-height: normal;']") ??
+             post.SelectSingleNode("//span[@style='font-size: 27px; line-height: normal;']") ??
+             post.SelectSingleNode("//span[@style='font-size: 26px; line-height: normal;']"))?.InnerText;
 
         var year = post.FindTag("Год выпуска")?.TagValue().TrimEnd('.', 'г');
 
         var s = (post.FindTag("Фамилия автора") ??
-                     post.FindTag("Фамилии авторов") ??
-                     post.FindTag("Aвтор") ?? // different "A"?
-                     post.FindTag("Автор") ??
-                     post.FindTag("Автора") ??
-                     post.FindTag("Авторы"))?.TagValue().Trim();
+                 post.FindTag("Фамилии авторов") ??
+                 post.FindTag("Aвтор") ?? // different "A"?
+                 post.FindTag("Автор") ??
+                 post.FindTag("Автора") ??
+                 post.FindTag("Авторы"))?.TagValue().Trim();
         var f = (post.FindTag("Имя автора") ??
-                     post.FindTag("Имена авторов"))?.TagValue().Trim();
+                 post.FindTag("Имена авторов"))?.TagValue().Trim();
         var author = (s + " " + f).Trim();
         if (string.IsNullOrWhiteSpace(author))
             author = null;
@@ -72,7 +71,7 @@ public static class Parser
 
         var performer = htmlNode?.TagValue();
         var rawSeries = (post.FindTag("Цикл") ??
-                        post.FindTag("Цикл/серия"))?.TagValue();
+                         post.FindTag("Цикл/серия"))?.TagValue();
         if (rawSeries != null && string.IsNullOrWhiteSpace(rawSeries))
             rawSeries = "<YES>";
         var series = rawSeries ?? Mmm(post);
@@ -85,7 +84,7 @@ public static class Parser
 
         if (title == "Рассказы")
             return null;
-        
+
         if (title.Contains('['))
         {
             var trim = Regex.Replace(title, "\\[.*\\]", "").Trim();
@@ -96,7 +95,7 @@ public static class Parser
             title = Regex.Replace(title, "\\(.*\\)", "").Trim();
         if (title.StartsWith("Рассказ"))
             title = title["Рассказ".Length..].Trim(' ', '\"');
-        if (series != null && title.Contains(series) && title != series && title != series+".")
+        if (series != null && title.Contains(series) && title != series && title != series + ".")
         {
             title = Regex.Replace(title, series + " (\\d)*\\.", "").Trim();
             title = title.Replace(series + ".", "").Trim();
@@ -110,7 +109,7 @@ public static class Parser
             if (title.Contains(f + " " + s))
                 title = title.Replace(f + " " + s, "").Trim('-', '–', ' ');
             else if (title.Contains(s + " " + f))
-                title = title.Replace(s + " " + f, "").Trim('-', '–',  ' ');
+                title = title.Replace(s + " " + f, "").Trim('-', '–', ' ');
         }
 
         return new Story(topicId, title, author,
@@ -138,6 +137,7 @@ public static class Parser
             var s = replace["Цикл".Length..];
             return string.IsNullOrWhiteSpace(s) ? null : s;
         }
+
         return replace.Extract<string>(@"Цикл ξ(.*)ξ");
     }
 }
