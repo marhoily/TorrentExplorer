@@ -50,5 +50,4 @@ public static class MyFile
         var json = await file.ReadAllTextOrNullAsync();
         return json == null ? default : JsonConvert.DeserializeObject<T>(json, CommonSettings.Json);
     }
-    
 }

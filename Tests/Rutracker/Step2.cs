@@ -1,7 +1,7 @@
 ﻿using System.Text;
 using Tests.Utilities;
 
-namespace Tests;
+namespace Tests.Rutracker;
 
 public class Step2
 {
@@ -18,14 +18,7 @@ public class Step2
             result.AddRange(collider.Sections);
         }
 
-        await $@"C:\temp\TorrentsExplorerData\Step2.json"
-            .SaveJson(result);
-        /*  foreach (var section in result)
-          {
-              await $@"C:\temp\TorrentsExplorerData\Step2\{section["topic-id"]}.json"
-                  .SaveJson(section);
-
-          }*/
+        await @"C:\temp\TorrentsExplorerData\Step2.json".SaveJson(result);
     }
 }
 

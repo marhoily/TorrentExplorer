@@ -1,6 +1,6 @@
 using Tests.Utilities;
 
-namespace Tests;
+namespace Tests.Html;
 
 public sealed class HtmlCache
 {

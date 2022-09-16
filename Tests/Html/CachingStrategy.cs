@@ -1,4 +1,4 @@
-﻿namespace Tests;
+﻿namespace Tests.Html;
 
 public enum CachingStrategy
 {

@@ -3,7 +3,7 @@ using HtmlAgilityPack;
 using Newtonsoft.Json.Linq;
 using Tests.Utilities;
 
-namespace Tests;
+namespace Tests.Rutracker;
 
 public class UnitTest2
 {

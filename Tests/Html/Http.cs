@@ -1,7 +1,7 @@
 using System.Net;
 using System.Text;
 
-namespace Tests;
+namespace Tests.Html;
 
 public class Http
 {
