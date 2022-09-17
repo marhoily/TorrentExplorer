@@ -10,11 +10,12 @@ namespace Tests.Rutracker;
 public static class Known
 {
     public static bool IsKnownTag(this string value) => 
-        !string.IsNullOrWhiteSpace(value) && 
+        !string.IsNullOrWhiteSpace(value) &&
         Tags.Any(t => Eq(value, t));
 
-    private static bool Eq(string value, string tag) => 
-        value.TrimPrefix(tag).Trim() is "" or ":";
+    private static bool Eq(string value, string tag) =>
+        value.StartsWith(tag) && 
+        value[tag.Length..].Trim() is "" or ":";
 
     public static readonly string[] Tags =
     {
