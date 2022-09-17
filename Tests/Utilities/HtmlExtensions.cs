@@ -48,6 +48,12 @@ public static class HtmlExtensions
         return htmlDocument.DocumentNode;
     }
 
+    public static HtmlNode? SelectSubNode(this HtmlNode node, string xpath)
+    {
+        var parentXPath = node.XPath;
+        return (node.SelectNodes(xpath) ?? Enumerable.Empty<HtmlNode>())
+            .FirstOrDefault(y => y.XPath.StartsWith(parentXPath));
+    }
     public static IEnumerable<HtmlNode> SelectSubNodes(this HtmlNode node, string xpath)
     {
         var parentXPath = node.XPath;

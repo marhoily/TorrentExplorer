@@ -1,6 +1,5 @@
 ﻿using System.Text.RegularExpressions;
 using HtmlAgilityPack;
-using Newtonsoft.Json.Linq;
 using RegExtract;
 using Tests.Utilities;
 using static System.StringSplitOptions;
@@ -10,6 +9,13 @@ namespace Tests.Rutracker;
 
 public static class Known
 {
+    public static bool IsKnownTag(this string value) => 
+        !string.IsNullOrWhiteSpace(value) && 
+        Tags.Any(t => Eq(value, t));
+
+    private static bool Eq(string value, string tag) => 
+        value.TrimPrefix(tag).Trim() is "" or ":";
+
     public static readonly string[] Tags =
     {
         "Год выпуска",
@@ -63,7 +69,7 @@ public static class Parser
 
     public static Topic? ParseRussianFantasyTopic(this HtmlNode node)
     {
-        var topicId = GetTopicId(node);
+        var topicId = node.FirstChild.GetTopicId();
 
         var post = node.SelectSingleNode("//div[@class='post_body']");
         if (post.FindTags("Год выпуска").Count() > 1)
@@ -89,13 +95,7 @@ public static class Parser
             genre, playTime);
     }
 
-    private static int GetTopicId(HtmlNode node)
-    {
-        var attributeValue = node.FirstChild.GetAttributeValue("data-ext_link_data", null);
-        var jObject = JObject.Parse(attributeValue);
-        var topicId = jObject["t"]!.Value<int>();
-        return topicId;
-    }
+
 
     private static string? GetTitle(HtmlNode post, string? series, string? firstName, string? secondName)
     {
