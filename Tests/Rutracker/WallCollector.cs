@@ -54,17 +54,6 @@ public sealed class WallCollector
         }
     }
 
-    private static HtmlNode? GoFurther(HtmlNode n) =>
-        n.NextSibling ?? (
-            n.ParentNode != null 
-                ? GoFurther(n.ParentNode) 
-                : null);
-
-    private static HtmlNode? GoDeeper(HtmlNode n) =>
-        n.ChildNodes.FirstOrDefault(
-            x => x.NodeType == HtmlNodeType.Element) 
-        ?? GoFurther(n);
-
     private HtmlNode ProcessTag(HtmlNode node)
     {
         var key = node.InnerText.TrimEnd();
@@ -114,4 +103,15 @@ public sealed class WallCollector
         _currentHeaders = new List<string>();
         _currentSection.Clear();
     }
+    
+    private static HtmlNode? GoFurther(HtmlNode n) =>
+        n.NextSibling ?? (
+            n.ParentNode != null 
+                ? GoFurther(n.ParentNode) 
+                : null);
+
+    private static HtmlNode? GoDeeper(HtmlNode n) =>
+        n.ChildNodes.FirstOrDefault(
+            x => x.NodeType == HtmlNodeType.Element) 
+        ?? GoFurther(n);
 }
