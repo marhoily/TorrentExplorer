@@ -2,7 +2,7 @@
 
 public sealed class CircuitBreaker
 {
-    private int _successCount = 0;
+    private int _successCount;
     private int _millisecondsDelay = 100;
 
     public async Task<TResult?> X<TResult>(Func<Task<TResult>> action)

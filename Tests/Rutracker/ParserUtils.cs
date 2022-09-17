@@ -1,4 +1,5 @@
-﻿using HtmlAgilityPack;
+﻿using System.Net;
+using HtmlAgilityPack;
 
 namespace Tests.Rutracker;
 
@@ -91,6 +92,10 @@ public static class ParserUtils
             else node = node.ParentNode;
         }
 
-        return node.InnerText.TrimStart(':', ' ').TrimEnd();
+        var tagValue = node.InnerText
+            .TrimStart(':', ' ')
+            .Replace("&#776;", "")
+            .TrimEnd();
+        return WebUtility.HtmlDecode(tagValue);
     }
 }

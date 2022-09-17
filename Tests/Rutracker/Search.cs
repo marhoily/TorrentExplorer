@@ -1,7 +1,10 @@
-﻿using System.Text;
+﻿using System.Net;
+using System.Text;
 using System.Web;
+using JetBrains.Annotations;
 using Tests.Html;
 using Tests.Utilities;
+using static System.StringSplitOptions;
 
 namespace Tests.Rutracker;
 
@@ -18,13 +21,15 @@ public class Search
         new HtmlCache(CacheLocation.Temp, CachingStrategy.Normal),
         Encoding.Default);
 
-    private static readonly Func<Story, string, Task<SearchResult?>>[] SearchEngines = new Func<Story, string, Task<SearchResult?>>[]
-    {
-        VseAudioknigiCom,
-        ReadliNet,
-        FanlabRu,
-        AuthorToday
-    };
+    private static readonly Func<Story, string, Task<SearchResult?>>[] 
+        SearchEngines =
+        {
+            VseAudioknigiCom,
+            Knigorai,
+            ReadliNet,
+            FanlabRu,
+            AuthorToday
+        };
 
     public const string Output = @"C:\temp\TorrentsExplorerData\Extract\Search\output.json";
 
@@ -33,15 +38,36 @@ public class Search
     {
         var topics = await CherryPickParsing.Output.ReadJson<List<Story>>();
         var circuitBreaker = new CircuitBreaker();
-        foreach (var topic in topics!)
+        foreach (var topic in topics!.Take(100))
             if (topic.Title != null)
                 await GoThroughSearchEngines(circuitBreaker, topic);
     }
 
+    private string FileName(int id, Outcome outcome) =>
+        $@"C:\temp\TorrentsExplorerData\Extract\Search-{outcome}\{id:D8}.json";
+    private enum Outcome {Positive, Negative}
+    private async Task Save<T>(int id, T obj, Outcome outcome)
+    {
+        var opposite = outcome == Outcome.Positive
+            ? Outcome.Negative
+            : Outcome.Positive;
+        var oppositeName = FileName(id, opposite);
+        if (File.Exists(oppositeName))
+            File.Delete(oppositeName);
+        await FileName(id, outcome).SaveJson(obj);
+    }
+    [UsedImplicitly]
+    private Outcome? GetOutcome(int id)
+    {
+        return File.Exists(FileName(id, Outcome.Positive))
+            ? Outcome.Positive
+            : File.Exists(FileName(id, Outcome.Negative))
+                ? Outcome.Negative
+                : null;
+    }
     private async Task GoThroughSearchEngines(CircuitBreaker circuitBreaker, Story topic)
     {
-        var file = $@"C:\temp\TorrentsExplorerData\Extract\Search\{topic.TopicId:D8}.json";
-        if (File.Exists(file)) return;
+        //if (GetOutcome(topic.TopicId) != null) return;
 
         var title = topic.Title;
         var q = title + " - " + topic.Author;
@@ -53,10 +79,10 @@ public class Search
             {
                 var result = await searchEngine(topic, q);
                 if (result == null) return false;
-                
-                if (MakeSense(result, topic))
+
+                if (ValidateSearchResult(result, topic))
                 {
-                    await file.SaveJson(new { topic, q, result });
+                    await Save(topic.TopicId, new { topic, q, result }, Outcome.Positive);
                     return true;
                 }
 
@@ -65,95 +91,105 @@ public class Search
             });
             if (finished) return;
         }
-        await $@"C:\temp\TorrentsExplorerData\Extract\NegativeSearch\{topic.TopicId:D8}.json"
-            .SaveJson(new { topic, q, negativeSearchResults});
+
+        await Save(topic.TopicId, new { topic, q, negativeSearchResults }, Outcome.Negative);
     }
 
-    private static bool MakeSense(SearchResult result, Story topic)
+    private static bool ValidateSearchResult(SearchResult result, Story topic)
     {
+        if (topic.TopicId == 6090051)
+            1.ToString();
         if (topic.Author != null)
         {
-            if (!CompareAuthors(result.Author, topic.Author))
+            if (!CompareAuthors(Sanitize(result.Author), Sanitize(topic.Author)))
             {
                 Console.WriteLine(result.Author + " != " + topic.Author);
                 return false;
             }
         }
 
-        var resultTitle = result.Title.Split(' ', '.', '-')
+        string Scrape(string s) => s
+            .Replace('ё', 'e')
+            .Replace("«", "")
+            .Replace("»", "")
+            .Replace("\"", "")
+            .Split(' ', '.', '-')
             .Where(c => !string.IsNullOrWhiteSpace(c))
-            .Select(c => c.ToLower());
-        var topicTitle = topic.Title!.Split(' ', '.', '-')
-            .Where(c => !string.IsNullOrWhiteSpace(c))
-            .Select(c => c.ToLower());
-        if (!resultTitle.SequenceEqual(topicTitle))
-        {
-            Console.WriteLine(result.Title + " != " + topic.Title);
-            return false;
-        }
+            .Select(c => c.ToLower())
+            .StrJoin(" ");
+        string Sanitize(string s) => s
+            .ToLower()
+            .Replace("&", ",")
+            .Replace("_", " ")
+            .Replace('ё', 'e')
+            .Replace("(", " ")
+            .Replace(")", " ")
+            .Replace("[", " ")
+            .Replace("]", " ");
 
-        return true;
+        var resultTitle = Scrape(result.Title);
+        var topicTitle = Scrape(topic.Title!);
+        if (resultTitle.Contains(topicTitle) ||
+            topicTitle.Contains(resultTitle))
+            return true;
+
+        Console.WriteLine(result.Title + " != " + topic.Title);
+        return false;
     }
 
     private static bool CompareAuthors(string formal, string manual)
     {
-        string Strip(string s) => s
-            .ToLower()
-            .Replace("(", "")
-            .Replace(")", "")
-            .Replace("[", "")
-            .Replace("]", "");
-
         if (formal.Contains(',') || manual.Contains(','))
         {
-            foreach (var f in formal.Split(',', StringSplitOptions.RemoveEmptyEntries))
-            foreach (var m in manual.Split(',', StringSplitOptions.RemoveEmptyEntries))
+            foreach (var f in formal.Split(',', RemoveEmptyEntries))
+            foreach (var m in manual.Split(',', RemoveEmptyEntries))
                 if (CompareAuthors(f, m))
                     return true;
         }
 
-        var ff = formal.Split(' ').Select(Strip).ToHashSet();
-        var mm = manual.Split(' ')
-            .Select(Strip)
+        var ff = formal.Split(' ', RemoveEmptyEntries).ToHashSet();
+        var mm = manual
             // for the case like "Змагаевы Алекс и Ангелина"
-            .Where(c => c != "и")
+            .Replace(" и ", " ")
+            .Split(new[]{' ', '.'}, RemoveEmptyEntries)
             .ToList();
-        if (ff.Count >= mm.Count)
+
+        bool Eq(string x, string y)
         {
-            foreach (var word in mm)
-                if (!ff.Contains(word) &&
-                    !ff.Contains(word.TrimEnd('ы', 'и')))
-                    return false;
-        }
-        else
-        {
-            foreach (var word in ff)
-                if (!mm.Contains(word) &&
-                    !mm.Contains(word + 'ы') &&
-                    !mm.Contains(word + 'и'))
-                    return false;
+            if (x == y) return true;
+            if (y.Length < x.Length) return Eq(y, x);
+            if (x == y.TrimEnd('ы', 'и')) return true;
+            if (x.Length == 1 && x.EndsWith(".") && x[0] == y[0]) return true;
+            return false;
         }
 
-        return true;
+        bool IsSubset(IEnumerable<string> a, ICollection<string> b) =>
+            a.All(word => b.Any(x => Eq(x, word)));
+
+        if (IsSubset(ff, mm) || IsSubset(mm, ff))
+            return true;
+        return false;
     }
 
     private static async Task<SearchResult?> VseAudioknigiCom(Story topic, string q)
     {
-        var html = await Html.Get($"vse-audioknigi.com/{topic.TopicId:D8}",
-            $"https://vse-audioknigi.com/search?text={HttpUtility.UrlEncode(q)}");
-        var vseAudioknigiCom = html.ParseHtml()
+        var localUri = $"https://vse-audioknigi.com/search?text={HttpUtility.UrlEncode(q)}";
+        var html = await Html.Get($"vse-audioknigi.com/{topic.TopicId:D8}", localUri);
+        var r = WebUtility.HtmlDecode(html.ParseHtml()
             .SelectSingleNode("//li[@class='b-statictop__items_item']//a")?
-            .InnerText;
-        if (vseAudioknigiCom == null) return null;
-        var strings = vseAudioknigiCom.Split(" - ");
-        return new SearchResult(strings[0], strings[1], null, null, "vse-audioknigi.com");
+            .InnerText);
+        if (r == null) return null;
+        var idx = r.LastIndexOf("-", StringComparison.InvariantCulture);
+        var vseAudioknigiCom = new SearchResult(
+            r[..idx].Trim(), r[(idx + 1)..].Trim(), null, null, localUri);
+        return vseAudioknigiCom;
     }
 
     private static async Task<SearchResult?> ReadliNet(Story topic, string q)
     {
+        var requestUri = $"https://readli.net/srch/?q={HttpUtility.UrlEncode(q)}";
         var html = await Html.Get($"readli.net/{topic.TopicId:D8}",
-            new HttpRequestMessage(HttpMethod.Get,
-                $"https://readli.net/srch/?q={HttpUtility.UrlEncode(q)}")
+            new HttpRequestMessage(HttpMethod.Get, requestUri)
             {
                 Headers =
                 {
@@ -176,14 +212,33 @@ public class Search
             .StrJoin(a => a.InnerText);
         if (string.IsNullOrWhiteSpace(authors))
             return null;
-        return new SearchResult(title, authors, null, null, "readli.net");
+        return new SearchResult(
+            WebUtility.HtmlDecode(title), 
+            WebUtility.HtmlDecode(authors), null, null, requestUri);
+    }
+
+    private static async Task<SearchResult?> Knigorai(Story topic, string q)
+    {
+        var requestUri = $"https://knigorai.com/?q={HttpUtility.UrlEncode(q)}";
+        var html = await Html.Get($"knigorai.com/{topic.TopicId:D8}", requestUri);
+        var article = html.ParseHtml()
+            .SelectSingleNode("//div[@class='book-item panel panel-default']");
+        if (article == null) return null;
+        var title = article.SelectSingleNode("//a[@class='book-title']").InnerText;
+        var authors = article.SelectSubNodes("//div[@class='col-lg-12 book-author']//a")
+            .StrJoin(a => a.InnerText);
+        if (string.IsNullOrWhiteSpace(authors))
+            return null;
+        return new SearchResult(
+            WebUtility.HtmlDecode(title), 
+            WebUtility.HtmlDecode(authors), null, null, requestUri);
     }
 
     private static async Task<SearchResult?> FanlabRu(Story topic, string q)
     {
+        var requestUri = $"https://fantlab.ru/searchmain?searchstr={HttpUtility.UrlEncode(q)}";
         var html = await Html.Get($"fantlab.ru/{topic.TopicId:D8}",
-            new HttpRequestMessage(HttpMethod.Get,
-                $"https://fantlab.ru/searchmain?searchstr={HttpUtility.UrlEncode(q)}")
+            new HttpRequestMessage(HttpMethod.Get, requestUri)
             {
                 Headers =
                 {
@@ -211,14 +266,16 @@ public class Search
         var authors = article.SelectSubNodes("//div[@class='autor']/a").StrJoin(a => a.InnerText);
         if (string.IsNullOrWhiteSpace(authors))
             return null;
-        return new SearchResult(title, authors, null, null, "fantlab.ru");
+        return new SearchResult(
+            WebUtility.HtmlDecode(title),
+            WebUtility.HtmlDecode(authors), null, null, requestUri);
     }
 
     private static async Task<SearchResult?> AuthorToday(Story topic, string q)
     {
+        var requestUri = $"https://author.today/search?category=works&q={HttpUtility.UrlEncode(q)}";
         var html = await Html.Get($"author.today/{topic.TopicId:D8}",
-            new HttpRequestMessage(HttpMethod.Get,
-                $"https://author.today/search?category=works&q={HttpUtility.UrlEncode(q)}")
+            new HttpRequestMessage(HttpMethod.Get, requestUri)
             {
                 Headers =
                 {
@@ -237,6 +294,8 @@ public class Search
         if (article == null) return null;
         var title = article.SelectSingleNode("//div[@class='book-title']").InnerText.Trim();
         var authors = article.SelectSubNodes("//div[@class='book-author']/a").StrJoin(a => a.InnerText.Trim());
-        return new SearchResult(title, authors, null, null, "author.today");
+        return new SearchResult(
+            WebUtility.HtmlDecode(title),
+            WebUtility.HtmlDecode(authors), null, null, requestUri);
     }
 }

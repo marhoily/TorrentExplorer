@@ -3,6 +3,7 @@ using HtmlAgilityPack;
 using Newtonsoft.Json.Linq;
 using RegExtract;
 using Tests.Utilities;
+using static System.StringSplitOptions;
 
 namespace Tests.Rutracker;
 
@@ -12,11 +13,13 @@ public abstract record Topic;
 
 public sealed record Story(
     int TopicId,
+    string Url,
     string? Title,
     string? Author,
     string? Performer,
     string? Year,
     string? Series,
+    string? NumberInSeries,
     string? Genre,
     string? PlayTime) : Topic;
 
@@ -62,9 +65,6 @@ public static class Parser
                  post.FindTag("Авторы"))?.TagValue().Trim();
         var f = (post.FindTag("Имя автора") ??
                  post.FindTag("Имена авторов"))?.TagValue().Trim();
-        var author = (s + " " + f).Trim();
-        if (string.IsNullOrWhiteSpace(author))
-            author = null;
         var htmlNode = post.FindTag("Исполнитель") ??
                        post.FindTag("Исполнители") ??
                        post.FindTag("Исполнитель и звукорежиссёр");
@@ -76,15 +76,18 @@ public static class Parser
             rawSeries = "<YES>";
         var series = rawSeries ?? Mmm(post);
 
+        var numberInSeries = post.FindTag("Номер книги")?.TagValue(); 
+
         var genre = post.FindTag("Жанр")?.TagValue();
         var playTime = post.FindTag("Время звучания")?.TagValue();
 
         if (title == null)
             return null;
 
-        if (title == "Рассказы")
+        title = title.Trim(' ', '•');
+        
+        if (title == "Рассказы" || title.TrimEnd('.').EndsWith(". Рассказы"))
             return null;
-
 
         if (title.StartsWith("\"") && title.EndsWith("\""))
             title = title.Trim('\"');
@@ -100,12 +103,57 @@ public static class Parser
         if (title.StartsWith("Рассказ"))
             title = title["Рассказ".Length..].Trim(' ', '\"');
 
+
+        if (topicId == 6239060)
+            1.ToString();
+        title = RemoveSeriesPrefixFromTitle(title, series);
+        title = RemoveAuthorPrefixFromTitle(title, f, s);
+
+        var author = CombineAuthors(s, f);
+        return new Story(topicId,
+            $"https://rutracker.org/forum/viewtopic.php?t={topicId}",
+            title, author, performer, year, series, numberInSeries,
+            genre, playTime);
+    }
+
+    private static string? CombineAuthors(string? s, string? f)
+    {
+        if (string.IsNullOrWhiteSpace(s+f))
+            return null;
+        var a = s?.Trim().Replace(";", ",");
+        var b = f?.Trim().Replace(";", ",");
+        if (a == null) return b;
+        if (b == null) return a;
+        if (a.Contains(',') && b.Contains(','))
+            return a.Split(',', RemoveEmptyEntries).Zip(b.Split(',', RemoveEmptyEntries))
+                .Select(x => x.First.Trim('_').Trim() + " " + x.Second.Trim('_').Trim())
+                .StrJoin();
+        return a + " " + b;
+    }
+
+    private static string RemoveAuthorPrefixFromTitle(string title, string? f, string? s)
+    {
+        var o1 = f + " " + s;
+        if (string.IsNullOrWhiteSpace(o1)) return title;
+        
+        if (title.Contains(o1))
+            return title.Replace(o1, "").Trim('-', '–', ' ');
+        
+        var o2 = s + " " + f;
+        if (title.Contains(o2))
+            return title.Replace(o2, "").Trim('-', '–', ' ');
+
+        return title;
+    }
+
+    private static string RemoveSeriesPrefixFromTitle(string title, string? series)
+    {
         if (series != null)
         {
             if (title.Contains(series) && title != series && title != series + ".")
             {
-                title = Regex.Replace(title, series + " (\\d)*\\.", "").Trim();
-                title = Regex.Replace(title, series + "-(\\d)*\\.", "").Trim();
+                title = Regex.Replace(title, series + " (\\d)*(\\.|,)", "").Trim();
+                title = Regex.Replace(title, series + "-(\\d)*(\\.|,)", "").Trim();
                 title = title.Replace(series + ".", "").Trim();
             }
         }
@@ -118,17 +166,7 @@ public static class Parser
 
         if (string.IsNullOrWhiteSpace(title))
             throw new Exception();
-
-        if (author != null)
-        {
-            if (title.Contains(f + " " + s))
-                title = title.Replace(f + " " + s, "").Trim('-', '–', ' ');
-            else if (title.Contains(s + " " + f))
-                title = title.Replace(s + " " + f, "").Trim('-', '–', ' ');
-        }
-
-        return new Story(topicId, title, author,
-            performer, year, series, genre, playTime);
+        return title;
     }
 
     private static string? Mmm(HtmlNode post)
