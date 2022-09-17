@@ -4,6 +4,7 @@ using Newtonsoft.Json.Linq;
 using RegExtract;
 using Tests.Utilities;
 using static System.StringSplitOptions;
+using static Tests.Utilities.HtmlExtensions;
 
 namespace Tests.Rutracker;
 
@@ -107,36 +108,31 @@ public static class Parser
 
         static string? GetRawTitle(HtmlNode post, string? series)
         {
-            var titleOptions = GetTitleOptions(post).Take(2).ToList();
+            var titleOptions = GetTitleOptions(post);
             var first = titleOptions.FirstOrDefault();
             var second = titleOptions.Skip(1).FirstOrDefault();
             var result = first == series && second != null ? second : first;
             return result?.Trim(' ', '•').Unquote();
         }
 
-        static IEnumerable<string> GetTitleOptions(HtmlNode post)
+        static List<string> GetTitleOptions(HtmlNode post)
         {
-            var currentXPath = default(string);
-            foreach (var descendant in post.Descendants())
+            return post.Walk<string>((node, cfg) =>
             {
-                if (descendant.NodeType == HtmlNodeType.Text &&
-                    Attributes.Any(a => descendant.InnerText.Contains(a)))
-                    break;
-                if (descendant.Name != "span")
-                    continue;
-                if (currentXPath != null && descendant.XPath.StartsWith(currentXPath))
-                    continue;
-                var fontSize = descendant
-                    .GetStyle("font-size")?
-                    .TrimPostfix("px")
-                    .ParseInt() ?? 0;
-                if (fontSize <= 20) continue;
-                if (string.IsNullOrWhiteSpace(descendant.InnerText))
-                    continue;
+                if (node.NodeType == HtmlNodeType.Text &&
+                    Attributes.Any(a => node.InnerText.Contains(a)))
+                    return cfg.YieldBreak(WalkInstruction.GoBy);
 
-                currentXPath = descendant.XPath;
-                yield return descendant.InnerText;
-            }
+                if (node.Name != "span")
+                    return cfg.Continue(WalkInstruction.GoDeep);
+
+                if ((node.GetFontSize() ?? 0) <= 20)
+                    return cfg.Continue(WalkInstruction.GoDeep);
+
+                return string.IsNullOrWhiteSpace(node.InnerText) 
+                    ? cfg.Continue(WalkInstruction.GoDeep) 
+                    : cfg.Yield(node.InnerText, WalkInstruction.GoBy);
+            });
         }
 
         static string? RemoveExplicitJunkFromTitle(string? input)
