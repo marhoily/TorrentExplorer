@@ -94,9 +94,9 @@ public class Search
         //if (await GetOldQ(topic.TopicId) is not { } oldQ) return;
 
          var q = GetQuery(topic);
-        //if (topic.TopicId != 588161)
-        //     if (q == oldQ)
-        //         return;
+       //if (topic.TopicId != 1019548)
+       //     if (q == oldQ)
+       //         return;
         var negativeSearchResults = new List<SearchResult>();
 
         foreach (var searchEngine in SearchEngines)
@@ -156,6 +156,7 @@ public class Search
             .Replace('а', 'a') //русский..topic
             .Replace('о', 'o') //русский..topic
             .Replace('х', 'x') //русский..topic
+            .Replace('–', '-') //русский..topic
             .Replace("«", "")
             .Replace("»", "")
             .Replace("\"", "")
@@ -173,6 +174,9 @@ public class Search
             .Replace('ё', 'e')
             .Replace('е', 'e')
             .Replace('c', 'с') //русский..topic
+            .Replace('а', 'a') //русский..topic
+            .Replace('о', 'o') //русский..topic
+            .Replace('х', 'x') //русский..topic
             .Replace("(", " ")
             .Replace(")", " ")
             .Replace("[", " ")
