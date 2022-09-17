@@ -91,7 +91,7 @@ public static class ParserUtils
         }
 
         var tagValue = node.InnerText
-            .TrimStart(':')
+            .TrimStart(':', ' ')
             .Replace("&#776;", "")
             .Trim();
         return WebUtility.HtmlDecode(tagValue);
