@@ -17,7 +17,7 @@ public class Search
     [Fact]
     public async Task Do()
     {
-        var topics = await CherryPickParsing.Output.ReadJson<List<Story>>();
+        var topics = await CherryPickOnJson.Output.ReadJson<List<Story>>();
         var circuitBreaker = new CircuitBreaker();
         foreach (var topic in topics!)
             if (topic.Title != null)
