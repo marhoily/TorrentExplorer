@@ -39,6 +39,67 @@ public static class Parser
         return node.SelectSingleNode("//div[@class='post_body']");
     }
 
+    public static IEnumerable<HtmlNode> DescendantElements(this HtmlNode node)
+    {
+        foreach (var child in node.ChildNodes)
+            if (child.NodeType == HtmlNodeType.Element)
+            {
+                yield return child;
+                foreach (var grand in child.DescendantElements())
+                    yield return grand;
+            }
+    }
+
+    private static readonly int[] HeaderFontSizes = { 24, 23, 28, 27, 26 };
+
+    public static IEnumerable<string> GetTitleOptions(this HtmlNode post)
+    {
+        var currentXPath = default(string);
+        foreach (var descendant in post.Descendants())
+        {
+            if (descendant.NodeType == HtmlNodeType.Text && 
+                Attributes.Any(a => descendant.InnerText.Contains(a)))
+                break;
+            if (descendant.Name != "span")
+                continue;
+            if (currentXPath != null && descendant.XPath.StartsWith(currentXPath))
+                continue;
+            var style = descendant.GetAttributeValue("style", null);
+            if (style == null)
+                continue;
+
+            var properties = style
+                .Split(';', RemoveEmptyEntries)
+                .ToDictionary(x => x.Split(": ")[0], x => x.Split(": ")[1]);
+            if (!properties.TryGetValue("font-size", out var fontSize) ||
+                int.Parse(fontSize.Replace("px", "")) <= 20) continue;
+
+            currentXPath = descendant.XPath;
+            yield return descendant.InnerText;
+        }
+    }
+
+    private static readonly string[] Attributes =
+    {
+        "Год выпуска",
+        "Фамилия автора",
+        "Фамилии авторов",
+        "Aвтор",
+        "Автор",
+        "Автора",
+        "Авторы",
+        "Имя автора",
+        "Имена авторов",
+        "Исполнитель",
+        "Исполнители",
+        "Исполнитель и звукорежиссёр",
+        "Цикл",
+        "Цикл/серия",
+        "Номер книги",
+        "Жанр",
+        "Время звучания",
+
+    };
     public static Topic? ParseRussianFantasyTopic(this HtmlNode node)
     {
         var attributeValue = node.FirstChild.GetAttributeValue("data-ext_link_data", null);
@@ -48,12 +109,6 @@ public static class Parser
         var post = node.SelectSingleNode("//div[@class='post_body']");
         if (post.FindTags("Год выпуска").Count() > 1)
             return new Series();
-        var title =
-            (post.SelectSingleNode("//span[@style='font-size: 24px; line-height: normal;']") ??
-             post.SelectSingleNode("//span[@style='font-size: 23px; line-height: normal;']") ??
-             post.SelectSingleNode("//span[@style='font-size: 28px; line-height: normal;']") ??
-             post.SelectSingleNode("//span[@style='font-size: 27px; line-height: normal;']") ??
-             post.SelectSingleNode("//span[@style='font-size: 26px; line-height: normal;']"))?.InnerText;
 
         var year = post.FindTag("Год выпуска")?.TagValue().TrimEnd('.', 'г');
 
@@ -76,16 +131,27 @@ public static class Parser
             rawSeries = "<YES>";
         var series = rawSeries ?? Mmm(post);
 
-        var numberInSeries = post.FindTag("Номер книги")?.TagValue(); 
+        var numberInSeries = post.FindTag("Номер книги")?.TagValue();
 
         var genre = post.FindTag("Жанр")?.TagValue();
         var playTime = post.FindTag("Время звучания")?.TagValue();
 
+        if (topicId == 5128171)
+            1.ToString();
+
+        var titleOptions = post.GetTitleOptions().Take(3).ToList();
+        var first = titleOptions.FirstOrDefault();
+        var second = titleOptions.Skip(1).FirstOrDefault();
+        string? title;
+        if (first == series && second != null)
+            title = second;
+        else
+            title = first;
         if (title == null)
             return null;
 
         title = title.Trim(' ', '•');
-        
+
         if (title == "Рассказы" || title.TrimEnd('.').EndsWith(". Рассказы"))
             return null;
 
@@ -104,8 +170,6 @@ public static class Parser
             title = title["Рассказ".Length..].Trim(' ', '\"');
 
 
-        if (topicId == 6239060)
-            1.ToString();
         title = RemoveSeriesPrefixFromTitle(title, series);
         title = RemoveAuthorPrefixFromTitle(title, f, s);
 
@@ -118,7 +182,7 @@ public static class Parser
 
     private static string? CombineAuthors(string? s, string? f)
     {
-        if (string.IsNullOrWhiteSpace(s+f))
+        if (string.IsNullOrWhiteSpace(s + f))
             return null;
         var a = s?.Trim().Replace(";", ",");
         var b = f?.Trim().Replace(";", ",");
@@ -135,10 +199,10 @@ public static class Parser
     {
         var o1 = f + " " + s;
         if (string.IsNullOrWhiteSpace(o1)) return title;
-        
+
         if (title.Contains(o1))
             return title.Replace(o1, "").Trim('-', '–', ' ');
-        
+
         var o2 = s + " " + f;
         if (title.Contains(o2))
             return title.Replace(o2, "").Trim('-', '–', ' ');

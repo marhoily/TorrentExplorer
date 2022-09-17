@@ -28,7 +28,8 @@ public class Search
             Knigorai,
             ReadliNet,
             FanlabRu,
-            AuthorToday
+            AuthorToday,
+            //FlibustaSeries,
         };
 
     public const string Output = @"C:\temp\TorrentsExplorerData\Extract\Search\output.json";
@@ -295,6 +296,40 @@ public class Search
         if (article == null) return null;
         var title = article.SelectSingleNode("//div[@class='book-title']").InnerText.Trim();
         var authors = article.SelectSubNodes("//div[@class='book-author']/a").StrJoin(a => a.InnerText.Trim());
+        return new SearchResult(
+            WebUtility.HtmlDecode(title),
+            WebUtility.HtmlDecode(authors), null, null, requestUri);
+    }
+    
+    private static async Task<SearchResult?> FlibustaSeries(Story topic, string q)
+    {
+        var requestUri = $"https://flibusta.site/booksearch?chs=on&ask={HttpUtility.UrlEncode(topic.Series)}";
+        var searchHtml = await Html.Get($"flibusta.site/{topic.TopicId:D8}",
+            new HttpRequestMessage(HttpMethod.Get, requestUri)
+            {
+                Headers =
+                {
+                }
+            });
+
+
+        var seriesHref = searchHtml.ParseHtml()
+            .SelectNodes("//li/a")
+            .Select(a => a.Href())
+            .OfType<string>()
+            .FirstOrDefault(href => href.StartsWith("/sequence/"));
+        if (seriesHref == null) return null;
+        var seriesHtml = await Html.Get($"flibusta.site{seriesHref}",
+            new HttpRequestMessage(HttpMethod.Get, 
+                $"https://flibusta.site{seriesHref}")
+            {
+                Headers =
+                {
+                }
+            });
+        var seriesPage = seriesHtml.ParseHtml();
+        var title = seriesPage.SelectSingleNode("//table/tbody/tr[td/b='Авторы:']/td[2]").InnerText.Trim();
+        var authors = seriesPage.SelectSubNodes("//table/tbody/tr[td/b='Авторы:']//a").StrJoin(a => a.InnerText.Trim());
         return new SearchResult(
             WebUtility.HtmlDecode(title),
             WebUtility.HtmlDecode(authors), null, null, requestUri);
