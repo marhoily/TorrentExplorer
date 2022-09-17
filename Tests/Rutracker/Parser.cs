@@ -34,37 +34,8 @@ public static class Parser
             .ToArray();
     }
 
-    public static HtmlNode GetForumPost(this HtmlNode node)
-    {
-        return node.SelectSingleNode("//div[@class='post_body']");
-    }
-
-    public static IEnumerable<string> GetTitleOptions(this HtmlNode post)
-    {
-        var currentXPath = default(string);
-        foreach (var descendant in post.Descendants())
-        {
-            if (descendant.NodeType == HtmlNodeType.Text && 
-                Attributes.Any(a => descendant.InnerText.Contains(a)))
-                break;
-            if (descendant.Name != "span")
-                continue;
-            if (currentXPath != null && descendant.XPath.StartsWith(currentXPath))
-                continue;
-            var style = descendant.GetAttributeValue("style", null);
-            if (style == null)
-                continue;
-
-            var properties = style
-                .Split(';', RemoveEmptyEntries)
-                .ToDictionary(x => x.Split(": ")[0], x => x.Split(": ")[1]);
-            if (!properties.TryGetValue("font-size", out var fontSize) ||
-                int.Parse(fontSize.Replace("px", "")) <= 20) continue;
-
-            currentXPath = descendant.XPath;
-            yield return descendant.InnerText;
-        }
-    }
+    public static HtmlNode GetForumPost(this HtmlNode node) =>
+        node.SelectSingleNode("//div[@class='post_body']");
 
     private static readonly string[] Attributes =
     {
@@ -84,89 +55,149 @@ public static class Parser
         "Цикл/серия",
         "Номер книги",
         "Жанр",
-        "Время звучания",
-
+        "Время звучания"
     };
+
     public static Topic? ParseRussianFantasyTopic(this HtmlNode node)
     {
-        var attributeValue = node.FirstChild.GetAttributeValue("data-ext_link_data", null);
-        var jObject = JObject.Parse(attributeValue);
-        var topicId = jObject["t"]!.Value<int>();
+        var topicId = GetTopicId(node);
 
         var post = node.SelectSingleNode("//div[@class='post_body']");
         if (post.FindTags("Год выпуска").Count() > 1)
             return new Series();
 
         var year = post.FindTag("Год выпуска")?.TagValue().TrimEnd('.', 'г', ' ');
-
-        var s = (post.FindTag("Фамилия автора") ??
-                 post.FindTag("Фамилии авторов") ??
-                 post.FindTag("Aвтор") ?? // different "A"?
-                 post.FindTag("Автор") ??
-                 post.FindTag("Автора") ??
-                 post.FindTag("Авторы"))?.TagValue().Trim();
-        var f = (post.FindTag("Имя автора") ??
-                 post.FindTag("Имена авторов"))?.TagValue().Trim();
-        var htmlNode = post.FindTag("Исполнитель") ??
-                       post.FindTag("Исполнители") ??
-                       post.FindTag("Исполнитель и звукорежиссёр");
-
-        var performer = htmlNode?.TagValue();
-        var rawSeries = (post.FindTag("Цикл") ??
-                         post.FindTag("Цикл/серия"))?.TagValue();
-        if (rawSeries != null && string.IsNullOrWhiteSpace(rawSeries))
-            rawSeries = "<YES>";
-        var series = rawSeries ?? Mmm(post);
-
+        var lastName = post.FindTags("Фамилия автора", "Фамилии авторов", 
+            "Aвтор", "Автор" /* different "A"? */, "Автора", "Авторы")?.TagValue();
+        var firstName = post.FindTags("Имя автора", "Имена авторов")?.TagValue();
+        var performer = post.FindTags("Исполнитель", "Исполнители", "Исполнитель и звукорежиссёр")?.TagValue();
+        var series = GetSeries(post);
         var numberInSeries = post.FindTag("Номер книги")?.TagValue();
-
         var genre = post.FindTag("Жанр")?.TagValue();
         var playTime = post.FindTag("Время звучания")?.TagValue();
-
-        var titleOptions = post.GetTitleOptions().Take(3).ToList();
-        var first = titleOptions.FirstOrDefault();
-        var second = titleOptions.Skip(1).FirstOrDefault();
-        string? title;
-        if (first == series && second != null)
-            title = second;
-        else
-            title = first;
+        var title = GetTitle(post, series, firstName, lastName);
         if (title == null)
             return null;
 
-        title = title.Trim(' ', '•');
-
-        if (title == "Рассказы" || title.TrimEnd('.').EndsWith(". Рассказы"))
-            return null;
-
-        if (title.StartsWith("\"") && title.EndsWith("\""))
-            title = title.Trim('\"');
-
-        if (title.Contains('['))
-        {
-            var trim = Regex.Replace(title, "\\[.*\\]", "").Trim();
-            title = trim != "" ? trim : title.TrimStart('[').TrimEnd(']');
-        }
-
-        if (title.Contains('('))
-            title = Regex.Replace(title, "\\(.*\\)", "").Trim();
-        if (title.StartsWith("Рассказ"))
-            title = title["Рассказ".Length..].Trim(' ', '\"');
-
-
-        if (topicId == 5076605)
-            1.ToString();
-        title = RemoveSeriesPrefixFromTitle(title, series);
-        title = RemoveAuthorPrefixFromTitle(title, f, s);
-        title = RemoveSeriesPrefixFromTitle(title, series);
-        title = RemoveAuthorPrefixFromTitle(title, f, s);
-        title = title.Trim('•', ' ');
-
-        var author = CombineAuthors(s, f);
+        var author = CombineAuthors(lastName, firstName);
         return new Story(topicId,
             $"https://rutracker.org/forum/viewtopic.php?t={topicId}",
             title, author, performer, year, series, numberInSeries,
             genre, playTime);
+    }
+
+    private static int GetTopicId(HtmlNode node)
+    {
+        var attributeValue = node.FirstChild.GetAttributeValue("data-ext_link_data", null);
+        var jObject = JObject.Parse(attributeValue);
+        var topicId = jObject["t"]!.Value<int>();
+        return topicId;
+    }
+
+    private static string? GetTitle(HtmlNode post, string? series, string? firstName, string? secondName)
+    {
+        var title = GetRawTitle(post, series);
+        var noJunk = RemoveExplicitJunkFromTitle(title);
+        if (noJunk == null) return null;
+        var s1 = RemoveSeriesPrefixFromTitle(noJunk, series);
+        var s2 = RemoveAuthorPrefixFromTitle(s1, firstName, secondName);
+        var s3 = RemoveSeriesPrefixFromTitle(s2, series);
+        var s4 = RemoveAuthorPrefixFromTitle(s3, firstName, secondName);
+        return s4.Trim('•', ' ');
+
+        static string? GetRawTitle(HtmlNode post, string? series)
+        {
+            var titleOptions = GetTitleOptions(post).Take(2).ToList();
+            var first = titleOptions.FirstOrDefault();
+            var second = titleOptions.Skip(1).FirstOrDefault();
+            var result = first == series && second != null ? second : first;
+            return result?.Trim(' ', '•').Unquote();
+        }
+
+        static IEnumerable<string> GetTitleOptions(HtmlNode post)
+        {
+            var currentXPath = default(string);
+            foreach (var descendant in post.Descendants())
+            {
+                if (descendant.NodeType == HtmlNodeType.Text &&
+                    Attributes.Any(a => descendant.InnerText.Contains(a)))
+                    break;
+                if (descendant.Name != "span")
+                    continue;
+                if (currentXPath != null && descendant.XPath.StartsWith(currentXPath))
+                    continue;
+                var fontSize = descendant
+                    .GetStyle("font-size")?
+                    .TrimPostfix("px")
+                    .ParseInt() ?? 0;
+                if (fontSize <= 20) continue;
+                if (string.IsNullOrWhiteSpace(descendant.InnerText))
+                    continue;
+
+                currentXPath = descendant.XPath;
+                yield return descendant.InnerText;
+            }
+        }
+
+        static string? RemoveExplicitJunkFromTitle(string? input)
+        {
+            if (input is null or "Рассказы")
+                return null;
+
+            var s1 = input.RemoveRegexIfItIsNotTheWholeString("\\[.*\\]");
+            var s2 = s1.Unbrace('[', ']');
+            var s3 = s2.RemoveRegexIfItIsNotTheWholeString("\\(.*\\)");
+            var s4 = s3.Unbrace('(', ')');
+            var s5 = s4.StartsWith("Рассказ") 
+                ? s4["Рассказ".Length..].Trim(' ', '\"') 
+                : s4;
+            return s5;
+        }
+
+        static string RemoveAuthorPrefixFromTitle(string title, string? f, string? s)
+        {
+            var o1 = f + " " + s;
+            if (string.IsNullOrWhiteSpace(o1)) return title;
+
+            if (title.Contains(o1))
+                return title.Replace(o1, "").Trim('-', '–', ' ');
+
+            var o2 = s + " " + f;
+            if (title.Contains(o2))
+                return title.Replace(o2, "").Trim('-', '–', ' ');
+
+            return title;
+        }
+
+        static string RemoveSeriesPrefixFromTitle(string title, string? series)
+        {
+            var idx = title.IndexOf(" серия ", StringComparison.InvariantCulture);
+            if (idx != -1)
+                return title[..idx].Trim('.', '-').Trim();
+
+            if (series == null)
+                return title;
+
+            if (!title.StartsWith(series) || title == series || title == series + ".") return title;
+
+            var t1 = Regex.Replace(title, 
+                    series + "(\n|. )" +
+                    "(Книга|Часть|Том) " +
+                    "(первая|вторая|третья|I|II|III|IV|V|VI|VII|\\d+)" +
+                    "(\\.|,)", "")
+                .Trim();
+            if (string.IsNullOrWhiteSpace(t1))
+                return title.Replace(series, "").TrimStart('\n', ' ', '.');
+            if (t1 != title) return t1;
+
+            var t2 = Regex.Replace(title, series + " (\\d)*(\\.|,)", "").Trim();
+            if (t2 != title) return t2;
+            var t3 = Regex.Replace(title, series + "( |-)(\\d)*(\\.|,)", "").Trim();
+            if (t3 != title) return t3;
+            var t4 = title.Replace(series + ".", "").Trim();
+            if (t4 != title) return t4;
+            return title;
+        }
     }
 
     private static string? CombineAuthors(string? s, string? f)
@@ -184,71 +215,36 @@ public static class Parser
         return a + " " + b;
     }
 
-    private static string RemoveAuthorPrefixFromTitle(string title, string? f, string? s)
+    private static string? GetSeries(HtmlNode post)
     {
-        var o1 = f + " " + s;
-        if (string.IsNullOrWhiteSpace(o1)) return title;
+        var rawSeries = post.FindTags("Цикл", "Цикл/серия")?.TagValue();
+        if (rawSeries != null && string.IsNullOrWhiteSpace(rawSeries))
+            return "<YES>";
+        return rawSeries ?? GetSeriesFromSpoiler(post);
 
-        if (title.Contains(o1))
-            return title.Replace(o1, "").Trim('-', '–', ' ');
-
-        var o2 = s + " " + f;
-        if (title.Contains(o2))
-            return title.Replace(o2, "").Trim('-', '–', ' ');
-
-        return title;
-    }
-
-    private static string RemoveSeriesPrefixFromTitle(string title, string? series)
-    {
-        if (series != null)
+        static string? GetSeriesFromSpoiler(HtmlNode post)
         {
-            if (title.StartsWith(series) && title != series && title != series + ".")
+            var singleOrDefault = post.GetSpoilers()
+                .SingleOrDefault(s => s.Header.Contains("Цикл"));
+            if (singleOrDefault == null) return null;
+            var replace = singleOrDefault
+                .Header
+                .Replace("Цикл/серия", "Цикл")
+                .Replace("Цикл книг", "Цикл")
+                .Replace("&#34;", "ξ")
+                .Replace('<', 'ξ')
+                .Replace('>', 'ξ')
+                .Replace('«', 'ξ')
+                .Replace('»', 'ξ');
+            if (replace.Trim() == "Цикл")
+                return "<PRESENT>";
+            if (!replace.Contains("ξ"))
             {
-                var t1 = Regex.Replace(title, series + "(\n|. )(Книга|Часть|Том) (первая|вторая|третья|I|II|III|IV|V|VI|VII|\\d+)(\\.|,)", "").Trim();
-                if (string.IsNullOrWhiteSpace(t1))
-                    return title.Replace(series, "").TrimStart('\n', ' ', '.');
-                if (t1 != title) return t1;
-                
-                title = Regex.Replace(title, series + " (\\d)*(\\.|,)", "").Trim();
-                title = Regex.Replace(title, series + "( |-)(\\d)*(\\.|,)", "").Trim();
-                title = title.Replace(series + ".", "").Trim();
+                var s = replace["Цикл".Length..];
+                return string.IsNullOrWhiteSpace(s) ? null : s;
             }
-        }
-        else
-        {
-            var idx = title.IndexOf(" серия ", StringComparison.InvariantCulture);
-            if (idx != -1)
-                title = title[..idx].Trim('.', '-').Trim();
-        }
 
-        if (string.IsNullOrWhiteSpace(title))
-            throw new Exception();
-        return title;
-    }
-
-    private static string? Mmm(HtmlNode post)
-    {
-        var singleOrDefault = post.GetSpoilers()
-            .SingleOrDefault(s => s.Header.Contains("Цикл"));
-        if (singleOrDefault == null) return null;
-        var replace = singleOrDefault
-            .Header
-            .Replace("Цикл/серия", "Цикл")
-            .Replace("Цикл книг", "Цикл")
-            .Replace("&#34;", "ξ")
-            .Replace('<', 'ξ')
-            .Replace('>', 'ξ')
-            .Replace('«', 'ξ')
-            .Replace('»', 'ξ');
-        if (replace.Trim() == "Цикл")
-            return "<PRESENT>";
-        if (!replace.Contains("ξ"))
-        {
-            var s = replace["Цикл".Length..];
-            return string.IsNullOrWhiteSpace(s) ? null : s;
+            return replace.Extract<string>(@"Цикл ξ(.*)ξ");
         }
-
-        return replace.Extract<string>(@"Цикл ξ(.*)ξ");
     }
 }

@@ -1,3 +1,4 @@
+using FluentAssertions;
 using HtmlAgilityPack;
 using static System.StringSplitOptions;
 
@@ -46,5 +47,40 @@ public static class HtmlExtensions
         var parentXPath = node.XPath;
         return (node.SelectNodes(xpath) ?? Enumerable.Empty<HtmlNode>())
             .Where(y => y.XPath.StartsWith(parentXPath));
+    }
+
+    public sealed class WalkConfig<TResult>
+    {
+        public bool Return { get; private set; }
+        public bool GoDeep { get; set; }
+        public TResult Result { get; private set; }
+
+        public void SetResult(TResult result)
+        {
+            Return.Should().BeFalse();
+            Return = true;
+            Result = result;
+        }
+    }
+
+    public static TResult Walk<TResult>(this HtmlNode root,
+        Action<HtmlNode, WalkConfig<TResult>> apply)
+    {
+        var cfg = new WalkConfig<TResult>();
+        bool Inner(HtmlNode x)
+        {
+            foreach (var child in x.ChildNodes)
+            {
+                apply(child, cfg);
+                if (cfg.Return) return true; 
+                if (!cfg.GoDeep) continue;
+                if (Inner(child)) return true;
+                if (cfg.Return) return true;
+            }
+            return cfg.Return;
+        }
+
+        Inner(root);
+        return cfg.Result;
     }
 }
