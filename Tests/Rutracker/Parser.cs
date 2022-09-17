@@ -8,6 +8,29 @@ using static Tests.Utilities.HtmlExtensions;
 
 namespace Tests.Rutracker;
 
+public static class Known
+{
+    public static readonly string[] Tags =
+    {
+        "Год выпуска",
+        "Фамилия автора",
+        "Фамилии авторов",
+        "Aвтор",
+        "Автор",
+        "Автора",
+        "Авторы",
+        "Имя автора",
+        "Имена авторов",
+        "Исполнитель",
+        "Исполнители",
+        "Исполнитель и звукорежиссёр",
+        "Цикл",
+        "Цикл/серия",
+        "Номер книги",
+        "Жанр",
+        "Время звучания"
+    };
+}
 public record Header(int Id);
 
 public abstract record Topic;
@@ -37,27 +60,6 @@ public static class Parser
 
     public static HtmlNode GetForumPost(this HtmlNode node) =>
         node.SelectSingleNode("//div[@class='post_body']");
-
-    private static readonly string[] Attributes =
-    {
-        "Год выпуска",
-        "Фамилия автора",
-        "Фамилии авторов",
-        "Aвтор",
-        "Автор",
-        "Автора",
-        "Авторы",
-        "Имя автора",
-        "Имена авторов",
-        "Исполнитель",
-        "Исполнители",
-        "Исполнитель и звукорежиссёр",
-        "Цикл",
-        "Цикл/серия",
-        "Номер книги",
-        "Жанр",
-        "Время звучания"
-    };
 
     public static Topic? ParseRussianFantasyTopic(this HtmlNode node)
     {
@@ -119,8 +121,7 @@ public static class Parser
         {
             return post.Walk<string>((node, cfg) =>
             {
-                if (node.NodeType == HtmlNodeType.Text &&
-                    Attributes.Any(a => node.InnerText.Contains(a)))
+                if (node.NodeType == HtmlNodeType.Text && Known.Tags.Any(a => node.InnerText.Contains(a)))
                     return cfg.YieldBreak(WalkInstruction.GoBy);
 
                 if (node.Name != "span")
