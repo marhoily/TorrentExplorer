@@ -180,7 +180,8 @@ public sealed class Collector
             var style = GetStyle(node);
             if (style?.Keys.StrJoin() == "font-size, line-height")
                 if (style["line-height"] == "normal")
-                    return new FontSize(style["font-size"].RemovePostfix("px")!.ParseInt());
+                    return new FontSize(style["font-size"]
+                        .TrimPostfix("px").ParseInt());
         }
         else if (keys == "class")
         {

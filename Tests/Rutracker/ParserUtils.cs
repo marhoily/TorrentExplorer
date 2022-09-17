@@ -23,6 +23,7 @@ public static class ParserUtils
                 selectNode.SelectSingleNode("div[@class='post-b']"));
         }
     }
+
     public static IEnumerable<HtmlNode> FindTags(this HtmlNode node, string value)
     {
         IEnumerable<HtmlNode> Rec(HtmlNode n)
@@ -36,6 +37,7 @@ public static class ParserUtils
             foreach (var grand in Rec(child))
                 yield return grand;
         }
+
         foreach (var d in Rec(node))
         {
             if (d.NodeType == HtmlNodeType.Text && d.ParentNode.Name == "span")
@@ -49,23 +51,18 @@ public static class ParserUtils
         }
     }
 
+    public static HtmlNode? FindTags(this HtmlNode node, params string[] values)
+        => values
+            .Select(value => FindTag(node, value))
+            .FirstOrDefault(t => t != null);
+
     public static HtmlNode? FindTag(this HtmlNode node, string value)
     {
         var htmlNodes = node.FindTags(value).ToList();
         if (htmlNodes.Count == 0) return null;
-       // if (htmlNodes.Count > 1)
-       //     throw new InvalidOperationException("blah");
         return htmlNodes[0];
     }
-    public static HtmlNode FindTagB(this HtmlNode node, string value)
-    {
-        var htmlNodes = node.FindTags(value).ToList();
-        if (htmlNodes.Count == 0)
-            throw new InvalidOperationException("blah");
-        if (htmlNodes.Count > 1)
-            throw new InvalidOperationException("blah");
-        return htmlNodes[0];
-    }
+
     public static string TagValue(this HtmlNode node)
     {
         var seenComma = node.InnerText.TrimEnd().EndsWith(":");
@@ -78,6 +75,7 @@ public static class ParserUtils
                 node = node.NextSibling;
             }
             else node = node.ParentNode;
+
             var text = node.InnerText.Trim();
             seenComma = text.EndsWith(":") || text.StartsWith(":");
         }
@@ -93,9 +91,9 @@ public static class ParserUtils
         }
 
         var tagValue = node.InnerText
-            .TrimStart(':', ' ')
+            .TrimStart(':')
             .Replace("&#776;", "")
-            .TrimEnd();
+            .Trim();
         return WebUtility.HtmlDecode(tagValue);
     }
 }

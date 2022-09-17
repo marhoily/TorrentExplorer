@@ -90,11 +90,11 @@ public class Search
 
     private async Task GoThroughSearchEngines(CircuitBreaker circuitBreaker, Story topic)
     {
-        if (GetOutcome(topic.TopicId) == Outcome.Positive) return;
-        //if (await GetOldQ(topic.TopicId) is not { } oldQ) return;
+         if (GetOutcome(topic.TopicId) == Outcome.Positive) return;
+        // if (await GetOldQ(topic.TopicId) is not { } oldQ) return;
 
-         var q = GetQuery(topic);
-       //if (topic.TopicId != 1019548)
+        var q = GetQuery(topic);
+       // if (topic.TopicId != 6257895)
        //     if (q == oldQ)
        //         return;
         var negativeSearchResults = new List<SearchResult>();
