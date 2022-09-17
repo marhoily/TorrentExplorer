@@ -5,7 +5,7 @@ public sealed class CircuitBreaker
     private int _successCount;
     private int _millisecondsDelay = 100;
 
-    public async Task<TResult?> X<TResult>(Func<Task<TResult>> action)
+    public async Task<TResult?> Execute<TResult>(Func<Task<TResult>> action)
     {
         try
         {
