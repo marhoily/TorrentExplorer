@@ -71,6 +71,15 @@ public class Search
         //if (GetOutcome(topic.TopicId) != null) return;
 
         var title = topic.Title;
+        if (title!.StartsWith("Книга "))
+        {
+            if (title["Книга ".Length..].Trim().ParseInt() ==
+                topic.NumberInSeries?.ParseInt())
+            {
+                title = topic.Series + ". " + title;
+            }
+        }
+            
         var q = title + " - " + topic.Author;
         var negativeSearchResults = new List<SearchResult>();
 
