@@ -19,6 +19,8 @@ public sealed class WallCollector
 
     private void MoveOn()
     {
+        if (_state.TopicId == 3470993)
+            1.ToString();
         var body = false;
         while (_currentNode != null)
         {
@@ -55,9 +57,9 @@ public sealed class WallCollector
     private HtmlNode ProcessTag(HtmlNode node)
     {
         var key = node.InnerText.TrimEnd();
-        var seenComma = key.EndsWith(":");
+        var seenColon = key.EndsWith(":");
         var moved = false;
-        while (!seenComma)
+        while (!seenColon)
         {
             if (node.NextSibling != null)
             {
@@ -67,10 +69,12 @@ public sealed class WallCollector
             else node = node.ParentNode;
 
             var text = node.InnerText.Trim();
-            seenComma = text.EndsWith(":") || text.StartsWith(":");
+            seenColon = text.EndsWith(":") || text.StartsWith(":");
+            if (!seenColon && !string.IsNullOrWhiteSpace(text))
+                return node;
         }
 
-        while (!moved || node.InnerText.Trim() == ":")
+        while (!moved || node.InnerText.Trim() is ":" or "")
         {
             if (node.NextSibling != null)
             {

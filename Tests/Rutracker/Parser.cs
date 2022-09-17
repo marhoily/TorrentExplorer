@@ -99,6 +99,8 @@ public static class Parser
     public static Topic? ParseRussianFantasyTopic(this Dictionary<string, object> post)
     {
         var topicId = post.FindTag("topic-id")!.ParseInt();
+        if (topicId == 3470993)
+            1.ToString();
         var year = post.FindTag("Год выпуска")?.TrimEnd('.', 'г', ' ');
         var lastName = post.FindTags("Фамилия автора", "Фамилии авторов", 
             "Aвтор", "Автор" /* different "A"? */, "Автора", "Авторы");
@@ -358,7 +360,10 @@ public static class Parser
         var rawSeries = post.FindTags("Цикл", "Цикл/серия");
         if (rawSeries != null && string.IsNullOrWhiteSpace(rawSeries))
             return "<YES>";
-        return rawSeries ?? GetSeriesFromSpoiler(post);
+        var wrap = rawSeries ?? GetSeriesFromSpoiler(post);
+        return wrap?.TrimEnd(':',' ')
+            .Unquote('\"')
+            .Unbrace('«', '»');
 
         static string? GetSeriesFromSpoiler(Dictionary<string, object> post)
         {

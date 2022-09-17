@@ -123,7 +123,5 @@ public static class HtmlExtensions
                 : null);
 
     public static HtmlNode? GoDeeper(this HtmlNode n) =>
-        n.ChildNodes.FirstOrDefault(
-            x => x.NodeType == HtmlNodeType.Element) 
-        ?? GoFurther(n);        
+        n.ChildNodes.FirstOrDefault() ?? GoFurther(n);        
 }
