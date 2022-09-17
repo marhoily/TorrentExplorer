@@ -154,6 +154,8 @@ public static class Parser
             title = title["Рассказ".Length..].Trim(' ', '\"');
 
 
+        if (topicId == 5076605)
+            1.ToString();
         title = RemoveSeriesPrefixFromTitle(title, series);
         title = RemoveAuthorPrefixFromTitle(title, f, s);
         title = RemoveSeriesPrefixFromTitle(title, series);
@@ -203,8 +205,11 @@ public static class Parser
         {
             if (title.StartsWith(series) && title != series && title != series + ".")
             {
-                if (Regex.IsMatch(title, series + "(\n|. )(Книга|Часть|Том) (первая|вторая|третья|\\d*)(\\.|,)?"))
+                var t1 = Regex.Replace(title, series + "(\n|. )(Книга|Часть|Том) (первая|вторая|третья|I|II|III|IV|V|VI|VII|\\d+)(\\.|,)", "").Trim();
+                if (string.IsNullOrWhiteSpace(t1))
                     return title.Replace(series, "").TrimStart('\n', ' ', '.');
+                if (t1 != title) return t1;
+                
                 title = Regex.Replace(title, series + " (\\d)*(\\.|,)", "").Trim();
                 title = Regex.Replace(title, series + "( |-)(\\d)*(\\.|,)", "").Trim();
                 title = title.Replace(series + ".", "").Trim();

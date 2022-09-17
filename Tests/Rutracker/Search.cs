@@ -2,6 +2,7 @@
 using System.Text;
 using System.Web;
 using JetBrains.Annotations;
+using Newtonsoft.Json.Linq;
 using Tests.Html;
 using Tests.Utilities;
 using static System.StringSplitOptions;
@@ -21,7 +22,7 @@ public class Search
         new HtmlCache(CacheLocation.Temp, CachingStrategy.Normal),
         Encoding.Default);
 
-    private static readonly Func<Story, string, Task<SearchResult?>>[] 
+    private static readonly Func<Story, string, Task<SearchResult?>>[]
         SearchEngines =
         {
             VseAudioknigiCom,
@@ -46,7 +47,13 @@ public class Search
 
     private string FileName(int id, Outcome outcome) =>
         $@"C:\temp\TorrentsExplorerData\Extract\Search-{outcome}\{id:D8}.json";
-    private enum Outcome {Positive, Negative}
+
+    private enum Outcome
+    {
+        Positive,
+        Negative
+    }
+
     private async Task Save<T>(int id, T obj, Outcome outcome)
     {
         var opposite = outcome == Outcome.Positive
@@ -57,6 +64,20 @@ public class Search
             File.Delete(oppositeName);
         await FileName(id, outcome).SaveJson(obj);
     }
+
+    [UsedImplicitly]
+    private async Task<string?> GetOldQ(int id)
+    {
+        var positive = FileName(id, Outcome.Positive);
+        var negative = FileName(id, Outcome.Negative);
+        var jObj = File.Exists(positive)
+            ? await positive.ReadJson<JObject>()
+            : File.Exists(negative)
+                ? await negative.ReadJson<JObject>()
+                : null;
+        return jObj?["q"]?.Value<string>();
+    }
+
     [UsedImplicitly]
     private Outcome? GetOutcome(int id)
     {
@@ -64,24 +85,18 @@ public class Search
             ? Outcome.Positive
             : File.Exists(FileName(id, Outcome.Negative))
                 ? Outcome.Negative
-                : null;
+                : default;
     }
+
     private async Task GoThroughSearchEngines(CircuitBreaker circuitBreaker, Story topic)
     {
-        if (GetOutcome(topic.TopicId) != null) return;
+        if (GetOutcome(topic.TopicId) == Outcome.Positive) return;
+        //if (await GetOldQ(topic.TopicId) is not { } oldQ) return;
 
-        var title = topic.Title;
-        if (title!.StartsWith("Книга "))
-        {
-            var n = title["Книга ".Length..].Trim().TryParseIntOrWord();
-            if (n != null && n == topic.NumberInSeries?.ParseInt())
-            {
-                //title = "Том " + n + ". " + title;
-                title = topic.Series + ". " + title;
-            }
-        }
-            
-        var q = title + " - " + topic.Author;
+         var q = GetQuery(topic);
+        //if (topic.TopicId != 588161)
+        //     if (q == oldQ)
+        //         return;
         var negativeSearchResults = new List<SearchResult>();
 
         foreach (var searchEngine in SearchEngines)
@@ -106,6 +121,22 @@ public class Search
         await Save(topic.TopicId, new { topic, q, negativeSearchResults }, Outcome.Negative);
     }
 
+    private static string GetQuery(Story topic)
+    {
+        var title = topic.Title;
+        if (title!.StartsWith("Книга "))
+        {
+            var n = title["Книга ".Length..].Trim().TryParseIntOrWord();
+            if (n != null && n == topic.NumberInSeries?.ParseInt())
+            {
+                //title = "Том " + n + ". " + title;
+                title = topic.Series + ". " + title;
+            }
+        }
+
+        return title + " - " + topic.Author;
+    }
+
     private static bool ValidateSearchResult(SearchResult result, Story topic)
     {
         if (topic.Author != null)
@@ -120,19 +151,28 @@ public class Search
         string Scrape(string s) => s
             .Replace('ё', 'e')
             .Replace('й', 'и')
+            .Replace('е', 'e')
+            .Replace('c', 'с') //русский..topic
+            .Replace('а', 'a') //русский..topic
+            .Replace('о', 'o') //русский..topic
+            .Replace('х', 'x') //русский..topic
             .Replace("«", "")
             .Replace("»", "")
             .Replace("\"", "")
+            .Replace(",", ", ")
+            .Replace("  ", " ")
             .Split(' ', '.', '-')
             .Where(c => !string.IsNullOrWhiteSpace(c))
             .Select(c => c.ToLower())
             .StrJoin(" ");
+
         string Sanitize(string s) => s
             .ToLower()
             .Replace("&", ",")
             .Replace("_", " ")
             .Replace('ё', 'e')
             .Replace('е', 'e')
+            .Replace('c', 'с') //русский..topic
             .Replace("(", " ")
             .Replace(")", " ")
             .Replace("[", " ")
@@ -162,7 +202,7 @@ public class Search
         var mm = manual
             // for the case like "Змагаевы Алекс и Ангелина"
             .Replace(" и ", " ")
-            .Split(new[]{' ', '.'}, RemoveEmptyEntries)
+            .Split(new[] { ' ', '.' }, RemoveEmptyEntries)
             .ToList();
 
         bool Eq(string x, string y)
@@ -173,7 +213,7 @@ public class Search
             if (x == y.TrimEnd('ы', 'и')) return true;
             // Стругацкий -> Стругацкие     
             if (x.Length > 3 && x[..^1] == y[..^1]) return true;
-            if (x.Length == 1 && x.EndsWith(".") && x[0] == y[0]) return true;
+            if (x.Length == 1 && x[0] == y[0]) return true;
             return false;
         }
 
@@ -228,7 +268,7 @@ public class Search
         if (string.IsNullOrWhiteSpace(authors))
             return null;
         return new SearchResult(
-            WebUtility.HtmlDecode(title), 
+            WebUtility.HtmlDecode(title),
             WebUtility.HtmlDecode(authors), null, null, requestUri);
     }
 
@@ -245,7 +285,7 @@ public class Search
         if (string.IsNullOrWhiteSpace(authors))
             return null;
         return new SearchResult(
-            WebUtility.HtmlDecode(title), 
+            WebUtility.HtmlDecode(title),
             WebUtility.HtmlDecode(authors), null, null, requestUri);
     }
 
@@ -313,6 +353,7 @@ public class Search
             WebUtility.HtmlDecode(title),
             WebUtility.HtmlDecode(authors), null, null, requestUri);
     }
+
     [UsedImplicitly]
     private static async Task<SearchResult?> FlibustaSeries(Story topic, string q)
     {
