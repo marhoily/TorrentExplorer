@@ -39,7 +39,7 @@ public class Search
     {
         var topics = await CherryPickParsing.Output.ReadJson<List<Story>>();
         var circuitBreaker = new CircuitBreaker();
-        foreach (var topic in topics!.Take(100))
+        foreach (var topic in topics!)
             if (topic.Title != null)
                 await GoThroughSearchEngines(circuitBreaker, topic);
     }
@@ -73,9 +73,10 @@ public class Search
         var title = topic.Title;
         if (title!.StartsWith("Книга "))
         {
-            if (title["Книга ".Length..].Trim().ParseInt() ==
-                topic.NumberInSeries?.ParseInt())
+            var n = title["Книга ".Length..].Trim().ParseInt();
+            if (n == topic.NumberInSeries?.ParseInt())
             {
+                //title = "Том " + n + ". " + title;
                 title = topic.Series + ". " + title;
             }
         }
@@ -107,8 +108,6 @@ public class Search
 
     private static bool ValidateSearchResult(SearchResult result, Story topic)
     {
-        if (topic.TopicId == 6256458)
-            1.ToString();
         if (topic.Author != null)
         {
             if (!CompareAuthors(Sanitize(result.Author), Sanitize(topic.Author)))
@@ -191,6 +190,7 @@ public class Search
             .InnerText);
         if (r == null) return null;
         var idx = r.LastIndexOf("-", StringComparison.InvariantCulture);
+        if (idx == -1) return null;
         var vseAudioknigiCom = new SearchResult(
             r[..idx].Trim(), r[(idx + 1)..].Trim(), null, null, localUri);
         return vseAudioknigiCom;
@@ -309,17 +309,11 @@ public class Search
             WebUtility.HtmlDecode(title),
             WebUtility.HtmlDecode(authors), null, null, requestUri);
     }
-    
+    [UsedImplicitly]
     private static async Task<SearchResult?> FlibustaSeries(Story topic, string q)
     {
         var requestUri = $"https://flibusta.site/booksearch?chs=on&ask={HttpUtility.UrlEncode(topic.Series)}";
-        var searchHtml = await Html.Get($"flibusta.site/{topic.TopicId:D8}",
-            new HttpRequestMessage(HttpMethod.Get, requestUri)
-            {
-                Headers =
-                {
-                }
-            });
+        var searchHtml = await Html.Get($"flibusta.site/{topic.TopicId:D8}", requestUri);
 
 
         var seriesHref = searchHtml.ParseHtml()
@@ -328,14 +322,9 @@ public class Search
             .OfType<string>()
             .FirstOrDefault(href => href.StartsWith("/sequence/"));
         if (seriesHref == null) return null;
-        var seriesHtml = await Html.Get($"flibusta.site{seriesHref}",
-            new HttpRequestMessage(HttpMethod.Get, 
-                $"https://flibusta.site{seriesHref}")
-            {
-                Headers =
-                {
-                }
-            });
+        var seriesHtml = await Html.Get(
+            $"flibusta.site{seriesHref}",
+            $"https://flibusta.site{seriesHref}");
         var seriesPage = seriesHtml.ParseHtml();
         var title = seriesPage.SelectSingleNode("//table/tbody/tr[td/b='Авторы:']/td[2]").InnerText.Trim();
         var authors = seriesPage.SelectSubNodes("//table/tbody/tr[td/b='Авторы:']//a").StrJoin(a => a.InnerText.Trim());

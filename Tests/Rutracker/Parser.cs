@@ -39,19 +39,6 @@ public static class Parser
         return node.SelectSingleNode("//div[@class='post_body']");
     }
 
-    public static IEnumerable<HtmlNode> DescendantElements(this HtmlNode node)
-    {
-        foreach (var child in node.ChildNodes)
-            if (child.NodeType == HtmlNodeType.Element)
-            {
-                yield return child;
-                foreach (var grand in child.DescendantElements())
-                    yield return grand;
-            }
-    }
-
-    private static readonly int[] HeaderFontSizes = { 24, 23, 28, 27, 26 };
-
     public static IEnumerable<string> GetTitleOptions(this HtmlNode post)
     {
         var currentXPath = default(string);
@@ -136,9 +123,6 @@ public static class Parser
         var genre = post.FindTag("Жанр")?.TagValue();
         var playTime = post.FindTag("Время звучания")?.TagValue();
 
-        if (topicId == 5128171)
-            1.ToString();
-
         var titleOptions = post.GetTitleOptions().Take(3).ToList();
         var first = titleOptions.FirstOrDefault();
         var second = titleOptions.Skip(1).FirstOrDefault();
@@ -216,6 +200,7 @@ public static class Parser
         {
             if (title.Contains(series) && title != series && title != series + ".")
             {
+                title = Regex.Replace(title, series + ". Книга (\\d)*(\\.|,)", "").Trim();
                 title = Regex.Replace(title, series + " (\\d)*(\\.|,)", "").Trim();
                 title = Regex.Replace(title, series + "-(\\d)*(\\.|,)", "").Trim();
                 title = title.Replace(series + ".", "").Trim();
