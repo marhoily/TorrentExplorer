@@ -5,20 +5,25 @@ using Tests.Utilities;
 
 namespace Tests.Rutracker;
 
-public class UnitTest2
+public class WallParsing
 {
+    public const string Output = @"C:\temp\TorrentsExplorerData\Extract\Rutracker\wall.json";
 
     [Fact]
-    public async Task Test1()
+    public async Task Parse()
     {
-        var htmlList = await @"c:\temp\kinozal-bulk.json".ReadJson<string[]>();
-        foreach (var htmlNode in htmlList!.Select(html => html.ParseHtml()))
+        var raw = await Step0.Output.ReadJson<string[]>();
+        var posts = raw ?? Array.Empty<string>();
+        await Output.SaveJson(Extract(posts).ToList());
+    }
+
+    private static IEnumerable<List<string>> Extract(string[] posts)
+    {
+        foreach (var post in posts.Select(html => html.ParseHtml()))
         {
             var collector = new Collector();
-            collector.Parse(htmlNode.ChildNodes[0]);
-            //collector.Sections.Should().NotBeEmpty();
-            await $@"C:\temp\TorrentsExplorerData\KinozalExtract\{collector.TopicId:D8}.json"
-                .SaveJson(collector.Elements);
+            collector.Parse(post.ChildNodes[0]);
+            yield return collector.Elements;
         }
     }
 }
@@ -26,13 +31,21 @@ public class UnitTest2
 public abstract record Style;
 
 public sealed record FontSize(int Value) : Style;
+
 public sealed record Color : Style;
+
 public sealed record Bold : Style;
+
 public sealed record Center : Style;
+
 public sealed record FontFamily : Style;
+
 public sealed record LineBreak : Style;
+
 public sealed record Italics : Style;
+
 public sealed record Underline : Style;
+
 public sealed record Normal : Style;
 
 public sealed class Collector
@@ -41,6 +54,7 @@ public sealed class Collector
     private readonly StringBuilder _buffer = new();
     private readonly HashSet<string> _tags = new();
     public int TopicId { get; private set; }
+
     public void Parse(HtmlNode htmlNode)
     {
         var attributeValue = htmlNode.GetAttributeValue("data-ext_link_data", null);
@@ -78,7 +92,7 @@ public sealed class Collector
                     var attributesSnapshot = GetAttributesSnapshot(n);
                     switch (n.GetAttributeValue("class", null))
                     {
-                        case "post-box": 
+                        case "post-box":
                         case "post-box-right":
                         case "c-wrap":
                         case "c-head":
@@ -89,6 +103,7 @@ public sealed class Collector
                             ParseRoot(n);
                             return;
                     }
+
                     switch (attributesSnapshot)
                     {
                         case "class='sp-wrap'": // spoiler
@@ -103,6 +118,7 @@ public sealed class Collector
                         default:
                             throw new Exception(attributesSnapshot + "\n" + n.InnerText);
                     }
+
                     break;
                 case "span":
                     var tag = ClassifySpan(n) switch
@@ -119,12 +135,14 @@ public sealed class Collector
                         PushTheBuffer();
                         if (tag != "") _tags.Add(tag);
                     }
+
                     ParseRoot(n);
                     if (tag != null)
                     {
                         PushTheBuffer();
                         _tags.Remove(tag);
                     }
+
                     break;
                 case "b":
                     PushTheBuffer();
@@ -141,7 +159,6 @@ public sealed class Collector
                     throw new ArgumentOutOfRangeException(n.NodeType + ": " + n.Name);
             }
         }
-
     }
 
     private static Style ClassifySpan(HtmlNode node)
@@ -201,6 +218,7 @@ public sealed class Collector
 
             return new Bold();
         }
+
         throw new InvalidOperationException(
             $"<{node.Name} {node.Attributes.Select(a => a.Name + "=" + a.Value.Quote()).StrJoin(" ")}>");
     }
@@ -213,6 +231,7 @@ public sealed class Collector
             .Select(x => x.Split(": "))
             .ToDictionary(x => x[0].Trim(), x => x[1].Trim());
     }
+
     private static string GetAttributesSnapshot(HtmlNode node)
     {
         return node.Attributes.Select(a => a.Name + "=" + a.Value.Quote()).StrJoin(" ");
@@ -224,12 +243,11 @@ public sealed class Collector
         {
             var value = _buffer.ToString().Trim();
             if (!string.IsNullOrWhiteSpace(value))
-                Elements.Add(_tags.Count > 0 ?
-                    $"<{_tags.StrJoin()}> {value}"
+                Elements.Add(_tags.Count > 0
+                    ? $"<{_tags.StrJoin()}> {value}"
                     : value);
         }
 
         _buffer.Clear();
     }
-
 }
