@@ -14,7 +14,7 @@ public class WallParsing
         await Output.SaveJson(Extract(posts).ToList());
     }
 
-    private static IEnumerable<List<Dictionary<string, string>>> Extract(string[] posts)
+    private static IEnumerable<List<Dictionary<string, object>>> Extract(string[] posts)
     {
         foreach (var post in posts.Select(html => html.ParseHtml()))
         {

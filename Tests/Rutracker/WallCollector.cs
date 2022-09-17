@@ -6,9 +6,10 @@ namespace Tests.Rutracker;
 
 public sealed class WallCollector
 {
-    public List<Dictionary<string, string>> Sections { get; } = new();
-    private Dictionary<string, string> _currentSection = new();
+    public List<Dictionary<string, object>> Sections { get; } = new();
+    private readonly Dictionary<string, object> _currentSection = new();
     private HtmlNode? _currentNode;
+    private List<string> _currentHeaders = new();
     private int _topicId;
 
     public void Parse(HtmlNode htmlNode)
@@ -31,8 +32,8 @@ public sealed class WallCollector
                     PushCurrentSection();
                     body = false;
                 }
-                _currentSection["header-" + _currentSection.Count] = 
-                    WebUtility.HtmlDecode(_currentNode.InnerText);
+                _currentHeaders.Add(WebUtility.
+                    HtmlDecode(_currentNode.InnerText));
                 _currentNode = GoFurther(_currentNode);
             }
             else if (_currentNode.InnerText.IsKnownTag())
@@ -103,9 +104,14 @@ public sealed class WallCollector
     private void PushCurrentSection()
     {
         if (_currentSection.Count <= 0) return;
-        _currentSection[_topicId.ToString()] = 
-            $"https://rutracker.org/forum/viewtopic.php?t={_topicId}";
-        Sections.Add(_currentSection);
-        _currentSection = new Dictionary<string, string>();
+        var tmp = new Dictionary<string, object>
+        {
+            [_topicId.ToString()] = $"https://rutracker.org/forum/viewtopic.php?t={_topicId}",
+            ["headers"] = _currentHeaders
+        };
+        foreach (var (k, v) in _currentSection) tmp.Add(k, v);
+        Sections.Add(tmp);
+        _currentHeaders = new List<string>();
+        _currentSection.Clear();
     }
 }
