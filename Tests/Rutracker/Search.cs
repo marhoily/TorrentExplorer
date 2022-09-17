@@ -97,7 +97,7 @@ public class Search
 
     private static bool ValidateSearchResult(SearchResult result, Story topic)
     {
-        if (topic.TopicId == 6090051)
+        if (topic.TopicId == 6256458)
             1.ToString();
         if (topic.Author != null)
         {
@@ -122,6 +122,7 @@ public class Search
             .Replace("&", ",")
             .Replace("_", " ")
             .Replace('ё', 'e')
+            .Replace('е', 'e')
             .Replace("(", " ")
             .Replace(")", " ")
             .Replace("[", " ")
