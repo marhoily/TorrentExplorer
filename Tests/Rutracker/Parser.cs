@@ -97,7 +97,7 @@ public static class Parser
         if (post.FindTags("Год выпуска").Count() > 1)
             return new Series();
 
-        var year = post.FindTag("Год выпуска")?.TagValue().TrimEnd('.', 'г');
+        var year = post.FindTag("Год выпуска")?.TagValue().TrimEnd('.', 'г', ' ');
 
         var s = (post.FindTag("Фамилия автора") ??
                  post.FindTag("Фамилии авторов") ??
@@ -156,6 +156,9 @@ public static class Parser
 
         title = RemoveSeriesPrefixFromTitle(title, series);
         title = RemoveAuthorPrefixFromTitle(title, f, s);
+        title = RemoveSeriesPrefixFromTitle(title, series);
+        title = RemoveAuthorPrefixFromTitle(title, f, s);
+        title = title.Trim('•', ' ');
 
         var author = CombineAuthors(s, f);
         return new Story(topicId,
@@ -198,11 +201,12 @@ public static class Parser
     {
         if (series != null)
         {
-            if (title.Contains(series) && title != series && title != series + ".")
+            if (title.StartsWith(series) && title != series && title != series + ".")
             {
-                title = Regex.Replace(title, series + ". Книга (\\d)*(\\.|,)", "").Trim();
+                if (Regex.IsMatch(title, series + "(\n|. )(Книга|Часть|Том) (первая|вторая|третья|\\d*)(\\.|,)?"))
+                    return title.Replace(series, "").TrimStart('\n', ' ', '.');
                 title = Regex.Replace(title, series + " (\\d)*(\\.|,)", "").Trim();
-                title = Regex.Replace(title, series + "-(\\d)*(\\.|,)", "").Trim();
+                title = Regex.Replace(title, series + "( |-)(\\d)*(\\.|,)", "").Trim();
                 title = title.Replace(series + ".", "").Trim();
             }
         }

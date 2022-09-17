@@ -68,13 +68,13 @@ public class Search
     }
     private async Task GoThroughSearchEngines(CircuitBreaker circuitBreaker, Story topic)
     {
-        //if (GetOutcome(topic.TopicId) != null) return;
+        if (GetOutcome(topic.TopicId) != null) return;
 
         var title = topic.Title;
         if (title!.StartsWith("Книга "))
         {
-            var n = title["Книга ".Length..].Trim().ParseInt();
-            if (n == topic.NumberInSeries?.ParseInt())
+            var n = title["Книга ".Length..].Trim().TryParseIntOrWord();
+            if (n != null && n == topic.NumberInSeries?.ParseInt())
             {
                 //title = "Том " + n + ". " + title;
                 title = topic.Series + ". " + title;
@@ -119,6 +119,7 @@ public class Search
 
         string Scrape(string s) => s
             .Replace('ё', 'e')
+            .Replace('й', 'и')
             .Replace("«", "")
             .Replace("»", "")
             .Replace("\"", "")
@@ -168,7 +169,10 @@ public class Search
         {
             if (x == y) return true;
             if (y.Length < x.Length) return Eq(y, x);
+            // Змагаевы -> Змагаев     
             if (x == y.TrimEnd('ы', 'и')) return true;
+            // Стругацкий -> Стругацкие     
+            if (x.Length > 3 && x[..^1] == y[..^1]) return true;
             if (x.Length == 1 && x.EndsWith(".") && x[0] == y[0]) return true;
             return false;
         }

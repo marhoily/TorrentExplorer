@@ -28,6 +28,32 @@ public static class StringExt
             ? throw new Exception($"Words count '{s}' is not a valid int")
             : result;
     }
+    public static int ParseIntOrWord(this string s)
+    {
+        return int.TryParse(s, out var result)
+            ? result
+            : s switch
+            {
+                // книга..
+                "первая" => 1,
+                "вторая" => 2,
+                "третья" => 3,
+                _ => throw new Exception($"Words count '{s}' is not a valid int")
+            };
+    }
+    public static int? TryParseIntOrWord(this string s)
+    {
+        return int.TryParse(s, out var result)
+            ? result
+            : s switch
+            {
+                // книга..
+                "первая" => 1,
+                "вторая" => 2,
+                "третья" => 3,
+                _ => null
+            };
+    }
     public static int? ParseIntOrNull(this string s)
     {
         return int.TryParse(s, out var result) ? result : null;
