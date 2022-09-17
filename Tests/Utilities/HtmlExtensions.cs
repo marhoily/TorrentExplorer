@@ -115,4 +115,15 @@ public static class HtmlExtensions
         Inner(root);
         return cfg.Collector;
     }
+    
+    public static HtmlNode? GoFurther(this HtmlNode n) =>
+        n.NextSibling ?? (
+            n.ParentNode != null 
+                ? GoFurther(n.ParentNode) 
+                : null);
+
+    public static HtmlNode? GoDeeper(this HtmlNode n) =>
+        n.ChildNodes.FirstOrDefault(
+            x => x.NodeType == HtmlNodeType.Element) 
+        ?? GoFurther(n);        
 }

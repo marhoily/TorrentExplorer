@@ -1,23 +1,20 @@
-﻿using System.Net;
-using HtmlAgilityPack;
+﻿using HtmlAgilityPack;
 using Tests.Utilities;
 
 namespace Tests.Rutracker;
 
 public sealed class WallCollector
 {
-    public List<Dictionary<string, object>> Sections { get; } = new();
-    private readonly Dictionary<string, object> _currentSection = new();
+    public List<Dictionary<string, object>> Sections => _state.Sections;
+    private WallCollectorState _state = null!;
     private HtmlNode? _currentNode;
-    private List<string> _currentHeaders = new();
-    private int _topicId;
 
     public void Parse(HtmlNode htmlNode)
     {
-        _topicId = htmlNode.GetTopicId();
+        _state = new WallCollectorState(htmlNode.GetTopicId());
         _currentNode = htmlNode;
         MoveOn();
-        PushCurrentSection();
+        _state.PushCurrentSection();
     }
 
     private void MoveOn()
@@ -29,12 +26,11 @@ public sealed class WallCollector
             {
                 if (body)
                 {
-                    PushCurrentSection();
+                    _state.PushCurrentSection();
                     body = false;
                 }
-                _currentHeaders.Add(WebUtility.
-                    HtmlDecode(_currentNode.InnerText));
-                _currentNode = GoFurther(_currentNode);
+                _state.AddHeader(_currentNode.InnerText);
+                _currentNode = _currentNode.GoFurther();
             }
             else if (_currentNode.InnerText.IsKnownTag())
             {
@@ -43,14 +39,16 @@ public sealed class WallCollector
             }
             else if (_currentNode.HasClass("sp-wrap"))
             {
-                _currentSection[WebUtility.HtmlDecode(_currentNode
+                _state.AddSpoiler(_currentNode
                     .SelectSubNode("div[@class='sp-head folded']")!
-                    .InnerText)] = "spoiler";
-                _currentNode = GoFurther(_currentNode);
+                    .InnerText);
+                _currentNode = _currentNode.GoFurther();
                 body = true;
             }
-            else if (_currentNode != null)
-                _currentNode = GoDeeper(_currentNode);
+            else
+            {
+                _currentNode = _currentNode?.GoDeeper();
+            }
         }
     }
 
@@ -82,36 +80,12 @@ public sealed class WallCollector
             else node = node.ParentNode;
         }
 
-        _currentSection[WebUtility.HtmlDecode(key.TrimEnd(':').Trim())]
-            = WebUtility.HtmlDecode(node.InnerText
+        _state.AddAttribute(
+            key.TrimEnd(':').Trim(),
+            node.InnerText
                 .TrimStart(':', ' ')
                 .Replace("&#776;", "")
                 .Trim());
         return node;
     }
-
-    private void PushCurrentSection()
-    {
-        if (_currentSection.Count <= 0) return;
-        var tmp = new Dictionary<string, object>
-        {
-            [_topicId.ToString()] = $"https://rutracker.org/forum/viewtopic.php?t={_topicId}",
-            ["headers"] = _currentHeaders
-        };
-        foreach (var (k, v) in _currentSection) tmp.Add(k, v);
-        Sections.Add(tmp);
-        _currentHeaders = new List<string>();
-        _currentSection.Clear();
-    }
-    
-    private static HtmlNode? GoFurther(HtmlNode n) =>
-        n.NextSibling ?? (
-            n.ParentNode != null 
-                ? GoFurther(n.ParentNode) 
-                : null);
-
-    private static HtmlNode? GoDeeper(HtmlNode n) =>
-        n.ChildNodes.FirstOrDefault(
-            x => x.NodeType == HtmlNodeType.Element) 
-        ?? GoFurther(n);
 }
