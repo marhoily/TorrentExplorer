@@ -20,7 +20,8 @@ internal sealed class WallCollectorState
         if (_currentSection.Count <= 0) return;
         var tmp = new Dictionary<string, object>
         {
-            [_topicId.ToString()] = $"https://rutracker.org/forum/viewtopic.php?t={_topicId}",
+            ["topic-id"] = _topicId,
+            ["url"] = $"https://rutracker.org/forum/viewtopic.php?t={_topicId}",
             ["headers"] = _currentHeaders
         };
         foreach (var (k, v) in _currentSection) tmp.Add(k, v);

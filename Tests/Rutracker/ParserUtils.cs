@@ -63,6 +63,13 @@ public static class ParserUtils
         return htmlNodes[0];
     }
 
+    public static string? FindTags(this Dictionary<string, object> dic, params string[] keys) =>
+        keys.Select(dic.FindTag).FirstOrDefault(t => t != null);
+
+
+    public static string? FindTag(this Dictionary<string, object> dic, string key) =>
+        dic.TryGetValue(key, out var result) ? result.ToString() : default;
+
     public static string TagValue(this HtmlNode node)
     {
         var seenComma = node.InnerText.TrimEnd().EndsWith(":");
