@@ -12,21 +12,25 @@ public static class SearchResultValidation
                     SanitizeAuthor(result.Author), 
                     SanitizeAuthor(topic.Author)))
             {
-                Console.WriteLine(result.Author + " != " + topic.Author);
                 return false;
             }
         }
 
+        var validateSearchResultMatches = CompareTitles(result, topic);
+        return validateSearchResultMatches;
+    }
+
+    private static bool CompareTitles(SearchResultItem result, Story topic)
+    {
         var resultTitle = ScrapeTopic(result.Title);
-        var title = SearchUtilities.GetTitle(topic.Title!, 
+        var title = SearchUtilities.GetTitle(topic.Title!,
             topic.Series ?? result.SeriesName);
         var topicTitle = ScrapeTopic(title);
 
         if (resultTitle.Contains(topicTitle) ||
             topicTitle.Contains(resultTitle))
             return true;
-        
-        Console.WriteLine(result.Title + " != " + topic.Title);
+
         return false;
     }
 
@@ -51,6 +55,11 @@ public static class SearchResultValidation
         .StrJoin(" ");
 
     private static string SanitizeAuthor(string s) => s
+        .Replace("M", "М")
+        .Replace("P", "Р")
+        .Replace("T", "Т")
+        .Replace("H", "Н")
+        .Replace("B", "В")
         .ToLower()
         .Replace("&", ",")
         .Replace("_", " ")
