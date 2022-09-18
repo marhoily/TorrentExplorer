@@ -1,7 +1,9 @@
 ﻿using System.Text;
+using System.Text.RegularExpressions;
 using Tests.Html;
 using Tests.Utilities;
 using Xunit.Abstractions;
+using static System.StringComparison;
 using static Tests.Rutracker.SearchResultManagement;
 
 namespace Tests.Rutracker;
@@ -29,18 +31,28 @@ public class Search
         var topics = await CherryPickOnJson.Output.ReadJson<List<Story>>();
         var circuitBreaker = new CircuitBreaker();
         foreach (var topic in topics!)
-            if (topic.Title != null)
-                if (await GoThroughSearchEngines(circuitBreaker, topic))
-                    positive++;
-                else
-                    negative++;
+        {
+            if (topic.Title == null) continue;
+            if (topic.Title.StartsWith("Цикл", OrdinalIgnoreCase)) continue;
+            if (topic.Title.StartsWith("Серия", OrdinalIgnoreCase)) continue;
+            if (topic.Title.Contains("Полный Сезон", OrdinalIgnoreCase)) continue;
+            if (topic.Title.Contains("Антология", OrdinalIgnoreCase)) continue;
+            if (topic.NumberInSeries is { } n)
+                if (Regex.IsMatch(n, "\\s*\\d+\\s*-\\s*\\d+\\s*"))
+                    continue;
+            if (await GoThroughSearchEngines(circuitBreaker, topic))
+                positive++;
+            else
+                negative++;
+        }
+
         _testOutputHelper.WriteLine($"Positive: {positive}; Negative: {negative}");
     }
 
     private static async Task<bool> GoThroughSearchEngines(CircuitBreaker circuitBreaker, Story topic)
     {
         var q = GetQuery(topic);
-        if (!await NeedToContinue(topic, RefreshWhen.Always, 6092533))
+        if (!await NeedToContinue(topic, RefreshWhen.Always, 3845368))
             return false;
 
         var negativeSearchResults = new List<SearchResult>();
