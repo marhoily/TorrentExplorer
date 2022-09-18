@@ -56,9 +56,11 @@ public static class HtmlExtensions
     }
     public static IEnumerable<HtmlNode> SelectSubNodes(this HtmlNode node, string xpath)
     {
-        var parentXPath = node.XPath;
-        return (node.SelectNodes(xpath) ?? Enumerable.Empty<HtmlNode>())
-            .Where(y => y.XPath.StartsWith(parentXPath));
+        var xPath = node.XPath;
+        var result = node.SelectNodes(xpath) ?? Enumerable.Empty<HtmlNode>();
+        return node.NodeType != HtmlNodeType.Document 
+            ? result.Where(y => y.XPath.StartsWith(xPath)) 
+            : result;
     }
 
     private static readonly ApplyResultMarker Stub = new();

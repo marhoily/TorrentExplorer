@@ -4,7 +4,7 @@ namespace Tests.Rutracker;
 
 public static class SearchResultValidation
 {
-    public static bool ValidateSearchResultMatches(this SearchResult result, Story topic)
+    public static bool ValidateSearchResultMatches(this SearchResultItem result, Story topic)
     {
         if (topic.Author != null)
         {
