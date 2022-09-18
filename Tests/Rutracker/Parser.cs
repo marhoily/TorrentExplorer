@@ -9,9 +9,12 @@ namespace Tests.Rutracker;
 
 public static class Known
 {
-    public static bool IsKnownTag(this string value) => 
-        !string.IsNullOrWhiteSpace(value) &&
-        Tags.Any(t => Eq(value, t));
+    public static bool IsKnownTag(this string value)
+    {
+        var strip = value.Replace("&nbsp;", "");
+        return !string.IsNullOrWhiteSpace(strip) &&
+               Tags.Any(t => Eq(strip, t));
+    }
 
     private static bool Eq(string value, string tag) =>
         value.StartsWith(tag) && 
@@ -33,6 +36,8 @@ public static class Known
         "Исполнитель и звукорежиссёр",
         "Цикл",
         "Цикл/серия",
+        "Серия",
+        "Теги",
         "Номер книги",
         "Жанр",
         "Время звучания"
@@ -204,7 +209,7 @@ public static class Parser
 
     private static (string?, string?) GetSeries(Dictionary<string, object> post)
     {
-        var rawSeries = post.FindTags("Цикл", "Цикл/серия");
+        var rawSeries = post.FindTags("Цикл", "Цикл/серия", "Серия");
         if (rawSeries != null && string.IsNullOrWhiteSpace(rawSeries))
             return ("<YES>", null);
         var wrap = rawSeries ?? GetSeriesFromSpoiler(post);

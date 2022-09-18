@@ -19,7 +19,9 @@ public static class HtmlExtensions
     {
         var style = node.GetAttributeValue("style", null);
         return style?.Split(';', RemoveEmptyEntries)
-            .ToDictionary(x => x.Split(": ")[0], x => x.Split(": ")[1]);
+            .Select(x => x.Split(StyleKvSeparator, RemoveEmptyEntries))
+            .Where(x => x.Length == 2)
+            .ToDictionary(x => x[0], x => x[1]);
     }
 
     public static string? GetStyle(this HtmlNode node, string propertyName)
@@ -50,9 +52,7 @@ public static class HtmlExtensions
 
     public static HtmlNode? SelectSubNode(this HtmlNode node, string xpath)
     {
-        var parentXPath = node.XPath;
-        return (node.SelectNodes(xpath) ?? Enumerable.Empty<HtmlNode>())
-            .FirstOrDefault(y => y.XPath.StartsWith(parentXPath));
+        return node.SelectSubNodes(xpath).FirstOrDefault();
     }
     public static IEnumerable<HtmlNode> SelectSubNodes(this HtmlNode node, string xpath)
     {
@@ -64,6 +64,8 @@ public static class HtmlExtensions
     }
 
     private static readonly ApplyResultMarker Stub = new();
+    private static readonly string[] StyleKvSeparator = {":", "="};
+
     public sealed class WalkConfig<TResult>
     {
         public bool Stop { get; private set; }

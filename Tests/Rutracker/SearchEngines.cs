@@ -57,7 +57,7 @@ public static class SearchEngines
 
     private static async Task<SearchResult> Knigorai(Http http, Story topic, string q)
     {
-        var relativeUri = $"?q={q}";
+        var relativeUri = $"?q={WebUtility.UrlEncode(q)}";
         var node = await http.Knigorai(relativeUri);
         return new SearchResult(
             new Uri(new Uri("https://knigorai.com"), relativeUri).ToString(),
@@ -69,7 +69,7 @@ public static class SearchEngines
 
     private static async Task<SearchResult> ReadliNet(Http http, Story topic, string q)
     {
-        var requestUri = $"srch/?q={q}";
+        var requestUri = $"srch/?q={WebUtility.UrlEncode(q)}";
         var node = await http.ReadliNet(requestUri);
         var items = await Task.WhenAll(
             node.SelectSubNodes("//div[@id='books']/article")
@@ -159,10 +159,17 @@ public static class SearchEngines
             authors, series, null);
     }
 
+    private static readonly WallCollector WallCollector = new ();
     private static async Task<SearchResultItem?> ParseReadliItem(Http http, HtmlNode article)
     {
-        var bookRef = article.SelectSubNode("//h4[@class='book__title']")!;
-        await http.ReadliNet(bookRef.Href()!);
+        var bookRef = article.SelectSubNode("//h4[@class='book__title']/a")!;
+        var book = await http.ReadliNet(bookRef.Href()!);
+        var series = book
+            .SelectSubNode("//div[@class='js-from-4']")?
+            .ParseWall()
+            .Single()
+            .FindTags("Серия");
+       
         var title = bookRef.InnerText.Trim();
         var authors = article.SelectSubNodes("//div[@class='book__authors-wrap']//a[@class='book__link']")
             .Concat(article.SelectSubNodes("//div[@class='book__authors-wrap']//a[@class='authors-hide__link']"))

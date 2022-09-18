@@ -11,16 +11,9 @@ public class WallParsing
     {
         var raw = await Step0.Output.ReadJson<string[]>();
         var posts = raw ?? Array.Empty<string>();
-        await Output.SaveJson(Extract(posts).ToList());
-    }
-
-    private static IEnumerable<List<Dictionary<string, object>>> Extract(string[] posts)
-    {
-        foreach (var post in posts.Select(html => html.ParseHtml()))
-        {
-            var collector = new WallCollector();
-            collector.Parse(post.ChildNodes[0]);
-            yield return collector.Sections;
-        }
+        await Output.SaveJson(
+            posts.Select(html => html.ParseHtml())
+                .Select(post => post.ChildNodes[0].ParseWall())
+                .ToList());
     }
 }

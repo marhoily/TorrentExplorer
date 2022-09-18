@@ -6,9 +6,10 @@ namespace Tests.Rutracker;
 
 public static class RutrackerPrimitives
 {
-    public static int GetTopicId(this HtmlNode node)
+    public static int? GetTopicId(this HtmlNode node)
     {
         var attributeValue = node.GetAttributeValue("data-ext_link_data", null);
+        if (attributeValue == null) return null;
         var jObject = JObject.Parse(attributeValue);
         var topicId = jObject["t"]!.Value<int>();
         return topicId;

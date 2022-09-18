@@ -4,13 +4,13 @@ namespace Tests.Rutracker;
 
 internal sealed class WallCollectorState
 {
-    public int TopicId { get; }
+    public int? TopicId { get; }
     private List<string> _currentHeaders = new();
     private List<string> _currentSpoilers = new();
     private readonly Dictionary<string, object> _currentSection = new();
     public List<Dictionary<string, object>> Sections { get; } = new();
 
-    public WallCollectorState(int topicId)
+    public WallCollectorState(int? topicId)
     {
         TopicId = topicId;
     }
@@ -18,12 +18,14 @@ internal sealed class WallCollectorState
     public void PushCurrentSection()
     {
         if (_currentSection.Count <= 0) return;
-        var tmp = new Dictionary<string, object>
+        var tmp = new Dictionary<string, object>();
+        if (TopicId != null)
         {
-            ["topic-id"] = TopicId,
-            ["url"] = $"https://rutracker.org/forum/viewtopic.php?t={TopicId}",
-            ["headers"] = _currentHeaders
-        };
+            tmp["topic-id"] = TopicId;
+            tmp["url"] = $"https://rutracker.org/forum/viewtopic.php?t={TopicId}";
+        }
+
+        tmp["headers"] = _currentHeaders;
         foreach (var (k, v) in _currentSection) tmp.Add(k, v);
         if (_currentSpoilers.Count > 0)
         {

@@ -3,18 +3,42 @@ using Tests.Utilities;
 
 namespace Tests.Rutracker;
 
+public sealed class Cursor
+{
+    private readonly string _ceiling;
+    public HtmlNode? Node { get; private set; }
+
+    public Cursor(HtmlNode node)
+    {
+        Node = node;
+        _ceiling = node.XPath;
+    }
+
+    public void Set(HtmlNode? value) => 
+        Node = value?.XPath.StartsWith(_ceiling) != true ? null : value;
+    public void GoFurther() => Set(Node?.GoFurther());
+    public void GoDeeper() => Set(Node?.GoDeeper());
+    
+}
+
+public static class WallCollectorExt
+{
+    public static List<Dictionary<string, object>> ParseWall(this HtmlNode htmlNode) => 
+        new WallCollector().Parse(htmlNode);
+}
+
 public sealed class WallCollector
 {
-    public List<Dictionary<string, object>> Sections => _state.Sections;
     private WallCollectorState _state = null!;
-    private HtmlNode? _currentNode;
+    private Cursor _cursor = null!;
 
-    public void Parse(HtmlNode htmlNode)
+    public List<Dictionary<string, object>> Parse(HtmlNode htmlNode)
     {
         _state = new WallCollectorState(htmlNode.GetTopicId());
-        _currentNode = htmlNode;
+        _cursor = new Cursor(htmlNode);
         MoveOn();
         _state.PushCurrentSection();
+        return _state.Sections;
     }
 
     private void MoveOn()
@@ -22,41 +46,42 @@ public sealed class WallCollector
         if (_state.TopicId == 3470993)
             1.ToString();
         var body = false;
-        while (_currentNode != null)
+        while (_cursor.Node != null)
         {
-            if (_currentNode.IsHeader())
+            if (_cursor.Node.IsHeader())
             {
                 if (body)
                 {
                     _state.PushCurrentSection();
                     body = false;
                 }
-                _state.AddHeader(_currentNode.InnerText);
-                _currentNode = _currentNode.GoFurther();
+
+                _state.AddHeader(_cursor.Node.InnerText);
+                _cursor.GoFurther();
             }
-            else if (_currentNode.InnerText.IsKnownTag())
+            else if (_cursor.Node.InnerText.IsKnownTag())
             {
-                _currentNode = ProcessTag(_currentNode);
+                _cursor.Set(ProcessTag(_cursor.Node));
                 body = true;
             }
-            else if (_currentNode.HasClass("sp-wrap"))
+            else if (_cursor.Node.HasClass("sp-wrap"))
             {
-                _state.AddSpoiler(_currentNode
+                _state.AddSpoiler(_cursor.Node
                     .SelectSubNode("div[@class='sp-head folded']")!
                     .InnerText);
-                _currentNode = _currentNode.GoFurther();
+                _cursor.GoFurther();
                 body = true;
             }
             else
             {
-                _currentNode = _currentNode?.GoDeeper();
+                _cursor.GoDeeper();
             }
         }
     }
 
     private HtmlNode ProcessTag(HtmlNode node)
     {
-        var key = node.InnerText.TrimEnd();
+        var key = node.InnerText.Replace("&nbsp;", " ").TrimEnd();
         var seenColon = key.EndsWith(":");
         var moved = false;
         while (!seenColon)
