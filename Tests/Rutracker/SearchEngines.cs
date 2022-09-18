@@ -37,6 +37,7 @@ public static class SearchEngines
         {
             VseAudioknigiCom,
             Knigorai,
+            AudioknigaComUa,
             AbooksInfo,
             ReadliNet,
             FanlabRu,
@@ -44,7 +45,7 @@ public static class SearchEngines
             //FlibustaSeries,
         };
 
-    private static readonly char[] Dashes = {'-', '–'};
+    private static readonly char[] Dashes = { '-', '–' };
 
     private static async Task<SearchResult> VseAudioknigiCom(Http http, Story topic, string q)
     {
@@ -56,6 +57,18 @@ public static class SearchEngines
                 .Select(ParseVseAudioknigiItem)
                 .WhereNotNull()
                 .ToList());
+    }
+
+    private static async Task<SearchResult> AudioknigaComUa(Http http, Story topic, string q)
+    {
+        var localUri = $"search?text={HttpUtility.UrlEncode(q)}";
+        var html = await http.AudioknigaComUa(localUri);
+        var results = await Task.WhenAll(
+            html.SelectSubNodes("//li[@class='b-statictop__items_item']//a")
+                .Select(x => AudioknigaComUa(http, x)));
+        return new SearchResult(
+            new Uri(new Uri("https://audiokniga.com.ua"), localUri).ToString(),
+            results.WhereNotNull().ToList());
     }
 
     private static async Task<SearchResult> Knigorai(Http http, Story topic, string q)
@@ -125,6 +138,21 @@ public static class SearchEngines
             : null;
     }
 
+    private static async Task<SearchResultItem?> AudioknigaComUa(Http http, HtmlNode book)
+    {
+        if (SplitByDash(book) is var (author, title))
+            return new SearchResultItem(null, title, author, null, null);
+
+        var href = book.Href()!;
+        var details = await http.AudioknigaComUa(href);
+        var items = details.SelectSubNodes("//ul[@class='breadcrumb']/li");
+        var last = items.TakeLast(2).ToList();
+        if (last.Count < 2) return null;
+        return new SearchResultItem(href,
+            WebUtility.HtmlDecode(last[1].InnerText.Trim()),
+            WebUtility.HtmlDecode(last[0].InnerText.Trim()), null, null);
+    }
+
     private static SearchResultItem? ParseKnigoraiItem(HtmlNode article)
     {
         var title = WebUtility.HtmlDecode(
@@ -149,7 +177,7 @@ public static class SearchEngines
         var authorAndTitle = SplitByDash(node!);
         if (authorAndTitle is not var (title, authors))
             return null;
-        
+
         var series = default(string);
 
         return new SearchResultItem(null,
@@ -181,7 +209,7 @@ public static class SearchEngines
 
     private static SearchResultItem? ParseFanlabItem(HtmlNode article)
     {
-        var title = article.SelectSubNode("//div[@class='title']/a")!.InnerText;
+        var title = article.SelectSubNode("//div[@class='title']//a")!.InnerText;
         var authors = article.SelectSubNodes("//div[@class='autor']/a").StrJoin(a => a.InnerText);
         if (string.IsNullOrWhiteSpace(authors))
             return null;

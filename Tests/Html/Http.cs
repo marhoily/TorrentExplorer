@@ -23,15 +23,21 @@ public class Http
 
     public async Task<string> Get(string localUri) =>
         await Get(localUri, localUri);
-    public async Task<string> Get(Uri uri) =>
-        await Get(uri.ToString(), uri.ToString());
+    public async Task<string> Get(Uri uri, HashSet<int>? errorsAsNull = default) =>
+        await Get(uri.ToString(), uri.ToString(), errorsAsNull);
 
-    public async Task<string> Get(string key, string localUri)
+    public async Task<string> Get(string key, string localUri, HashSet<int>? errorsAsNull = default)
     {
         var cachedValue = await _cache.TryGetValue(key);
         if (cachedValue != null) return cachedValue;
         var message = new HttpRequestMessage(HttpMethod.Get, localUri);
         var result = await _client.SendAsync(message);
+        if (errorsAsNull?.Contains((int)result.StatusCode) == true)
+        {
+            var r = $"<Error>{result.StatusCode}<Error>";
+            await _cache.SaveValue(key, r);
+            return r;
+        }
         if ((int)result.StatusCode == 404)
             throw new Exception("Page is not found");
         if ((int)result.StatusCode >= 400)

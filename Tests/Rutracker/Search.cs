@@ -52,7 +52,7 @@ public class Search
     private static async Task<bool> GoThroughSearchEngines(CircuitBreaker circuitBreaker, Story topic)
     {
         var q = GetQuery(topic);
-        if (!await NeedToContinue(topic, RefreshWhen.Always, 3845368))
+        if (!await NeedToContinue(topic, RefreshWhen.Always, 4727288))
             return false;
 
         var negativeSearchResults = new List<SearchResult>();
