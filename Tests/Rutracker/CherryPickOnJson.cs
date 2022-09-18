@@ -11,8 +11,7 @@ public class CherryPickOnJson
     {
         var posts = await WallParsing.Output.ReadJson<Dictionary<string, object>[][]>();
         await Output.SaveJson(posts!
-            // .SelectMany(p => p)
-            .Select(p => p.FirstOrDefault())
+            .SelectMany(p => p)
             .WhereNotNull()
             .Select(section => section.ParseRussianFantasyTopic())
             .Where(result => result != null)

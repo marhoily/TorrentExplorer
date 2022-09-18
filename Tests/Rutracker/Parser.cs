@@ -58,6 +58,12 @@ public sealed record Series : Topic;
 
 public static class Parser
 {
+    private static readonly Regex SeriesRgx =
+        new("\\s+\\(" +
+            "(Книга|книга|Часть|часть|Том|том)" +
+            "\\s+(?<num>первая|вторая|третья|четвертая|пятая|I{1,3}|IV|V{0,3}|\\d+)" +
+            "\\)ξ");
+
     public static Header[] ParseRussianFantasyHeaders(this HtmlNode node)
     {
         return node.SelectNodes("//tr[@class='hl-tr']/td[1]")
@@ -78,8 +84,8 @@ public static class Parser
             "Aвтор", "Автор" /* different "A"? */, "Автора", "Авторы");
         var firstName = post.FindTags("Имя автора", "Имена авторов");
         var performer = post.FindTags("Исполнитель", "Исполнители", "Исполнитель и звукорежиссёр");
-        var series = GetSeries(post);
-        var numberInSeries = post.FindTag("Номер книги");
+        var (series, num) = GetSeries(post);
+        var numberInSeries = post.FindTag("Номер книги") ?? num;
         var genre = post.FindTag("Жанр");
         var playTime = post.FindTag("Время звучания");
         var title = GetTitle(post, series, firstName, lastName);
@@ -163,8 +169,8 @@ public static class Parser
 
             var t1 = Regex.Replace(title, 
                     series + "(\n|. )" +
-                    "(Книга|Часть|Том) " +
-                    "(первая|вторая|третья|I|II|III|IV|V|VI|VII|\\d+)" +
+                    "(Книга|книга|Часть|часть|Том|том)" +
+                    "\\s+(первая|вторая|третья|четвертая|пятая|I{1,3}|IV|V{0,3}|\\d+)" +
                     "(\\.|,)", "")
                 .Trim();
             if (string.IsNullOrWhiteSpace(t1))
@@ -196,16 +202,25 @@ public static class Parser
         return a + " " + b;
     }
 
-    private static string? GetSeries(Dictionary<string, object> post)
+    private static (string?, string?) GetSeries(Dictionary<string, object> post)
     {
         var rawSeries = post.FindTags("Цикл", "Цикл/серия");
         if (rawSeries != null && string.IsNullOrWhiteSpace(rawSeries))
-            return "<YES>";
+            return ("<YES>", null);
         var wrap = rawSeries ?? GetSeriesFromSpoiler(post);
-        return wrap?.TrimEnd(':',' ')
+        var unbrace = wrap?.TrimEnd(':',' ','-')
             .Trim()
             .Unquote()
             .Unbrace('«', '»');
+        if (unbrace == null) return (null, null);
+
+        var match = SeriesRgx.Match(unbrace+"ξ");
+        if (!match.Success) return (unbrace, null);
+        var s = SeriesRgx.Replace(unbrace + "ξ", "")
+            .Trim()
+            .Unquote()
+            .Unbrace('«', '»');
+        return (s, match.Groups["num"].Value);
 
         static string? GetSeriesFromSpoiler(Dictionary<string, object> post)
         {
