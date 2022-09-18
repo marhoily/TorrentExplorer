@@ -8,49 +8,17 @@ public static class SearchResultValidation
     {
         if (topic.Author != null)
         {
-            if (!CompareAuthors(Sanitize(result.Author), Sanitize(topic.Author)))
+            if (!CompareAuthors(
+                    SanitizeAuthor(result.Author), 
+                    SanitizeAuthor(topic.Author)))
             {
                 Console.WriteLine(result.Author + " != " + topic.Author);
                 return false;
             }
         }
 
-        string Scrape(string s) => s
-            .Replace('ё', 'e')
-            .Replace('й', 'и')
-            .Replace('е', 'e')
-            .Replace('c', 'с') //русский..topic
-            .Replace('а', 'a') //русский..topic
-            .Replace('о', 'o') //русский..topic
-            .Replace('х', 'x') //русский..topic
-            .Replace('–', '-') //русский..topic
-            .Replace("«", "")
-            .Replace("»", "")
-            .Replace("\"", "")
-            .Replace(",", ", ")
-            .Replace("  ", " ")
-            .Split(' ', '.', '-')
-            .Where(c => !string.IsNullOrWhiteSpace(c))
-            .Select(c => c.ToLower())
-            .StrJoin(" ");
-
-        string Sanitize(string s) => s
-            .ToLower()
-            .Replace("&", ",")
-            .Replace("_", " ")
-            .Replace('ё', 'e')
-            .Replace('е', 'e')
-            .Replace('c', 'с') //русский..topic
-            .Replace('а', 'a') //русский..topic
-            .Replace('о', 'o') //русский..topic
-            .Replace('х', 'x') //русский..topic
-            .Replace("(", " ")
-            .Replace(")", " ")
-            .Replace("[", " ")
-            .Replace("]", " ");
-
-        var resultTitle = Scrape(result.Title);
-        var topicTitle = Scrape(topic.Title!);
+        var resultTitle = ScrapeTopic(result.Title);
+        var topicTitle = ScrapeTopic(topic.Title!);
         if (resultTitle.Contains(topicTitle) ||
             topicTitle.Contains(resultTitle))
             return true;
@@ -58,6 +26,41 @@ public static class SearchResultValidation
         Console.WriteLine(result.Title + " != " + topic.Title);
         return false;
     }
+
+    private static string ScrapeTopic(string s) => s
+        .Replace('ё', 'e')
+        .Replace('й', 'и')
+        .Replace('е', 'e')
+        .Replace('c', 'с') //русский..topic
+        .Replace('а', 'a') //русский..topic
+        .Replace('о', 'o') //русский..topic
+        .Replace('х', 'x') //русский..topic
+        .Replace('–', '-') //русский..topic
+        .Replace("«", "")
+        .Replace("»", "")
+        .Replace("\"", "")
+        .Replace(",", ", ")
+        .Replace("  ", " ")
+        .Split(' ', '.', '-')
+        .Where(c => !string.IsNullOrWhiteSpace(c))
+        .Select(c => c.ToLower())
+        .StrJoin(" ");
+
+    private static string SanitizeAuthor(string s) => s
+        .ToLower()
+        .Replace("&", ",")
+        .Replace("_", " ")
+        .Replace('ё', 'e')
+        .Replace('е', 'e')
+        .Replace('c', 'с') //русский..topic
+        .Replace('а', 'a') //русский..topic
+        .Replace('о', 'o') //русский..topic
+        .Replace('х', 'x') //русский..topic
+        .Replace("(", " ")
+        .Replace(")", " ")
+        .Replace("[", " ")
+        .Replace("]", " ");
+
 
     private static bool CompareAuthors(string formal, string manual)
     {
