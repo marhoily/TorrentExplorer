@@ -1,8 +1,43 @@
+using System.Data;
+using ServiceStack.DataAnnotations;
+using ServiceStack.OrmLite;
 using Tests.Utilities;
 
 namespace Tests.Html;
 
-public sealed class HtmlCache
+public interface IHtmlCache
+{
+    Task<string?> TryGetValue(string key);
+    Task SaveValue(string key, string value);
+}
+
+public sealed record CacheLine([property: PrimaryKey] string Key, string Value);
+public sealed class SqliteCache : IHtmlCache
+{
+    private readonly IDbConnection _db;
+
+    public SqliteCache(CachingStrategy cachingStrategy)
+    {
+        var dbFactory = new OrmLiteConnectionFactory(
+            @"C:\temp\TorrentsExplorerData\HtmlCache.db",
+            SqliteDialect.Provider);
+        _db = dbFactory.OpenDbConnection();
+        _db.CreateTableIfNotExists<CacheLine>();
+    }
+
+    public async Task<string?> TryGetValue(string key)
+    {
+        var cacheLine = await _db.SingleByIdAsync<CacheLine>(key);
+        return cacheLine?.Value;
+    }
+
+    public async Task SaveValue(string key, string value)
+    {
+        await _db.SaveAsync(new CacheLine(key, value));
+    }
+}
+
+public sealed class HtmlCache : IHtmlCache
 {
     private readonly CachingStrategy _strategy;
     private readonly string _folder;

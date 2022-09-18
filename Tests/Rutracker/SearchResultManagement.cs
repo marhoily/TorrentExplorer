@@ -45,7 +45,7 @@ public static class SearchResultManagement
 
     public enum RefreshWhen
     {
-        All,
+        Always,
         Missing,
         Positives,
         Negatives,
@@ -58,10 +58,10 @@ public static class SearchResultManagement
     public static async Task<bool> NeedToContinue(
         Story topic, string q, RefreshWhen refreshWhen, int preferId = 6257895)
     {
-        if (topic.TopicId != preferId) return true;
+        if (topic.TopicId == preferId) return true;
         return refreshWhen switch
         {
-            RefreshWhen.All => true,
+            RefreshWhen.Always => true,
             RefreshWhen.Missing => GetOutcome(topic.TopicId) is null,
             RefreshWhen.Positives => GetOutcome(topic.TopicId) is Outcome.Positive or null,
             RefreshWhen.Negatives => GetOutcome(topic.TopicId) is Outcome.Negative or null,

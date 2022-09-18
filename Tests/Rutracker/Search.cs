@@ -8,11 +8,23 @@ namespace Tests.Rutracker;
 public class Search
 {
     private static readonly Http Html = new(
-        new HtmlCache(CacheLocation.Temp, CachingStrategy.AlwaysMiss),
+        new SqliteCache(CachingStrategy.AlwaysMiss),
         Encoding.Default);
 
 
     public const string Output = @"C:\temp\TorrentsExplorerData\Extract\Search\output.json";
+    /*
+    [Fact]
+    public async Task ChangeFormat()
+    {
+        var negative = @"C:\temp\TorrentsExplorerData\Extract\SearchResults";
+        foreach (var n in Directory.GetFiles(negative))
+            yield return await n.ReadJson<Dictionary<string, string>>();
+        var positive = @"C:\temp\TorrentsExplorerData\Extract\Search-Positive";
+        foreach (var p in Directory.GetFiles(positive))
+            yield return await p.ReadJson<Dictionary<string, string>>();
+
+    }  */  
 
     [Fact]
     public async Task Do()
@@ -27,9 +39,8 @@ public class Search
     private static async Task GoThroughSearchEngines(CircuitBreaker circuitBreaker, Story topic)
     {
         var q = GetQuery(topic);
-        if (await NeedToContinue(topic, q, RefreshWhen.QueryStringChange))
-            if (GetOutcome(topic.TopicId) == Outcome.Positive)
-                return;
+        if (!await NeedToContinue(topic, q, RefreshWhen.Always))
+            return;
 
         var negativeSearchResults = new List<SearchResult>();
         foreach (var searchEngine in SearchEngines.List)
@@ -53,7 +64,7 @@ public class Search
 
         await Save(topic.TopicId, new { topic, q, negativeSearchResults }, Outcome.Negative);
     }
-    
+
     private static string GetQuery(Story topic)
     {
         var title = topic.Title;
@@ -68,5 +79,5 @@ public class Search
         }
 
         return title + " - " + topic.Author;
-    }    
+    }
 }

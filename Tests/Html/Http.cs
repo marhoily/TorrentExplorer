@@ -5,11 +5,11 @@ namespace Tests.Html;
 
 public class Http
 {
-    private readonly HtmlCache _cache;
+    private readonly IHtmlCache _cache;
     private readonly HttpClient _client;
     private readonly Encoding _encoding;
 
-    public Http(HtmlCache cache, Encoding encoding)
+    public Http(IHtmlCache cache, Encoding encoding)
     {
         _cache = cache;
         _encoding = encoding;

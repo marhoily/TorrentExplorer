@@ -28,7 +28,7 @@ public static class SearchEngines
     private static async Task<SearchResult?> VseAudioknigiCom(Http http, Story topic, string q)
     {
         var localUri = $"https://vse-audioknigi.com/search?text={HttpUtility.UrlEncode(q)}";
-        var html = await http.Get($"vse-audioknigi.com/{topic.TopicId:D8}", localUri);
+        var html = await http.Get($"vse-audioknigi.com/{q}", localUri);
         var r = WebUtility.HtmlDecode(html.ParseHtml()
             .SelectSingleNode("//li[@class='b-statictop__items_item']//a")?
             .InnerText);
@@ -43,7 +43,7 @@ public static class SearchEngines
     private static async Task<SearchResult?> ReadliNet(Http http, Story topic, string q)
     {
         var requestUri = $"https://readli.net/srch/?q={HttpUtility.UrlEncode(q)}";
-        var html = await http.Get($"readli.net/{topic.TopicId:D8}",
+        var html = await http.Get($"readli.net/{q}",
             new HttpRequestMessage(HttpMethod.Get, requestUri)
             {
                 Headers =
@@ -75,7 +75,7 @@ public static class SearchEngines
     private static async Task<SearchResult?> Knigorai(Http http, Story topic, string q)
     {
         var requestUri = $"https://knigorai.com/?q={HttpUtility.UrlEncode(q)}";
-        var html = await http.Get($"knigorai.com/{topic.TopicId:D8}", requestUri);
+        var html = await http.Get($"knigorai.com/{q}", requestUri);
         var article = html.ParseHtml()
             .SelectSingleNode("//div[@class='book-item panel panel-default']");
         if (article == null) return null;
@@ -92,7 +92,7 @@ public static class SearchEngines
     private static async Task<SearchResult?> FanlabRu(Http http, Story topic, string q)
     {
         var requestUri = $"https://fantlab.ru/searchmain?searchstr={HttpUtility.UrlEncode(q)}";
-        var html = await http.Get($"fantlab.ru/{topic.TopicId:D8}",
+        var html = await http.Get($"fantlab.ru/{q}",
             new HttpRequestMessage(HttpMethod.Get, requestUri)
             {
                 Headers =
@@ -129,7 +129,7 @@ public static class SearchEngines
     private static async Task<SearchResult?> AuthorToday(Http http, Story topic, string q)
     {
         var requestUri = $"https://author.today/search?category=works&q={HttpUtility.UrlEncode(q)}";
-        var html = await http.Get($"author.today/{topic.TopicId:D8}",
+        var html = await http.Get($"author.today/{q}",
             new HttpRequestMessage(HttpMethod.Get, requestUri)
             {
                 Headers =
@@ -158,7 +158,7 @@ public static class SearchEngines
     private static async Task<SearchResult?> FlibustaSeries(Http http, Story topic, string q)
     {
         var requestUri = $"https://flibusta.site/booksearch?chs=on&ask={HttpUtility.UrlEncode(topic.Series)}";
-        var searchHtml = await http.Get($"flibusta.site/{topic.TopicId:D8}", requestUri);
+        var searchHtml = await http.Get($"flibusta.site/{q}", requestUri);
 
 
         var seriesHref = searchHtml.ParseHtml()
