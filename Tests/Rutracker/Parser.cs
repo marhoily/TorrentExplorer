@@ -82,7 +82,7 @@ public static class Parser
     public static Topic? ParseRussianFantasyTopic(this Dictionary<string, object> post)
     {
         var topicId = post.FindTag("topic-id")!.ParseInt();
-        if (topicId == 3470993)
+        if (topicId == 5903923)
             1.ToString();
         var year = post.FindTag("Год выпуска")?.TrimEnd('.', 'г', ' ');
         var lastName = post.FindTags("Фамилия автора", "Фамилии авторов", 
@@ -113,7 +113,7 @@ public static class Parser
         var s2 = RemoveAuthorPrefixFromTitle(s1, firstName, secondName);
         var s3 = RemoveSeriesPrefixFromTitle(s2, series);
         var s4 = RemoveAuthorPrefixFromTitle(s3, firstName, secondName);
-        return s4.Trim('•', ' ').Unbrace('<', '>').CompressIfPossible();
+        return s4.Trim('•', ' ').Unquote().Unbrace('<', '>').CompressIfPossible();
 
         static string? GetRawTitle(Dictionary<string, object> post, string? series)
         {
@@ -182,10 +182,12 @@ public static class Parser
                 return title.Replace(series, "").TrimStart('\n', ' ', '.');
             if (t1 != title) return t1;
 
-            var t2 = Regex.Replace(title, series + " (\\d)*(\\.|,)", "").Trim();
-            if (t2 != title) return t2;
-            var t3 = Regex.Replace(title, series + "( |-)(\\d)*(\\.|,)", "").Trim();
+            var t3 = Regex.Replace(title, 
+                series + "\\s*(-|,)?\\s*\\d+(\\.|,|:)", "").Trim();
             if (t3 != title) return t3;
+            var t2 = Regex.Replace(title, 
+                series + "\\s*(\\.|:|-)\\s*", "").Trim();
+            if (t2 != title && !int.TryParse(t2.Trim(), out _)) return t2;
             var t4 = title.Replace(series + ".", "").Trim();
             if (t4 != title) return t4;
             return title;
