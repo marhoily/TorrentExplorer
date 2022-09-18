@@ -70,6 +70,13 @@ public static class SiteUrls
         return html.ParseHtml();
     }
 
+    public static async Task<HtmlNode> MyBookRu(this Http http, string localUrl)
+    {
+        var uri = new Uri(new Uri("https://mybook.ru"), localUrl);
+        var html = await http.Get(uri);
+        return html.ParseHtml();
+    }
+
     public static async Task<HtmlNode> ReadliNet(this Http http, string localUrl)
     {
         var requestUri = new Uri(new Uri("https://readli.net"), localUrl);

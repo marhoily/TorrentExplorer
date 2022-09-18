@@ -40,6 +40,7 @@ public static class SearchEngines
             AudioknigaComUa,
             AbooksInfo,
             ReadliNet,
+            MyBookRu,
             FanlabRu,
             AuthorToday,
             //FlibustaSeries,
@@ -105,6 +106,16 @@ public static class SearchEngines
         return new SearchResult(
             new Uri(new Uri("https://readli.net"), requestUri).ToString(),
             items.WhereNotNull().ToList());
+    }
+    private static async Task<SearchResult> MyBookRu(Http http, Story topic, string q)
+    {
+        var requestUri = $"search/?q={WebUtility.UrlEncode(q)}";
+        var node = await http.MyBookRu(requestUri);
+        return new SearchResult(
+            new Uri(new Uri("https://mybook.ru"), requestUri).ToString(),
+            node.SelectSubNodes("//div[@class='e4xwgl-0 iJwsmp']")
+                .Select(MyBookRu)
+                .ToList());
     }
 
     private static async Task<SearchResult> FanlabRu(Http http, Story topic, string q)
@@ -183,6 +194,18 @@ public static class SearchEngines
         return new SearchResultItem(null,
             SearchUtilities.GetTitle(title, series),
             authors, series, null);
+    }
+
+    private static SearchResultItem MyBookRu(HtmlNode article)
+    {
+        var title = article.SelectSubNode(
+            "//p[@class='lnjchu-1 hhskLb']")!.InnerText;
+        var author = article.SelectSubNode(
+            "//div[@class='m4n24q-0 gFPQgy']")!.InnerText;
+        
+        var series = default(string);
+
+        return new SearchResultItem(null, title, author, series, null);
     }
 
     private static async Task<SearchResultItem?> ParseReadliItem(Http http, HtmlNode article)
