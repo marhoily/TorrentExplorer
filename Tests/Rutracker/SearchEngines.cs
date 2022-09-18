@@ -45,11 +45,11 @@ public static class SearchEngines
 
     private static async Task<SearchResult> VseAudioknigiCom(Http http, Story topic, string q)
     {
-        var localUri = $"https://vse-audioknigi.com/search?text={HttpUtility.UrlEncode(q)}";
-        var html = await http.Get($"vse-audioknigi.com/{q}", localUri);
-        return new SearchResult(localUri,
-            html.ParseHtml()
-                .SelectSubNodes("//li[@class='b-statictop__items_item']//a")
+        var localUri = $"search?text={HttpUtility.UrlEncode(q)}";
+        var html = await http.VseAudioknigiCom(localUri);
+        return new SearchResult(
+            new Uri(new Uri("https://vse-audioknigi.com"), localUri).ToString(),
+            html.SelectSubNodes("//li[@class='b-statictop__items_item']//a")
                 .Select(ParseVseAudioknigiItem)
                 .WhereNotNull()
                 .ToList());
@@ -81,19 +81,12 @@ public static class SearchEngines
 
     private static async Task<SearchResult> FanlabRu(Http http, Story topic, string q)
     {
-        var requestUri = $"https://fantlab.ru/searchmain?searchstr={HttpUtility.UrlEncode(q)}";
-        var html = await http.Get($"fantlab.ru/{q}",
-            new HttpRequestMessage(HttpMethod.Get, requestUri)
-            {
-                Headers =
-                {
-                    { "Cookie", "_ym_uid=166312055796018485; _ym_d=1663120557; _ym_isad=1" },
-                }
-            });
+        var requestUri = $"searchmain?searchstr={HttpUtility.UrlEncode(q)}";
+        var html = await http.FanlabRu($"fantlab.ru/{q}", requestUri);
 
-        return new SearchResult(requestUri,
-            html.ParseHtml()
-                .SelectSubNodes("//div[@class='one']")
+        return new SearchResult(
+            new Uri(new Uri("https://fantlab.ru"), requestUri).ToString(),
+            html.SelectSubNodes("//div[@class='one']")
                 .Select(ParseFanlabItem)
                 .WhereNotNull()
                 .ToList());
@@ -101,27 +94,12 @@ public static class SearchEngines
 
     private static async Task<SearchResult> AuthorToday(Http http, Story topic, string q)
     {
-        var requestUri = $"https://author.today/search?category=works&q={HttpUtility.UrlEncode(q)}";
-        var html = await http.Get($"author.today/{q}",
-            new HttpRequestMessage(HttpMethod.Get, requestUri)
-            {
-                Headers =
-                {
-                    {
-                        "User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:104.0) Gecko/20100101 Firefox/104.0"
-                    },
-                    {
-                        "Cookie",
-                        "cf_clearance=A5_mD_kB1YWIoFzfEeU0zIbqvj.z10Msu0RtAitJLqs-1663341274-0-150; backend_route=web08; mobile-mode=false; CSRFToken=R5hHyUTpt0v1r-AfEUQq3d8VQBMc87bWeVNyYVoXZ24kEAsFxSb_fJqUmZEmBrXkELGfvGl2VMberYKix1z-tF3oL2A1; ngSessnCookie=AAAAANqSJGN1LP2AAZMgBg=="
-                    },
-                }
-            });
-
-        return new SearchResult(requestUri,
-            html.ParseHtml()
-                .SelectSubNodes("//div[@class='book-row']")
+        var requestUri = $"search?category=works&q={HttpUtility.UrlEncode(q)}";
+        var html = await http.AuthorToday($"author.today/{q}", requestUri);
+        return new SearchResult(
+            new Uri(new Uri("https://author.today"), requestUri).ToString(),
+            html.SelectSubNodes("//div[@class='book-row']")
                 .Select(ParseAuthorTodayItem)
-                .WhereNotNull()
                 .ToList());
     }
 
@@ -159,7 +137,6 @@ public static class SearchEngines
             authors, series, null);
     }
 
-    private static readonly WallCollector WallCollector = new ();
     private static async Task<SearchResultItem?> ParseReadliItem(Http http, HtmlNode article)
     {
         var bookRef = article.SelectSubNode("//h4[@class='book__title']/a")!;
@@ -179,7 +156,7 @@ public static class SearchEngines
 
         return new SearchResultItem(null, 
             WebUtility.HtmlDecode(title),
-            WebUtility.HtmlDecode(authors), null, null);
+            WebUtility.HtmlDecode(authors), series, null);
     }
 
     private static SearchResultItem? ParseFanlabItem(HtmlNode article)
@@ -193,7 +170,7 @@ public static class SearchEngines
             WebUtility.HtmlDecode(authors), null, null);
     }
 
-    private static SearchResultItem? ParseAuthorTodayItem(HtmlNode article)
+    private static SearchResultItem ParseAuthorTodayItem(HtmlNode article)
     {
         var title = article.SelectSingleNode("//div[@class='book-title']").InnerText.Trim();
         var authors = article.SelectSubNodes("//div[@class='book-author']/a").StrJoin(a => a.InnerText.Trim());
@@ -207,7 +184,6 @@ public static class SearchEngines
     {
         var requestUri = $"https://flibusta.site/booksearch?chs=on&ask={HttpUtility.UrlEncode(topic.Series)}";
         var searchHtml = await http.Get($"flibusta.site/{q}", requestUri);
-
 
         var seriesHref = searchHtml.ParseHtml()
             .SelectNodes("//li/a")

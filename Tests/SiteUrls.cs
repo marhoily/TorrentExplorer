@@ -71,11 +71,11 @@ public static class SiteUrls
         return html.ParseHtml();
     }
 
-    public static async Task<HtmlNode> FanlabRu(this Http http, string localUrl)
+    public static async Task<HtmlNode> FanlabRu(this Http http, string key, string localUrl)
     {
         var requestUri = new Uri(new Uri("https://fantlab.ru"), localUrl);
         const string cookie = "_ym_uid=166312055796018485; _ym_d=1663120557; _ym_isad=1";
-        var html = await http.Get(
+        var html = await http.Get(key,
             new HttpRequestMessage(HttpMethod.Get, requestUri)
             {
                 Headers =
@@ -86,11 +86,11 @@ public static class SiteUrls
         return html.ParseHtml();
     }
 
-    public static async Task<HtmlNode> AuthorToday(this Http http, string localUrl)
+    public static async Task<HtmlNode> AuthorToday(this Http http, string key, string localUrl)
     {
         var requestUri = new Uri(new Uri("https://author.today.ru"), localUrl);
         const string cookie = "cf_clearance=A5_mD_kB1YWIoFzfEeU0zIbqvj.z10Msu0RtAitJLqs-1663341274-0-150; backend_route=web08; mobile-mode=false; CSRFToken=R5hHyUTpt0v1r-AfEUQq3d8VQBMc87bWeVNyYVoXZ24kEAsFxSb_fJqUmZEmBrXkELGfvGl2VMberYKix1z-tF3oL2A1; ngSessnCookie=AAAAANqSJGN1LP2AAZMgBg==";
-        var html = await http.Get(
+        var html = await http.Get(key,
             new HttpRequestMessage(HttpMethod.Get, requestUri)
             {
                 Headers =
