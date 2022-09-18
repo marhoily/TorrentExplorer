@@ -37,11 +37,14 @@ public static class SearchEngines
         {
             VseAudioknigiCom,
             Knigorai,
+            AbooksInfo,
             ReadliNet,
             FanlabRu,
             AuthorToday,
             //FlibustaSeries,
         };
+
+    private static readonly char[] Dashes = {'-', '–'};
 
     private static async Task<SearchResult> VseAudioknigiCom(Http http, Story topic, string q)
     {
@@ -67,13 +70,25 @@ public static class SearchEngines
                 .ToList());
     }
 
+    private static async Task<SearchResult> AbooksInfo(Http http, Story topic, string q)
+    {
+        var relativeUri = $"?s={WebUtility.UrlEncode(q)}";
+        var node = await http.AbooksInfo(relativeUri);
+        return new SearchResult(
+            new Uri(new Uri("https://abooks.info"), relativeUri).ToString(),
+            node.SelectSubNodes("//article")
+                .Select(ParseAbooksInfoItem)
+                .WhereNotNull()
+                .ToList());
+    }
+
     private static async Task<SearchResult> ReadliNet(Http http, Story topic, string q)
     {
         var requestUri = $"srch/?q={WebUtility.UrlEncode(q)}";
         var node = await http.ReadliNet(requestUri);
         var items = await Task.WhenAll(
             node.SelectSubNodes("//div[@id='books']/article")
-            .Select(x => ParseReadliItem(http, x)));
+                .Select(x => ParseReadliItem(http, x)));
         return new SearchResult(
             new Uri(new Uri("https://readli.net"), requestUri).ToString(),
             items.WhereNotNull().ToList());
@@ -105,19 +120,9 @@ public static class SearchEngines
 
     private static SearchResultItem? ParseVseAudioknigiItem(HtmlNode book)
     {
-        return ParseAuthorAndTitle(book) is var (author, title)
+        return SplitByDash(book) is var (author, title)
             ? new SearchResultItem(null, title, author, null, null)
             : null;
-
-        static (string author, string title)? ParseAuthorAndTitle(HtmlNode link)
-        {
-            var authorAndTitle = WebUtility.HtmlDecode(link.InnerText);
-            var idx = authorAndTitle.LastIndexOf("-", StringComparison.InvariantCulture);
-            if (idx == -1) return null;
-            var title = authorAndTitle[..idx].Trim();
-            var author = authorAndTitle[(idx + 1)..].Trim();
-            return (author, title);
-        }
     }
 
     private static SearchResultItem? ParseKnigoraiItem(HtmlNode article)
@@ -132,7 +137,22 @@ public static class SearchEngines
         if (string.IsNullOrWhiteSpace(authors))
             return null;
 
-        return new SearchResultItem(null, 
+        return new SearchResultItem(null,
+            SearchUtilities.GetTitle(title, series),
+            authors, series, null);
+    }
+
+    private static SearchResultItem? ParseAbooksInfoItem(HtmlNode article)
+    {
+        var node = article.SelectSubNode(
+            "//h2[contains(@class,'entry-title')]/a");
+        var authorAndTitle = SplitByDash(node!);
+        if (authorAndTitle is not var (title, authors))
+            return null;
+        
+        var series = default(string);
+
+        return new SearchResultItem(null,
             SearchUtilities.GetTitle(title, series),
             authors, series, null);
     }
@@ -146,7 +166,7 @@ public static class SearchEngines
             .ParseWall()
             .Single()
             .FindTags("Серия");
-       
+
         var title = bookRef.InnerText.Trim();
         var authors = article.SelectSubNodes("//div[@class='book__authors-wrap']//a[@class='book__link']")
             .Concat(article.SelectSubNodes("//div[@class='book__authors-wrap']//a[@class='authors-hide__link']"))
@@ -154,7 +174,7 @@ public static class SearchEngines
         if (string.IsNullOrWhiteSpace(authors))
             return null;
 
-        return new SearchResultItem(null, 
+        return new SearchResultItem(null,
             WebUtility.HtmlDecode(title),
             WebUtility.HtmlDecode(authors), series, null);
     }
@@ -165,7 +185,7 @@ public static class SearchEngines
         var authors = article.SelectSubNodes("//div[@class='autor']/a").StrJoin(a => a.InnerText);
         if (string.IsNullOrWhiteSpace(authors))
             return null;
-        return new SearchResultItem(null, 
+        return new SearchResultItem(null,
             WebUtility.HtmlDecode(title),
             WebUtility.HtmlDecode(authors), null, null);
     }
@@ -174,7 +194,7 @@ public static class SearchEngines
     {
         var title = article.SelectSingleNode("//div[@class='book-title']").InnerText.Trim();
         var authors = article.SelectSubNodes("//div[@class='book-author']/a").StrJoin(a => a.InnerText.Trim());
-        return new SearchResultItem(null, 
+        return new SearchResultItem(null,
             WebUtility.HtmlDecode(title),
             WebUtility.HtmlDecode(authors), null, null);
     }
@@ -199,10 +219,18 @@ public static class SearchEngines
         var seriesPage = seriesHtml.ParseHtml();
         var title = seriesPage.SelectSingleNode("//table/tbody/tr[td/b='Авторы:']/td[2]").InnerText.Trim();
         var authors = seriesPage.SelectSubNodes("//table/tbody/tr[td/b='Авторы:']//a").StrJoin(a => a.InnerText.Trim());
-        var result = new SearchResultItem(null, 
+        var result = new SearchResultItem(null,
             WebUtility.HtmlDecode(title),
             WebUtility.HtmlDecode(authors), null, null);
         return new SearchResult(requestUri,
             new List<SearchResultItem> { result });
+    }
+
+    private static (string x, string y)? SplitByDash(HtmlNode link)
+    {
+        var input = WebUtility.HtmlDecode(link.InnerText);
+        var idx = input.LastIndexOfAny(Dashes);
+        if (idx == -1) return null;
+        return (input[(idx + 1)..].Trim(), input[..idx].Trim());
     }
 }
