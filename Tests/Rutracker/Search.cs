@@ -1,5 +1,6 @@
 ﻿using System.Text;
 using System.Text.RegularExpressions;
+using FluentAssertions;
 using Tests.Html;
 using Tests.Utilities;
 using Xunit.Abstractions;
@@ -47,6 +48,14 @@ public class Search
         }
 
         _testOutputHelper.WriteLine($"Positive: {positive}; Negative: {negative}");
+    }
+
+    [Fact]
+    public void CompressIfPossibleTest()
+    {
+        "Н Е Ч Е Л О В Е К".CompressIfPossible().Should().Be("НЕЧЕЛОВЕК");
+        "НЕ Ч Е Л О В  Е К".CompressIfPossible().Should().Be("НЕ Ч Е Л О В  Е К");
+        "Н Ч".CompressIfPossible().Should().Be("НЧ");
     }
 
     private static async Task<bool> GoThroughSearchEngines(CircuitBreaker circuitBreaker, Story topic)

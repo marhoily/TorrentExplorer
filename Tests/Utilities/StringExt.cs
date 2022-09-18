@@ -52,6 +52,14 @@ public static class StringExt
             : result;
     }
 
+    public static string CompressIfPossible(this string s)
+    {
+        var strings = s.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (strings.Length * 2 - 1 == s.Length)
+            return string.Concat(strings);
+        return s;
+    }
+
     public static int ParseIntOrWord(this string s)
     {
         return int.TryParse(s, out var result)

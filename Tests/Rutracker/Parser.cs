@@ -113,7 +113,7 @@ public static class Parser
         var s2 = RemoveAuthorPrefixFromTitle(s1, firstName, secondName);
         var s3 = RemoveSeriesPrefixFromTitle(s2, series);
         var s4 = RemoveAuthorPrefixFromTitle(s3, firstName, secondName);
-        return s4.Trim('•', ' ').Unbrace('<', '>');
+        return s4.Trim('•', ' ').Unbrace('<', '>').CompressIfPossible();
 
         static string? GetRawTitle(Dictionary<string, object> post, string? series)
         {
