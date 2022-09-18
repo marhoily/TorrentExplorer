@@ -50,9 +50,8 @@ public static class SiteUrls
 
     public static async Task<HtmlNode> Knigorai(this Http http, string localUrl)
     {
-        var html = await http.Get(new Uri(
-            new Uri("https://knigorai.com"),
-            localUrl));
+        var uri = new Uri(new Uri("https://knigorai.com"), localUrl);
+        var html = await http.Get(uri);
         return html.ParseHtml();
     }
 

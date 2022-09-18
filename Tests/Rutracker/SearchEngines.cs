@@ -11,6 +11,7 @@ namespace Tests.Rutracker;
 public sealed record SearchResult(string Url, List<SearchResultItem> Items);
 
 public sealed record SearchResultItem(
+    string? Url,
     string Title,
     string Author,
     string? SeriesName,
@@ -56,11 +57,11 @@ public static class SearchEngines
 
     private static async Task<SearchResult> Knigorai(Http http, Story topic, string q)
     {
-        var requestUri = $"https://knigorai.com/?q={HttpUtility.UrlEncode(q)}";
-        var html = await http.Get($"knigorai.com/{q}", requestUri);
-        return new SearchResult(requestUri,
-            html.ParseHtml()
-                .SelectSubNodes("//div[@class='book-item panel panel-default']")
+        var relativeUri = $"?q={q}";
+        var node = await http.Knigorai(relativeUri);
+        return new SearchResult(
+            new Uri(new Uri("https://knigorai.com"), relativeUri).ToString(),
+            node.SelectSubNodes("//div[@class='book-item panel panel-default']")
                 .Select(ParseKnigoraiItem)
                 .WhereNotNull()
                 .ToList());
@@ -68,14 +69,14 @@ public static class SearchEngines
 
     private static async Task<SearchResult> ReadliNet(Http http, Story topic, string q)
     {
-        var requestUri = $"srch/?q={HttpUtility.UrlEncode(q)}";
+        var requestUri = $"srch/?q={q}";
         var node = await http.ReadliNet(requestUri);
+        var items = await Task.WhenAll(
+            node.SelectSubNodes("//div[@id='books']/article")
+            .Select(x => ParseReadliItem(http, x)));
         return new SearchResult(
             new Uri(new Uri("https://readli.net"), requestUri).ToString(),
-            node.SelectSubNodes("//div[@id='books']/article")
-                .Select(ParseReadliItem)
-                .WhereNotNull()
-                .ToList());
+            items.WhereNotNull().ToList());
     }
 
     private static async Task<SearchResult> FanlabRu(Http http, Story topic, string q)
@@ -127,13 +128,12 @@ public static class SearchEngines
     private static SearchResultItem? ParseVseAudioknigiItem(HtmlNode book)
     {
         return ParseAuthorAndTitle(book) is var (author, title)
-            ? new SearchResultItem(title, author, null, null)
+            ? new SearchResultItem(null, title, author, null, null)
             : null;
 
         static (string author, string title)? ParseAuthorAndTitle(HtmlNode link)
         {
-            var authorAndTitle = WebUtility.HtmlDecode(link?.InnerText);
-            if (authorAndTitle == null) return null;
+            var authorAndTitle = WebUtility.HtmlDecode(link.InnerText);
             var idx = authorAndTitle.LastIndexOf("-", StringComparison.InvariantCulture);
             if (idx == -1) return null;
             var title = authorAndTitle[..idx].Trim();
@@ -154,14 +154,15 @@ public static class SearchEngines
         if (string.IsNullOrWhiteSpace(authors))
             return null;
 
-        return new SearchResultItem(
+        return new SearchResultItem(null, 
             SearchUtilities.GetTitle(title, series),
             authors, series, null);
     }
 
-    private static SearchResultItem? ParseReadliItem(HtmlNode article)
+    private static async Task<SearchResultItem?> ParseReadliItem(Http http, HtmlNode article)
     {
         var bookRef = article.SelectSubNode("//h4[@class='book__title']")!;
+        await http.ReadliNet(bookRef.Href()!);
         var title = bookRef.InnerText.Trim();
         var authors = article.SelectSubNodes("//div[@class='book__authors-wrap']//a[@class='book__link']")
             .Concat(article.SelectSubNodes("//div[@class='book__authors-wrap']//a[@class='authors-hide__link']"))
@@ -169,7 +170,7 @@ public static class SearchEngines
         if (string.IsNullOrWhiteSpace(authors))
             return null;
 
-        return new SearchResultItem(
+        return new SearchResultItem(null, 
             WebUtility.HtmlDecode(title),
             WebUtility.HtmlDecode(authors), null, null);
     }
@@ -180,7 +181,7 @@ public static class SearchEngines
         var authors = article.SelectSubNodes("//div[@class='autor']/a").StrJoin(a => a.InnerText);
         if (string.IsNullOrWhiteSpace(authors))
             return null;
-        return new SearchResultItem(
+        return new SearchResultItem(null, 
             WebUtility.HtmlDecode(title),
             WebUtility.HtmlDecode(authors), null, null);
     }
@@ -189,7 +190,7 @@ public static class SearchEngines
     {
         var title = article.SelectSingleNode("//div[@class='book-title']").InnerText.Trim();
         var authors = article.SelectSubNodes("//div[@class='book-author']/a").StrJoin(a => a.InnerText.Trim());
-        return new SearchResultItem(
+        return new SearchResultItem(null, 
             WebUtility.HtmlDecode(title),
             WebUtility.HtmlDecode(authors), null, null);
     }
@@ -215,7 +216,7 @@ public static class SearchEngines
         var seriesPage = seriesHtml.ParseHtml();
         var title = seriesPage.SelectSingleNode("//table/tbody/tr[td/b='Авторы:']/td[2]").InnerText.Trim();
         var authors = seriesPage.SelectSubNodes("//table/tbody/tr[td/b='Авторы:']//a").StrJoin(a => a.InnerText.Trim());
-        var result = new SearchResultItem(
+        var result = new SearchResultItem(null, 
             WebUtility.HtmlDecode(title),
             WebUtility.HtmlDecode(authors), null, null);
         return new SearchResult(requestUri,
