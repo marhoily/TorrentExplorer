@@ -46,13 +46,14 @@ public static class SearchEngines
     {
         var localUri = $"https://vse-audioknigi.com/search?text={HttpUtility.UrlEncode(q)}";
         var html = await http.Get($"vse-audioknigi.com/{q}", localUri);
-        return new SearchResult(localUri, 
+        return new SearchResult(localUri,
             html.ParseHtml()
                 .SelectSubNodes("//li[@class='b-statictop__items_item']//a")
                 .Select(ParseVseAudioknigiItem)
                 .WhereNotNull()
                 .ToList());
     }
+
     private static async Task<SearchResult> Knigorai(Http http, Story topic, string q)
     {
         var requestUri = $"https://knigorai.com/?q={HttpUtility.UrlEncode(q)}";
@@ -64,32 +65,19 @@ public static class SearchEngines
                 .WhereNotNull()
                 .ToList());
     }
+
     private static async Task<SearchResult> ReadliNet(Http http, Story topic, string q)
     {
-        var requestUri = $"https://readli.net/srch/?q={HttpUtility.UrlEncode(q)}";
-        var html = await http.Get($"readli.net/{q}",
-            new HttpRequestMessage(HttpMethod.Get, requestUri)
-            {
-                Headers =
-                {
-                    {
-                        "User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:104.0) Gecko/20100101 Firefox/104.0"
-                    },
-                    {
-                        "Cookie",
-                        "_ga=GA1.2.37066940.1663270926; _gid=GA1.2.330031539.1663270926; advanced-frontend=84uqtqjj4g54f915fkc8qu56v9; _csrf-frontend=33e0b2dbf8bf3fd887ebaa108b4fdbcead07599c3091d46862ebb5e5bcfa9b94a%3A2%3A%7Bi%3A0%3Bs%3A14%3A%22_csrf-frontend%22%3Bi%3A1%3Bs%3A32%3A%22TDtxxN2rcQlSLmpR4krXD2KkqW4zLe-L%22%3B%7D"
-                    },
-                }
-            }
-        );
-
-        return new SearchResult(requestUri,
-            html.ParseHtml()
-                .SelectSubNodes("//div[@id='books']/article")
+        var requestUri = $"srch/?q={HttpUtility.UrlEncode(q)}";
+        var node = await http.ReadliNet(requestUri);
+        return new SearchResult(
+            new Uri(new Uri("https://readli.net"), requestUri).ToString(),
+            node.SelectSubNodes("//div[@id='books']/article")
                 .Select(ParseReadliItem)
                 .WhereNotNull()
                 .ToList());
     }
+
     private static async Task<SearchResult> FanlabRu(Http http, Story topic, string q)
     {
         var requestUri = $"https://fantlab.ru/searchmain?searchstr={HttpUtility.UrlEncode(q)}";
@@ -109,6 +97,7 @@ public static class SearchEngines
                 .WhereNotNull()
                 .ToList());
     }
+
     private static async Task<SearchResult> AuthorToday(Http http, Story topic, string q)
     {
         var requestUri = $"https://author.today/search?category=works&q={HttpUtility.UrlEncode(q)}";
@@ -137,10 +126,10 @@ public static class SearchEngines
 
     private static SearchResultItem? ParseVseAudioknigiItem(HtmlNode book)
     {
-        return ParseAuthorAndTitle(book) is var (author, title) 
-            ? new SearchResultItem(title, author, null, null) 
+        return ParseAuthorAndTitle(book) is var (author, title)
+            ? new SearchResultItem(title, author, null, null)
             : null;
-        
+
         static (string author, string title)? ParseAuthorAndTitle(HtmlNode link)
         {
             var authorAndTitle = WebUtility.HtmlDecode(link?.InnerText);
@@ -152,6 +141,7 @@ public static class SearchEngines
             return (author, title);
         }
     }
+
     private static SearchResultItem? ParseKnigoraiItem(HtmlNode article)
     {
         var title = WebUtility.HtmlDecode(
@@ -168,9 +158,11 @@ public static class SearchEngines
             SearchUtilities.GetTitle(title, series),
             authors, series, null);
     }
+
     private static SearchResultItem? ParseReadliItem(HtmlNode article)
     {
-        var title = article.SelectSingleNode("//h4[@class='book__title']/a").InnerText;
+        var bookRef = article.SelectSubNode("//h4[@class='book__title']")!;
+        var title = bookRef.InnerText.Trim();
         var authors = article.SelectSubNodes("//div[@class='book__authors-wrap']//a[@class='book__link']")
             .Concat(article.SelectSubNodes("//div[@class='book__authors-wrap']//a[@class='authors-hide__link']"))
             .StrJoin(a => a.InnerText);
@@ -181,6 +173,7 @@ public static class SearchEngines
             WebUtility.HtmlDecode(title),
             WebUtility.HtmlDecode(authors), null, null);
     }
+
     private static SearchResultItem? ParseFanlabItem(HtmlNode article)
     {
         var title = article.SelectSingleNode("//div[@class='title']/a").InnerText;
@@ -191,6 +184,7 @@ public static class SearchEngines
             WebUtility.HtmlDecode(title),
             WebUtility.HtmlDecode(authors), null, null);
     }
+
     private static SearchResultItem? ParseAuthorTodayItem(HtmlNode article)
     {
         var title = article.SelectSingleNode("//div[@class='book-title']").InnerText.Trim();

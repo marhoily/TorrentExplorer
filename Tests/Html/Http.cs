@@ -23,6 +23,8 @@ public class Http
 
     public async Task<string> Get(string localUri) =>
         await Get(localUri, localUri);
+    public async Task<string> Get(Uri uri) =>
+        await Get(uri.ToString(), uri.ToString());
 
     public async Task<string> Get(string key, string localUri)
     {
@@ -42,6 +44,10 @@ public class Http
         await _cache.SaveValue(key, content);
         return content;
     }
+
+    public async Task<string> Get(HttpRequestMessage message) => 
+        await Get(message.RequestUri!.ToString(), message);
+
 
     public async Task<string> Get(string key, HttpRequestMessage message)
     {
