@@ -22,7 +22,7 @@ public static class SearchResultManagement
     {
         if (!File.Exists(FileName(id)))
             return null;
-        var readJson = await FileName(id).ReadJson<Dictionary<string, string>>();
+        var readJson = await FileName(id).ReadJson<Dictionary<string, object>>();
         if (readJson == null)
             return null;
         return readJson.ContainsKey("result")

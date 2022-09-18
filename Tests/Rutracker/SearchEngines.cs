@@ -1,5 +1,7 @@
 ﻿using System.Net;
+using System.Text.RegularExpressions;
 using System.Web;
+using HtmlAgilityPack;
 using JetBrains.Annotations;
 using Tests.Html;
 using Tests.Utilities;
@@ -13,6 +15,19 @@ public sealed record SearchResult(
     int? NumberInSeries,
     string Source);
 
+public static class SearchUtilities
+{
+    public static string GetTitle(string title, string? series)
+    {
+        if (series == null)
+            return title;
+
+        return Regex.Replace(title,
+            series + "\\s*(:?|-)\\s*\\d+(\\.|:)\\s*", "",
+            RegexOptions.IgnoreCase);
+    }
+
+}
 public static class SearchEngines
 {
     public static readonly Func<Http, Story, string, Task<SearchResult?>>[]
@@ -28,17 +43,51 @@ public static class SearchEngines
     private static async Task<SearchResult?> VseAudioknigiCom(Http http, Story topic, string q)
     {
         var localUri = $"https://vse-audioknigi.com/search?text={HttpUtility.UrlEncode(q)}";
-        var html = await http.Get($"vse-audioknigi.com/{q}", localUri);
-        var r = WebUtility.HtmlDecode(html.ParseHtml()
-            .SelectSingleNode("//li[@class='b-statictop__items_item']//a")?
-            .InnerText);
-        if (r == null) return null;
-        var idx = r.LastIndexOf("-", StringComparison.InvariantCulture);
-        if (idx == -1) return null;
-        var vseAudioknigiCom = new SearchResult(
-            r[..idx].Trim(), r[(idx + 1)..].Trim(), null, null, localUri);
-        return vseAudioknigiCom;
+        var searchHtml = await http.Get($"vse-audioknigi.com/{q}", localUri);
+        var bookA = searchHtml.ParseHtml()
+            .SelectSingleNode("//li[@class='b-statictop__items_item']//a");
+        if (ParseAuthorAndTitle(bookA) is not var (author, title)) return null;
+
+       // var bookHtml = await http.Get($"https://vse-audioknigi.com{bookA.Href()}");
+       // var breadcrumb = bookHtml.ParseHtml().SelectSingleNode("//ui[@class='breadcrumb']");
+
+        var result = new SearchResult(
+            title, author, null, null, localUri);
+        return result;
     }
+
+    private static (string author, string title)? ParseAuthorAndTitle(HtmlNode? link)
+    {
+        var authorAndTitle = WebUtility.HtmlDecode(link?.InnerText);
+        if (authorAndTitle == null) return null;
+        var idx = authorAndTitle.LastIndexOf("-", StringComparison.InvariantCulture);
+        if (idx == -1) return null;
+        var title = authorAndTitle[..idx].Trim();
+        var author = authorAndTitle[(idx + 1)..].Trim();
+        return(author, title);
+    }
+
+    private static async Task<SearchResult?> Knigorai(Http http, Story topic, string q)
+    {
+        var requestUri = $"https://knigorai.com/?q={HttpUtility.UrlEncode(q)}";
+        var html = await http.Get($"knigorai.com/{q}", requestUri);
+        var article = html.ParseHtml()
+            .SelectSingleNode("//div[@class='book-item panel panel-default']");
+        if (article == null) return null;
+        var title = WebUtility.HtmlDecode(
+            article.SelectSingleNode("//a[@class='book-title']").InnerText);
+        var series = WebUtility.HtmlDecode(
+            article.SelectSubNode("//div[@class='row book-series']//a")?.InnerText);
+        var authors = WebUtility.HtmlDecode(
+            article.SelectSubNodes("//div[@class='col-lg-12 book-author']//a")
+                .StrJoin(a => a.InnerText));
+        if (string.IsNullOrWhiteSpace(authors))
+            return null;
+        return new SearchResult(
+            SearchUtilities.GetTitle(title, series),
+            authors, series, null, requestUri);
+    }
+
 
     private static async Task<SearchResult?> ReadliNet(Http http, Story topic, string q)
     {
@@ -64,23 +113,6 @@ public static class SearchEngines
         var title = article.SelectSingleNode("//h4[@class='book__title']/a").InnerText;
         var authors = article.SelectSubNodes("//div[@class='book__authors-wrap']//a[@class='book__link']")
             .Concat(article.SelectSubNodes("//div[@class='book__authors-wrap']//a[@class='authors-hide__link']"))
-            .StrJoin(a => a.InnerText);
-        if (string.IsNullOrWhiteSpace(authors))
-            return null;
-        return new SearchResult(
-            WebUtility.HtmlDecode(title),
-            WebUtility.HtmlDecode(authors), null, null, requestUri);
-    }
-
-    private static async Task<SearchResult?> Knigorai(Http http, Story topic, string q)
-    {
-        var requestUri = $"https://knigorai.com/?q={HttpUtility.UrlEncode(q)}";
-        var html = await http.Get($"knigorai.com/{q}", requestUri);
-        var article = html.ParseHtml()
-            .SelectSingleNode("//div[@class='book-item panel panel-default']");
-        if (article == null) return null;
-        var title = article.SelectSingleNode("//a[@class='book-title']").InnerText;
-        var authors = article.SelectSubNodes("//div[@class='col-lg-12 book-author']//a")
             .StrJoin(a => a.InnerText);
         if (string.IsNullOrWhiteSpace(authors))
             return null;

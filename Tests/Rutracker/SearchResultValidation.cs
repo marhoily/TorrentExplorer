@@ -18,17 +18,22 @@ public static class SearchResultValidation
         }
 
         var resultTitle = ScrapeTopic(result.Title);
-        var topicTitle = ScrapeTopic(topic.Title!);
+        var title = SearchUtilities.GetTitle(topic.Title!, 
+            topic.Series ?? result.SeriesName);
+        var topicTitle = ScrapeTopic(title);
+
         if (resultTitle.Contains(topicTitle) ||
             topicTitle.Contains(resultTitle))
             return true;
-
+        
         Console.WriteLine(result.Title + " != " + topic.Title);
         return false;
     }
 
     private static string ScrapeTopic(string s) => s
+        .ToLower()
         .Replace('ё', 'e')
+        .Replace('й', 'и')
         .Replace('й', 'и')
         .Replace('е', 'e')
         .Replace('c', 'с') //русский..topic
@@ -43,7 +48,6 @@ public static class SearchResultValidation
         .Replace("  ", " ")
         .Split(' ', '.', '-')
         .Where(c => !string.IsNullOrWhiteSpace(c))
-        .Select(c => c.ToLower())
         .StrJoin(" ");
 
     private static string SanitizeAuthor(string s) => s

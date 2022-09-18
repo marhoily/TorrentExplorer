@@ -1,5 +1,6 @@
 using System.Net;
 using System.Text;
+using HtmlAgilityPack;
 
 namespace Tests.Html;
 
@@ -17,17 +18,19 @@ public class Http
         {
             UseCookies = false,
             AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate,
-
         };
         _client = new HttpClient(handler);
     }
+
+    public async Task<string> Get(string localUri) =>
+        await Get(localUri, localUri);
 
     public async Task<string> Get(string key, string localUri)
     {
         var cachedValue = await _cache.TryGetValue(key);
         if (cachedValue != null) return cachedValue;
         var message = new HttpRequestMessage(HttpMethod.Get, localUri);
-      var result = await _client.SendAsync(message);
+        var result = await _client.SendAsync(message);
         if ((int)result.StatusCode == 404)
             throw new Exception("Page is not found");
         if ((int)result.StatusCode >= 400)
@@ -40,6 +43,7 @@ public class Http
         await _cache.SaveValue(key, content);
         return content;
     }
+
     public async Task<string> Get(string key, HttpRequestMessage message)
     {
         var cachedValue = await _cache.TryGetValue(key);

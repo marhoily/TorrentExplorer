@@ -8,7 +8,7 @@ namespace Tests.Rutracker;
 public class Search
 {
     private static readonly Http Html = new(
-        new SqliteCache(CachingStrategy.AlwaysMiss),
+        new SqliteCache(CachingStrategy.Normal),
         Encoding.Default);
 
     public const string Output = @"C:\temp\TorrentsExplorerData\Extract\Search\output.json";
@@ -26,7 +26,7 @@ public class Search
     private static async Task GoThroughSearchEngines(CircuitBreaker circuitBreaker, Story topic)
     {
         var q = GetQuery(topic);
-        if (!await NeedToContinue(topic, RefreshWhen.Always))
+        if (!await NeedToContinue(topic, RefreshWhen.Missing, 3251890))
             return;
 
         var negativeSearchResults = new List<SearchResult>();
