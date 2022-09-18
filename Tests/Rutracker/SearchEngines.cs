@@ -181,7 +181,7 @@ public static class SearchEngines
 
     private static SearchResultItem? ParseFanlabItem(HtmlNode article)
     {
-        var title = article.SelectSingleNode("//div[@class='title']/a").InnerText;
+        var title = article.SelectSubNode("//div[@class='title']/a")!.InnerText;
         var authors = article.SelectSubNodes("//div[@class='autor']/a").StrJoin(a => a.InnerText);
         if (string.IsNullOrWhiteSpace(authors))
             return null;
@@ -192,7 +192,7 @@ public static class SearchEngines
 
     private static SearchResultItem ParseAuthorTodayItem(HtmlNode article)
     {
-        var title = article.SelectSingleNode("//div[@class='book-title']").InnerText.Trim();
+        var title = article.SelectSubNode("//div[@class='book-title']")!.InnerText.Trim();
         var authors = article.SelectSubNodes("//div[@class='book-author']/a").StrJoin(a => a.InnerText.Trim());
         return new SearchResultItem(null,
             WebUtility.HtmlDecode(title),
@@ -217,7 +217,7 @@ public static class SearchEngines
             $"flibusta.site{seriesHref}",
             $"https://flibusta.site{seriesHref}");
         var seriesPage = seriesHtml.ParseHtml();
-        var title = seriesPage.SelectSingleNode("//table/tbody/tr[td/b='Авторы:']/td[2]").InnerText.Trim();
+        var title = seriesPage.SelectSubNode("//table/tbody/tr[td/b='Авторы:']/td[2]")!.InnerText.Trim();
         var authors = seriesPage.SelectSubNodes("//table/tbody/tr[td/b='Авторы:']//a").StrJoin(a => a.InnerText.Trim());
         var result = new SearchResultItem(null,
             WebUtility.HtmlDecode(title),
