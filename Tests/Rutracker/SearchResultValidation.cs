@@ -85,13 +85,12 @@ public static class SearchResultValidation
 
         bool Eq(string x, string y)
         {
-            if (x == y) return true;
+            if (y.StartsWith(x)) return true;
             if (y.Length < x.Length) return Eq(y, x);
             // Змагаевы -> Змагаев     
             if (x == y.TrimEnd('ы', 'и')) return true;
             // Стругацкий -> Стругацкие     
             if (x.Length > 3 && x[..^1] == y[..^1]) return true;
-            if (x.Length == 1 && x[0] == y[0]) return true;
             return false;
         }
 
