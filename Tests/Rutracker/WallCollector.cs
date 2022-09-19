@@ -56,27 +56,28 @@ public sealed class WallCollector
         }
     }
 
-    private HtmlNode? ProcessTag(HtmlNode node)
+    private HtmlNode? ProcessTag(HtmlNode start)
     {
-        var key = node.InnerText.Replace("&nbsp;", " ").TrimEnd();
+        var key = start.InnerText.Replace("&nbsp;", " ").TrimEnd();
 
-        var colon = key.EndsWith(":") ? node : SkipEmpty(node);
-        if (colon?.InnerText.Trim() is not { } text ||
-            !text.StartsWith(":") && !text.EndsWith(":"))
-            return colon;
+        var colonNode = key.EndsWith(":") ? start : SkipEmpty(start);
+        if (colonNode?.InnerText.Trim() is not { } text ||
+            !text.Replace("&nbsp;", "").StartsWith(":") && 
+            !text.Replace("&nbsp;", "").EndsWith(":"))
+            return colonNode;
 
-        var goFurther = node != colon ? colon : colon.GoFurther();
-        while (goFurther?.InnerText.Trim() is ":" or "")
-            goFurther = goFurther.GoFurther();
+        var valueNode = start != colonNode ? colonNode : colonNode.GoFurther();
+        while (valueNode?.InnerText.Trim() is ":" or "")
+            valueNode = valueNode.GoFurther();
 
-        if (goFurther != null)
+        if (valueNode != null)
             _state.AddAttribute(
                 key.TrimEnd(':').Trim(),
-                goFurther.InnerText
+                valueNode.InnerText
                     .TrimStart(':', ' ')
                     .Replace("&#776;", "")
                     .Trim());
-        return goFurther;
+        return valueNode;
     }
 
     private static HtmlNode? SkipEmpty(HtmlNode start)
