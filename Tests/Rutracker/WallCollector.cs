@@ -61,16 +61,16 @@ public sealed class WallCollector
         var key = start.InnerText.Replace("&nbsp;", " ").TrimEnd();
 
         var colonNode = !key.EndsWith(":") 
-            ? start.SkipWhile(c => c.InnerText.HtmlTrim() == "") 
+            ? start.GoFurther()?.SkipWhile(c => c.InnerText.HtmlTrim() == "") 
             : start;
         if (colonNode?.InnerText.Trim() is not { } text ||
             !text.Replace("&nbsp;", "").StartsWith(":") && 
             !text.Replace("&nbsp;", "").EndsWith(":"))
             return colonNode;
 
-        var valueNode = start != colonNode ? colonNode : colonNode.GoFurther();
-        while (valueNode?.InnerText.HtmlTrim() is ":" or "")
-            valueNode = valueNode.GoFurther();
+        var next = start != colonNode ? colonNode : colonNode.GoFurther();
+        var valueNode = next?
+            .SkipWhile(c => c.InnerText.HtmlTrim() is ":" or "");
 
         if (valueNode != null)
             _state.AddAttribute(

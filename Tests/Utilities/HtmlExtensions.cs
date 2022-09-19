@@ -133,12 +133,8 @@ public static class HtmlExtensions
     public static HtmlNode? SkipWhile(this HtmlNode start, Func<HtmlNode, bool> predicate)
     {
         var current = start;
-        do
-        {
+        while (current != null && predicate(current)) 
             current = current.GoFurther();
-            if (current == null) break;
-        } while (predicate(current));
-
         return current;
     }
 }
