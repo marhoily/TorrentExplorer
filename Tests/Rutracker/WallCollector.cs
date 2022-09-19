@@ -14,16 +14,16 @@ public sealed class Cursor
         _ceiling = node.XPath;
     }
 
-    public void Set(HtmlNode? value) => 
+    public void Set(HtmlNode? value) =>
         Node = value?.XPath.StartsWith(_ceiling) != true ? null : value;
+
     public void GoFurther() => Set(Node?.GoFurther());
     public void GoDeeper() => Set(Node?.GoDeeper());
-    
 }
 
 public static class WallCollectorExt
 {
-    public static List<Dictionary<string, object>> ParseWall(this HtmlNode htmlNode) => 
+    public static List<Dictionary<string, object>> ParseWall(this HtmlNode htmlNode) =>
         new WallCollector().Parse(htmlNode);
 }
 
@@ -79,7 +79,7 @@ public sealed class WallCollector
         }
     }
 
-    private HtmlNode ProcessTag(HtmlNode node)
+    private HtmlNode? ProcessTag(HtmlNode node)
     {
         var key = node.InnerText.Replace("&nbsp;", " ").TrimEnd();
         var seenColon = key.EndsWith(":");
@@ -99,22 +99,17 @@ public sealed class WallCollector
                 return node;
         }
 
-        while (!moved || node.InnerText.Trim() is ":" or "")
-        {
-            if (node.NextSibling != null)
-            {
-                moved = true;
-                node = node.NextSibling;
-            }
-            else node = node.ParentNode;
-        }
+        var goFurther = moved ? node : node.GoFurther();
+        while (goFurther?.InnerText.Trim() is ":" or "")
+            goFurther = goFurther.GoFurther();
 
-        _state.AddAttribute(
-            key.TrimEnd(':').Trim(),
-            node.InnerText
-                .TrimStart(':', ' ')
-                .Replace("&#776;", "")
-                .Trim());
-        return node;
+        if (goFurther != null)
+            _state.AddAttribute(
+                key.TrimEnd(':').Trim(),
+                goFurther.InnerText
+                    .TrimStart(':', ' ')
+                    .Replace("&#776;", "")
+                    .Trim());
+        return goFurther;
     }
 }
