@@ -16,6 +16,16 @@ public static class KinozalParser
 
     public static HtmlNode GetKinozalForumPost(this HtmlNode node)
     {
-        return node.SelectSingleNode("//div[@class='bx1 justify']");
+        var post = node.SelectSubNode("//div[@class='mn1_content']")!;
+        var doc = new HtmlDocument();
+        var root = doc.CreateElement("root");
+        root.SetAttributeValue("topic-id", post
+            .SelectSubNode("//a")!
+            .Href()!
+            .Split("?id=")[1]);
+        foreach (var div in post.SelectSubNodes("div[@class='bx1 justify']")) 
+            root.AppendChild(div.Clone());
+        doc.DocumentNode.AppendChild(root);
+        return root;
     }
 }

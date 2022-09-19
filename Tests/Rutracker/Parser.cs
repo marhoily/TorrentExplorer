@@ -18,11 +18,16 @@ public static class Known
     }
 
     private static bool Eq(string value, string tag) =>
-        value.StartsWith(tag) && 
+        value.StartsWith(tag) &&
         value[tag.Length..].Trim() is "" or ":";
 
     private static readonly string[] Tags =
     {
+        "Название",
+        "Выпущено",
+        "Озвучивает",
+        "Описание",
+        
         "Год выпуска",
         "Фамилия автора",
         "Фамилии авторов",
@@ -45,6 +50,7 @@ public static class Known
         "Время звучания"
     };
 }
+
 public record Header(int Id);
 
 public abstract record Topic;
@@ -105,7 +111,8 @@ public static class Parser
             genre, playTime);
     }
 
-    private static string? GetTitle(Dictionary<string, object> post, string? series, string? firstName, string? secondName)
+    private static string? GetTitle(Dictionary<string, object> post, string? series, string? firstName,
+        string? secondName)
     {
         var title = GetRawTitle(post, series);
         var noJunk = RemoveExplicitJunkFromTitle(title);
@@ -149,8 +156,8 @@ public static class Parser
             var s2 = s1.Unbrace('[', ']');
             var s3 = s2.RemoveRegexIfItIsNotTheWholeString("\\(.*\\)\\.?");
             var s4 = s3.Unbrace('(', ')');
-            var s5 = s4.StartsWith("Рассказ") 
-                ? s4["Рассказ".Length..].Trim(' ', '\"') 
+            var s5 = s4.StartsWith("Рассказ")
+                ? s4["Рассказ".Length..].Trim(' ', '\"')
                 : s4;
             return s5;
         }
@@ -181,21 +188,21 @@ public static class Parser
 
             if (!title.StartsWith(series) || title == series || title == series + ".") return title;
 
-            var t1 = Regex.Replace(title, 
+            var t1 = Regex.Replace(title,
                     series + "(\n|. )" +
                     "(Книга|книга|Часть|часть|Том|том)" +
                     "\\s+(первая|вторая|третья|четвертая|пятая|I{1,3}|IV|V{0,3}|\\d+)" +
                     "(\\.|,)", "")
                 .Trim();
-            
+
             if (string.IsNullOrWhiteSpace(t1))
                 return title.Replace(series, "").TrimStart('\n', ' ', '.');
             if (t1 != title) return t1;
 
-            var t3 = Regex.Replace(title, 
+            var t3 = Regex.Replace(title,
                 series + "\\s*(-|,)?\\s*\\d+(\\.|,|:)", "").Trim();
             if (t3 != title) return t3;
-            var t2 = Regex.Replace(title, 
+            var t2 = Regex.Replace(title,
                 series + "\\s*(\\.|:|-)\\s*", "").Trim();
             if (t2 != title && !int.TryParse(t2.Trim(), out _)) return t2;
             var t4 = title.Replace(series + ".", "").Trim();
@@ -225,13 +232,13 @@ public static class Parser
         if (rawSeries != null && string.IsNullOrWhiteSpace(rawSeries))
             return ("<YES>", null);
         var wrap = rawSeries ?? GetSeriesFromSpoiler(post);
-        var unbrace = wrap?.TrimEnd(':',' ','-')
+        var unbrace = wrap?.TrimEnd(':', ' ', '-')
             .Trim()
             .Unquote()
             .Unbrace('«', '»');
         if (unbrace == null) return (null, null);
 
-        var match = SeriesRgx.Match(unbrace+"ξ");
+        var match = SeriesRgx.Match(unbrace + "ξ");
         if (!match.Success) return (unbrace, null);
         var s = SeriesRgx.Replace(unbrace + "ξ", "")
             .Trim()
@@ -241,7 +248,7 @@ public static class Parser
 
         static string? GetSeriesFromSpoiler(Dictionary<string, object> post)
         {
-            var src =  post.TryGetValue("spoilers", out var arr) && arr is JArray jArr
+            var src = post.TryGetValue("spoilers", out var arr) && arr is JArray jArr
                 ? jArr.Select(token => token.Value<string>()).ToList()!
                 : new List<string>();
 
