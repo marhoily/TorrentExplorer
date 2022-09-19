@@ -14,10 +14,12 @@ public interface IHtmlCache
 public sealed record CacheLine([property: PrimaryKey] string Key, string Value);
 public sealed class SqliteCache : IHtmlCache
 {
+    private readonly CachingStrategy _cachingStrategy;
     private readonly IDbConnection _db;
 
-    public SqliteCache()
+    public SqliteCache(CachingStrategy cachingStrategy)
     {
+        _cachingStrategy = cachingStrategy;
         var dbFactory = new OrmLiteConnectionFactory(
             @"C:\temp\TorrentsExplorerData\HtmlCache.db",
             SqliteDialect.Provider);
@@ -27,6 +29,7 @@ public sealed class SqliteCache : IHtmlCache
 
     public async Task<string?> TryGetValue(string key)
     {
+        if (_cachingStrategy == CachingStrategy.AlwaysMiss) return null;
         var cacheLine = await _db.SingleByIdAsync<CacheLine>(key);
         return cacheLine?.Value;
     }

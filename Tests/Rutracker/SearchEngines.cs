@@ -2,8 +2,10 @@
 using System.Web;
 using HtmlAgilityPack;
 using JetBrains.Annotations;
+using ServiceStack;
 using Tests.Html;
 using Tests.Utilities;
+using Http = Tests.Html.Http;
 
 namespace Tests.Rutracker;
 
@@ -21,17 +23,27 @@ public sealed class SearchEngine
     private readonly string _name;
     private readonly Func<Http, Story, string, Task<SearchResult>> _search;
     private readonly Uri _uri;
+    private readonly SqliteCache _cache;
 
     public SearchEngine(string name,
-        Func<Http, Story, string, Task<SearchResult>> search, string url)
+        Func<Http, Story, string, Task<SearchResult>> search, string url,
+        CachingStrategy cachingStrategy)
     {
         _name = name;
         _search = search;
         _uri = new Uri(url);
+        _cache = new SqliteCache(cachingStrategy);
     }
 
-    public Task<SearchResult> Search(Http http, Story topic, string q)
-        => _search(http, topic, q);
+    public async Task<SearchResult> Search(Http http, Story topic, string q)
+    {
+        var key = $"SearchResult: {_name}: {q}";
+        var cache = await _cache.TryGetValue(key);
+        if (cache != null) return cache.FromJsv<SearchResult>();
+        var result = await _search(http, topic, q);
+        await _cache.SaveValue(key, result.ToJsv());
+        return result;
+    }
 }
 
 public static class SearchEngines
@@ -39,14 +51,14 @@ public static class SearchEngines
     public static readonly SearchEngine[]
         List =
         {
-            new(nameof(VseAudioknigiCom), VseAudioknigiCom,"https://vse-audioknigi.com"),
-            new(nameof(Knigorai), Knigorai,"https://knigorai.com"),
-            new(nameof(AudioknigaComUa), AudioknigaComUa,"https://audiokniga.com.ua"),
-            new(nameof(AbooksInfo), AbooksInfo,"https://abooks.info"),
-            new(nameof(ReadliNet), ReadliNet,"https://readli.net"),
-            new(nameof(MyBookRu), MyBookRu,"https://mybook.ru"),
-            new(nameof(FanlabRu), FanlabRu,"https://fantlab.ru"),
-            new(nameof(AuthorToday), AuthorToday,"https://author.today"),
+            new(nameof(VseAudioknigiCom), VseAudioknigiCom,"https://vse-audioknigi.com", CachingStrategy.Normal),
+            new(nameof(Knigorai), Knigorai,"https://knigorai.com", CachingStrategy.AlwaysMiss),
+            new(nameof(AudioknigaComUa), AudioknigaComUa,"https://audiokniga.com.ua", CachingStrategy.AlwaysMiss),
+            new(nameof(AbooksInfo), AbooksInfo,"https://abooks.info", CachingStrategy.AlwaysMiss),
+            new(nameof(ReadliNet), ReadliNet,"https://readli.net", CachingStrategy.AlwaysMiss),
+            new(nameof(MyBookRu), MyBookRu,"https://mybook.ru", CachingStrategy.AlwaysMiss),
+            new(nameof(FanlabRu), FanlabRu,"https://fantlab.ru", CachingStrategy.AlwaysMiss),
+            new(nameof(AuthorToday), AuthorToday,"https://author.today", CachingStrategy.AlwaysMiss),
             //nameof( FlibustaSeries),FlibustaSeries,
         };
 
