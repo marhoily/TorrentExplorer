@@ -1,5 +1,6 @@
 ﻿using System.Text.RegularExpressions;
 using HtmlAgilityPack;
+using JetBrains.Annotations;
 using Newtonsoft.Json.Linq;
 using RegExtract;
 using Tests.Utilities;
@@ -20,11 +21,12 @@ public static class Known
         value.StartsWith(tag) && 
         value[tag.Length..].Trim() is "" or ":";
 
-    public static readonly string[] Tags =
+    private static readonly string[] Tags =
     {
         "Год выпуска",
         "Фамилия автора",
         "Фамилии авторов",
+        "Фамилия авторов",
         "Aвтор",
         "Автор",
         "Автора",
@@ -47,6 +49,7 @@ public record Header(int Id);
 
 public abstract record Topic;
 
+[UsedImplicitly]
 public sealed record Story(
     int TopicId,
     string Url,
@@ -82,10 +85,10 @@ public static class Parser
     public static Topic? ParseRussianFantasyTopic(this Dictionary<string, object> post)
     {
         var topicId = post.FindTag("topic-id")!.ParseInt();
-        if (topicId == 6115381)
+        if (topicId == 6043436)
             1.ToString();
         var year = post.FindTag("Год выпуска")?.TrimEnd('.', 'г', ' ');
-        var lastName = post.FindTags("Фамилия автора", "Фамилии авторов", 
+        var lastName = post.FindTags("Фамилия автора", "Фамилии авторов", "Фамилия авторов",
             "Aвтор", "Автор" /* different "A"? */, "Автора", "Авторы");
         var firstName = post.FindTags("Имя автора", "Имена авторов");
         var performer = post.FindTags("Исполнитель", "Исполнители", "Исполнитель и звукорежиссёр");
@@ -126,7 +129,10 @@ public static class Parser
             var first = titleOptions.FirstOrDefault();
             var second = titleOptions.Skip(1).FirstOrDefault();
             var result = first == series && second != null ? second : first;
-            return result?.Trim(' ', '•').Replace('\n', ' ').Unquote();
+            return result?
+                .Trim(' ', '•')
+                .Replace('\n', ' ')
+                .Unquote();
         }
 
         static List<string> GetTitleOptions(Dictionary<string, object> post)
@@ -141,9 +147,9 @@ public static class Parser
             if (input is null or "Рассказы")
                 return null;
 
-            var s1 = input.RemoveRegexIfItIsNotTheWholeString("\\[.*\\]");
+            var s1 = input.RemoveRegexIfItIsNotTheWholeString("\\[.*\\]\\.?");
             var s2 = s1.Unbrace('[', ']');
-            var s3 = s2.RemoveRegexIfItIsNotTheWholeString("\\(.*\\)");
+            var s3 = s2.RemoveRegexIfItIsNotTheWholeString("\\(.*\\)\\.?");
             var s4 = s3.Unbrace('(', ')');
             var s5 = s4.StartsWith("Рассказ") 
                 ? s4["Рассказ".Length..].Trim(' ', '\"') 
