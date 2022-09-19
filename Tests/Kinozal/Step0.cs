@@ -21,25 +21,16 @@ public class Step0
                 var page = await http.DownloadKinozalFantasyHeaders(i);
                 return page.ParseKinozalFantasyHeaders();
             }));
-        var settings = new XmlWriterSettings
-        {
-            OmitXmlDeclaration = true,
-            Async = true
-        };
+     
 
         var headers = headerPages.SelectMany(p => p)
             .Select(async header =>
             {
                 var topic = await http.DownloadKinozalFantasyTopic(header);
-                var kinozalForumPost = topic.GetKinozalForumPost();
-                var sb = new StringBuilder();
-                await using var writer = XmlWriter.Create(sb, settings);
-                kinozalForumPost.WriteTo(writer);
-                await writer.FlushAsync();
-                return sb.ToString();
+                return topic.GetKinozalForumPost();
             });
         var htmlNodes = await Task.WhenAll(headers);
-        SavePrettyXml(Output, htmlNodes);
+        SavePrettyXml(Output, htmlNodes.Select(x => x.Xml).ToArray());
     }
 
     private static void SavePrettyXml(string file, string[] xmlList)

@@ -1,7 +1,12 @@
-﻿using HtmlAgilityPack;
+﻿using System.Text;
+using System.Xml;
+using HtmlAgilityPack;
+using ServiceStack;
 using Tests.Utilities;
 
 namespace Tests.Kinozal;
+
+public sealed record KinozalForumPost(int Id, string Xml);
 
 public static class KinozalParser
 {
@@ -14,18 +19,28 @@ public static class KinozalParser
             .ToArray();
     }
 
-    public static HtmlNode GetKinozalForumPost(this HtmlNode node)
+    private static readonly XmlWriterSettings Settings = new()
+    {
+        OmitXmlDeclaration = true,
+        Async = true
+    };
+
+    public static KinozalForumPost GetKinozalForumPost(this HtmlNode node)
     {
         var post = node.SelectSubNode("//div[@class='mn1_content']")!;
-        var doc = new HtmlDocument();
-        var root = doc.CreateElement("root");
-        root.SetAttributeValue("topic-id", post
+        var id = post
             .SelectSubNode("//a")!
             .Href()!
-            .Split("?id=")[1]);
-        foreach (var div in post.SelectSubNodes("div[@class='bx1 justify']")) 
-            root.AppendChild(div.Clone());
-        doc.DocumentNode.AppendChild(root);
-        return root;
+            .Split("?id=")[1].ToInt();
+    
+        var sb = new StringBuilder();
+        using var writer = XmlWriter.Create(sb, Settings);
+        writer.WriteStartElement("root");
+        writer.WriteAttributeString("topic-id", id.ToString());
+        foreach (var div in post.SelectSubNodes("div[@class='bx1 justify']"))
+            div.WriteTo(writer);
+        writer.WriteEndElement();
+        writer.Flush();
+        return new KinozalForumPost(id, sb.ToString());
     }
 }
