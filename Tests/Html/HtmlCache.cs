@@ -34,10 +34,8 @@ public sealed class SqliteCache : IHtmlCache
         return cacheLine?.Value;
     }
 
-    public async Task SaveValue(string key, string value)
-    {
+    public async Task SaveValue(string key, string value) => 
         await _db.SaveAsync(new CacheLine(key, value));
-    }
 }
 
 public sealed class HtmlCache : IHtmlCache
