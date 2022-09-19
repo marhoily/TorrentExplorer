@@ -1,4 +1,4 @@
-using Newtonsoft.Json.Linq;
+﻿using Newtonsoft.Json.Linq;
 using Tests.Rutracker;
 using Tests.Utilities;
 
@@ -13,10 +13,12 @@ public class KinozalStep1
     {
         var books = await Step0.Output.ReadJson<KinozalBook[]>();
 
-        JObject Selector(KinozalBook post)
+        static JObject Selector(KinozalBook post)
         {
             var jArray = post.Post.Xml.ParseHtml().ParseWall();
             var jObj = (JObject)jArray[0];
+            if (post.Series != null)
+                jObj.Add("Цикл", post.Series);
             return jObj;
         }
 
