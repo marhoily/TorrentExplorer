@@ -40,7 +40,7 @@ public class Http
         }
         if ((int)result.StatusCode == 404)
             throw new Exception("Page is not found");
-        if ((int)result.StatusCode >= 400)
+        if ((int)result.StatusCode is >= 400 and < 500)
             throw new Exception("Bad request");
         if ((int)result.StatusCode >= 500)
             throw new Exception("Server is having troubles. Come later");
