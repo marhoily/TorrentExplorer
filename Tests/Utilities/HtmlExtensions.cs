@@ -127,5 +127,18 @@ public static class HtmlExtensions
                 : null);
 
     public static HtmlNode? GoDeeper(this HtmlNode n) =>
-        n.ChildNodes.FirstOrDefault() ?? GoFurther(n);        
+        n.ChildNodes.FirstOrDefault() ?? GoFurther(n);
+
+
+    public static HtmlNode? SkipWhile(this HtmlNode start, Func<HtmlNode, bool> predicate)
+    {
+        var current = start;
+        do
+        {
+            current = current.GoFurther();
+            if (current == null) break;
+        } while (predicate(current));
+
+        return current;
+    }
 }
