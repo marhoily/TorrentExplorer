@@ -1,5 +1,4 @@
 ﻿using System.Net;
-using System.Text.RegularExpressions;
 using System.Web;
 using HtmlAgilityPack;
 using JetBrains.Annotations;
@@ -16,19 +15,6 @@ public sealed record SearchResultItem(
     string Author,
     string? SeriesName,
     int? NumberInSeries);
-
-public static class SearchUtilities
-{
-    public static string GetTitle(string title, string? series)
-    {
-        if (series == null)
-            return title;
-
-        return Regex.Replace(title,
-            series + "\\s*(:?|-)\\s*\\d+(\\.|:)\\s*", "",
-            RegexOptions.IgnoreCase);
-    }
-}
 
 public static class SearchEngines
 {
