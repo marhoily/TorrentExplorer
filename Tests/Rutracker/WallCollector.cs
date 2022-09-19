@@ -57,15 +57,12 @@ public sealed class WallCollector
     {
         var keyNode = _cursor.Node!;
         var key = keyNode.InnerText.HtmlTrim();
-        
-        if (!key.EndsWith(":")) 
-            _cursor.GoFurther().SkipWhile(c => c.InnerText.HtmlTrim() == "");
-        
-        if (_cursor.Node?.InnerText.HtmlTrim().StartsOrEndsWith(':') != true)
-            return;
 
-        if (_cursor.Node == keyNode)
-            _cursor.GoFurther();
+        _cursor.GoFurther().SkipWhile(c => c.InnerText.HtmlTrim() == "");
+        
+        if (!key.EndsWith(":"))
+            if (_cursor.Node?.InnerText.HtmlTrim().StartsOrEndsWith(':') != true)
+                return;
 
         _cursor.SkipWhile(c => c.InnerText.HtmlTrim() is ":" or "");
 
