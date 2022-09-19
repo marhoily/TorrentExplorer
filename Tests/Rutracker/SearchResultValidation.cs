@@ -1,4 +1,5 @@
-﻿using Tests.Utilities;
+﻿using System.Runtime.CompilerServices;
+using Tests.Utilities;
 
 namespace Tests.Rutracker;
 
@@ -16,22 +17,29 @@ public static class SearchResultValidation
             }
         }
 
+        if (topic.Series != null && result.SeriesName != null)
+        {
+            if (!Compare(topic.Series, result.SeriesName))
+                return false;
+        }
+
         var validateSearchResultMatches = CompareTitles(result, topic);
         return validateSearchResultMatches;
     }
 
     private static bool CompareTitles(SearchResultItem result, Story topic)
     {
-        var resultTitle = ScrapeTopic(result.Title);
         var title = SearchUtilities.GetTitle(topic.Title!,
             topic.Series ?? result.SeriesName);
-        var topicTitle = ScrapeTopic(title);
+        var s = result.Title;
+        return Compare(s, title);
+    }
 
-        if (resultTitle.Contains(topicTitle) ||
-            topicTitle.Contains(resultTitle))
-            return true;
-
-        return false;
+    private static bool Compare(string x, string y)
+    {
+        var xx = ScrapeTopic(x);
+        var yy = ScrapeTopic(y);
+        return xx.Contains(yy) || yy.Contains(xx);
     }
 
     private static string ScrapeTopic(string s) => s

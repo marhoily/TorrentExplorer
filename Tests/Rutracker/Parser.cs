@@ -82,7 +82,7 @@ public static class Parser
     public static Topic? ParseRussianFantasyTopic(this Dictionary<string, object> post)
     {
         var topicId = post.FindTag("topic-id")!.ParseInt();
-        if (topicId == 5903923)
+        if (topicId == 5050012)
             1.ToString();
         var year = post.FindTag("Год выпуска")?.TrimEnd('.', 'г', ' ');
         var lastName = post.FindTags("Фамилия автора", "Фамилии авторов", 
@@ -113,7 +113,12 @@ public static class Parser
         var s2 = RemoveAuthorPrefixFromTitle(s1, firstName, secondName);
         var s3 = RemoveSeriesPrefixFromTitle(s2, series);
         var s4 = RemoveAuthorPrefixFromTitle(s3, firstName, secondName);
-        return s4.Trim('•', ' ').Unquote().Unbrace('<', '>').CompressIfPossible();
+        return s4
+            .Trim('•', ' ')
+            .Unquote()
+            .Unbrace('«', '»')
+            .Unbrace('<', '>')
+            .CompressIfPossible();
 
         static string? GetRawTitle(Dictionary<string, object> post, string? series)
         {
@@ -121,7 +126,7 @@ public static class Parser
             var first = titleOptions.FirstOrDefault();
             var second = titleOptions.Skip(1).FirstOrDefault();
             var result = first == series && second != null ? second : first;
-            return result?.Trim(' ', '•').Unquote();
+            return result?.Trim(' ', '•').Replace('\n', ' ').Unquote();
         }
 
         static List<string> GetTitleOptions(Dictionary<string, object> post)
@@ -178,6 +183,7 @@ public static class Parser
                     "\\s+(первая|вторая|третья|четвертая|пятая|I{1,3}|IV|V{0,3}|\\d+)" +
                     "(\\.|,)", "")
                 .Trim();
+            
             if (string.IsNullOrWhiteSpace(t1))
                 return title.Replace(series, "").TrimStart('\n', ' ', '.');
             if (t1 != title) return t1;
