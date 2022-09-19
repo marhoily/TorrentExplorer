@@ -1,4 +1,3 @@
-using System.Xml.Linq;
 using Newtonsoft.Json.Linq;
 using Tests.Rutracker;
 using Tests.Utilities;
@@ -12,19 +11,15 @@ public class KinozalStep1
     [Fact]
     public async Task Convert()
     {
-        await using var fileStream = File.OpenRead(Step0.Output);
-        var xml = await XDocument.LoadAsync(
-            fileStream, LoadOptions.None, CancellationToken.None);
+        var books = await Step0.Output.ReadJson<KinozalBook[]>();
 
-        JArray Selector(XElement post)
+        JObject Selector(KinozalBook post)
         {
-            var htmlNode = post.ToString().ParseHtml();
-            return htmlNode.ParseWall();
+            var jArray = post.Post.Xml.ParseHtml().ParseWall();
+            var jObj = (JObject)jArray[0];
+            return jObj;
         }
 
-        await Output.SaveJson(xml.Root!
-            .Elements()
-            .Select(Selector)
-            .ToList());
+        await Output.SaveJson(books!.Select(Selector));
     }
 }

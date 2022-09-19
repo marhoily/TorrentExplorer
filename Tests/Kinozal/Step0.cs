@@ -1,12 +1,10 @@
 ﻿using System.Text;
-using System.Xml;
-using System.Xml.Linq;
 using Tests.Html;
 using Tests.Utilities;
 
 namespace Tests.Kinozal;
 
-public sealed record KinozalBook(KinozalForumPost Post, string Series);
+public sealed record KinozalBook(KinozalForumPost Post, string? Series);
 
 public class Step0
 {
@@ -48,30 +46,13 @@ public class Step0
             {
                 var topic = await _http.DownloadKinozalFantasyTopic(header);
                 var post = topic.GetKinozalForumPost();
-                var html = await _httpUtf8.Get($"http://kinozal.tv/get_srv_details.php?id={post.Id}&pagesd=0");
+                if (post.SeriesId == null) return new KinozalBook(post, null);
+                var html = await _httpUtf8.Get(
+                    "http://kinozal.tv/get_srv_details.php?" +
+                    $"id={post.Id}&pagesd={post.SeriesId}");
                 return new KinozalBook(post, html);
             });
 
         return await Task.WhenAll(headers);
     }
-
-    private static void SavePrettyXml(string file, string[] xmlList)
-    {
-        var settings = new XmlWriterSettings
-        {
-            OmitXmlDeclaration = true,
-            Indent = true
-        };
-
-        using var xmlWriter = XmlWriter.Create(File.OpenWrite(file), settings);
-        xmlWriter.WriteStartElement("blah");
-        foreach (var xml in xmlList)
-        {
-            var element = XElement.Parse(xml);
-            element.WriteTo(xmlWriter);
-        }
-
-        xmlWriter.WriteEndElement();
-    }
 }
-

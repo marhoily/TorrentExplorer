@@ -1,12 +1,13 @@
 ﻿using System.Text;
 using System.Xml;
 using HtmlAgilityPack;
+using RegExtract;
 using ServiceStack;
 using Tests.Utilities;
 
 namespace Tests.Kinozal;
 
-public sealed record KinozalForumPost(int Id, string Xml);
+public sealed record KinozalForumPost(int Id, int? SeriesId, string Xml);
 
 public static class KinozalParser
 {
@@ -32,7 +33,13 @@ public static class KinozalParser
             .SelectSubNode("//a")!
             .Href()!
             .Split("?id=")[1].ToInt();
-    
+
+        var seriesId = post
+            .SelectSubNodes("div[@class='bx1'][1]//ul[@class='lis']/li/a")
+            .FirstOrDefault(a => a.InnerText.Trim() == "Цикл")?
+            .GetAttributeValue("onclick", null)
+            .Extract<int>($"showtab\\({id},(\\d+)\\); return false;");
+
         var sb = new StringBuilder();
         using var writer = XmlWriter.Create(sb, Settings);
         writer.WriteStartElement("root");
@@ -41,6 +48,6 @@ public static class KinozalParser
             div.WriteTo(writer);
         writer.WriteEndElement();
         writer.Flush();
-        return new KinozalForumPost(id, sb.ToString());
+        return new KinozalForumPost(id, seriesId, sb.ToString());
     }
 }

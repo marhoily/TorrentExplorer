@@ -10,6 +10,9 @@
       <NamedTestSelector>
         <TestName>Tests.Step2.Test1</TestName>
       </NamedTestSelector>
+      <FixtureTestSelector>
+        <FixtureName>Tests.Rutracker.CherryPickParsing</FixtureName>
+      </FixtureTestSelector>
     </IgnoredTests>
   </Settings>
 </ProjectConfiguration>
