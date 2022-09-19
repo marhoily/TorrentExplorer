@@ -16,20 +16,38 @@ public sealed record SearchResultItem(
     string? SeriesName,
     int? NumberInSeries);
 
+public sealed class SearchEngine
+{
+    private readonly string _name;
+    private readonly Func<Http, Story, string, Task<SearchResult>> _search;
+    private readonly Uri _uri;
+
+    public SearchEngine(string name,
+        Func<Http, Story, string, Task<SearchResult>> search, string url)
+    {
+        _name = name;
+        _search = search;
+        _uri = new Uri(url);
+    }
+
+    public Task<SearchResult> Search(Http http, Story topic, string q)
+        => _search(http, topic, q);
+}
+
 public static class SearchEngines
 {
-    public static readonly Func<Http, Story, string, Task<SearchResult>>[]
+    public static readonly SearchEngine[]
         List =
         {
-            VseAudioknigiCom,
-            Knigorai,
-            AudioknigaComUa,
-            AbooksInfo,
-            ReadliNet,
-            MyBookRu,
-            FanlabRu,
-            AuthorToday,
-            //FlibustaSeries,
+            new(nameof(VseAudioknigiCom), VseAudioknigiCom,"https://vse-audioknigi.com"),
+            new(nameof(Knigorai), Knigorai,"https://knigorai.com"),
+            new(nameof(AudioknigaComUa), AudioknigaComUa,"https://audiokniga.com.ua"),
+            new(nameof(AbooksInfo), AbooksInfo,"https://abooks.info"),
+            new(nameof(ReadliNet), ReadliNet,"https://readli.net"),
+            new(nameof(MyBookRu), MyBookRu,"https://mybook.ru"),
+            new(nameof(FanlabRu), FanlabRu,"https://fantlab.ru"),
+            new(nameof(AuthorToday), AuthorToday,"https://author.today"),
+            //nameof( FlibustaSeries),FlibustaSeries,
         };
 
     private static readonly char[] Dashes = { '-', '–' };
@@ -93,6 +111,7 @@ public static class SearchEngines
             new Uri(new Uri("https://readli.net"), requestUri).ToString(),
             items.WhereNotNull().ToList());
     }
+
     private static async Task<SearchResult> MyBookRu(Http http, Story topic, string q)
     {
         var requestUri = $"search/?q={WebUtility.UrlEncode(q)}";
@@ -188,7 +207,7 @@ public static class SearchEngines
             "//p[@class='lnjchu-1 hhskLb']")!.InnerText;
         var author = article.SelectSubNode(
             "//div[@class='m4n24q-0 gFPQgy']")!.InnerText;
-        
+
         var series = default(string);
 
         return new SearchResultItem(null, title, author, series, null);
