@@ -15,33 +15,27 @@ public sealed class Cursor
         _ceiling = node.XPath;
     }
 
-    public void Set(HtmlNode? value) =>
+    private void Set(HtmlNode? value) =>
         Node = value?.XPath.StartsWith(_ceiling) != true ? null : value;
 
+    // ReSharper disable once UnusedMethodReturnValue.Global
     public Cursor GoFurther()
     {
         Set(Node?.GoFurther());
         return this;
     }
 
+    // ReSharper disable once UnusedMethodReturnValue.Global
     public Cursor GoDeeper()
     {
         Set(Node?.GoDeeper());
         return this;
     }
 
+    // ReSharper disable once UnusedMethodReturnValue.Global
     public Cursor SkipWhile(Func<HtmlNode, bool> predicate)
     {
         Set(Node?.SkipWhile(predicate));
         return this;
-    }
-
-    public string GetBarrier() =>
-        Node?.XPath ?? throw new InvalidOperationException(
-            "Cannot start a barrier from empty cursor");
-    public void AssertBarrierIsRespected(string barrier)
-    {
-        if (!barrier.Contains(GetBarrier()))
-            throw new Exception("Barrier is broken!");
     }
 }

@@ -35,9 +35,7 @@ public sealed class WallCollector
             }
             else if (_cursor.Node.InnerText.IsKnownTag())
             {
-                var barrier = _cursor.GetBarrier();
                 ProcessTag();
-                //_cursor.AssertBarrierIsRespected(barrier);
                 body = true;
             }
             else if (_cursor.Node.HasClass("sp-wrap"))
@@ -57,8 +55,8 @@ public sealed class WallCollector
 
     private void ProcessTag()
     {
-        var keyNode = _cursor.Node;
-        var key = _cursor.Node!.InnerText.HtmlTrim();
+        var keyNode = _cursor.Node!;
+        var key = keyNode.InnerText.HtmlTrim();
         
         if (!key.EndsWith(":")) 
             _cursor.GoFurther().SkipWhile(c => c.InnerText.HtmlTrim() == "");
