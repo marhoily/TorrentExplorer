@@ -35,7 +35,9 @@ public sealed class WallCollector
             }
             else if (_cursor.Node.InnerText.IsKnownTag())
             {
-                _cursor.Set(ProcessTag(_cursor.Node));
+                var barrier = _cursor.GetBarrier();
+                ProcessTag();
+                //_cursor.AssertBarrierIsRespected(barrier);
                 body = true;
             }
             else if (_cursor.Node.HasClass("sp-wrap"))
@@ -53,26 +55,28 @@ public sealed class WallCollector
         }
     }
 
-    private HtmlNode? ProcessTag(HtmlNode keyNode)
+    private void ProcessTag()
     {
-        var key = keyNode.InnerText.HtmlTrim();
+        var keyNode = _cursor.Node;
+        var key = _cursor.Node!.InnerText.HtmlTrim();
+        
+        if (!key.EndsWith(":")) 
+            _cursor.GoFurther().SkipWhile(c => c.InnerText.HtmlTrim() == "");
+        
+        if (_cursor.Node?.InnerText.HtmlTrim().StartsOrEndsWith(':') != true)
+            return;
 
-        var afterKey = !key.EndsWith(":") 
-            ? keyNode.GoFurther()?.SkipWhile(c => c.InnerText.HtmlTrim() == "") 
-            : keyNode;
-        if (afterKey?.InnerText.HtmlTrim().StartsOrEndsWith(':') != true)
-            return afterKey;
+        if (_cursor.Node == keyNode)
+            _cursor.GoFurther();
 
-        var interim = afterKey == keyNode ? afterKey.GoFurther() : afterKey;
-        var valueNode = interim?.SkipWhile(c => c.InnerText.HtmlTrim() is ":" or "");
+        _cursor.SkipWhile(c => c.InnerText.HtmlTrim() is ":" or "");
 
-        if (valueNode != null)
+        if (_cursor.Node != null)
             _state.AddAttribute(
                 key.TrimEnd(':').TrimEnd(),
-                valueNode.InnerText
+                _cursor.Node.InnerText
                     .TrimStart(':', ' ')
                     .Replace("&#776;", "")
                     .Trim());
-        return valueNode;
     }
 }

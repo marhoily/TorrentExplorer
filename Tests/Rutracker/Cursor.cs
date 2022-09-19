@@ -5,6 +5,7 @@ namespace Tests.Rutracker;
 
 public sealed class Cursor
 {
+    public static implicit operator HtmlNode?(Cursor c) => c.Node;
     private readonly string _ceiling;
     public HtmlNode? Node { get; private set; }
 
@@ -17,6 +18,30 @@ public sealed class Cursor
     public void Set(HtmlNode? value) =>
         Node = value?.XPath.StartsWith(_ceiling) != true ? null : value;
 
-    public void GoFurther() => Set(Node?.GoFurther());
-    public void GoDeeper() => Set(Node?.GoDeeper());
+    public Cursor GoFurther()
+    {
+        Set(Node?.GoFurther());
+        return this;
+    }
+
+    public Cursor GoDeeper()
+    {
+        Set(Node?.GoDeeper());
+        return this;
+    }
+
+    public Cursor SkipWhile(Func<HtmlNode, bool> predicate)
+    {
+        Set(Node?.SkipWhile(predicate));
+        return this;
+    }
+
+    public string GetBarrier() =>
+        Node?.XPath ?? throw new InvalidOperationException(
+            "Cannot start a barrier from empty cursor");
+    public void AssertBarrierIsRespected(string barrier)
+    {
+        if (!barrier.Contains(GetBarrier()))
+            throw new Exception("Barrier is broken!");
+    }
 }
