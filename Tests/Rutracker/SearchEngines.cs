@@ -2,6 +2,7 @@
 using System.Web;
 using HtmlAgilityPack;
 using JetBrains.Annotations;
+using Newtonsoft.Json.Linq;
 using Tests.Html;
 using Tests.Utilities;
 using Http = Tests.Html.Http;
@@ -204,7 +205,7 @@ public static class SearchEngines
         var book = await http.ReadliNet(bookRef.Href()!);
         var series = book
             .SelectSubNode("//div[@class='js-from-4']")?
-            .ParseWall()
+            .ParseWall().OfType<JObject>()
             .Single()
             .FindTags("Серия");
 

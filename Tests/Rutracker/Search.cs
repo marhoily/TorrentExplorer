@@ -70,8 +70,9 @@ public class Search
             var finished = await circuitBreaker.Execute(async () =>
             {
                 var results = await searchEngine.Search(Html, topic, q);
-                var result = results.Items.FirstOrDefault(
-                    result => result.ValidateSearchResultMatches(topic));
+                var result = results.Items
+                    .FirstOrDefault(result => 
+                        result.ValidateSearchResultMatches(topic));
                 if (result != null)
                 {
                     await Save(topic.TopicId, new { topic, q, result }, Outcome.Positive);

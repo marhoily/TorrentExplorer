@@ -1,4 +1,5 @@
-﻿using Tests.Html;
+﻿using JetBrains.Annotations;
+using Tests.Html;
 using StringExtensions = ServiceStack.StringExtensions;
 
 namespace Tests.Rutracker;
@@ -7,6 +8,7 @@ public sealed class SearchEngine
 {
     private readonly string _name;
     private readonly Func<Http, Story, string, Task<SearchResult>> _search;
+    [UsedImplicitly]
     private readonly Uri _uri;
     private readonly SqliteCache _cache;
 

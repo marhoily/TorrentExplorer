@@ -1,17 +1,22 @@
 ﻿using HtmlAgilityPack;
+using Newtonsoft.Json.Linq;
 using Tests.Utilities;
 
 namespace Tests.Rutracker;
 
 public sealed class WallCollector
 {
-    private WallCollectorState _state = null!;
-    private Cursor _cursor = null!;
+    private readonly WallCollectorState _state;
+    private readonly Cursor _cursor;
 
-    public List<Dictionary<string, object>> Parse(HtmlNode htmlNode)
+    public WallCollector(HtmlNode htmlNode)
     {
-        _state = new WallCollectorState(htmlNode.GetTopicId());
+        _state = new WallCollectorState();
         _cursor = new Cursor(htmlNode);
+    }
+
+    public JArray Parse()
+    {
         MoveOn();
         _state.PushCurrentSection();
         return _state.Sections;
@@ -59,7 +64,7 @@ public sealed class WallCollector
         var key = keyNode.InnerText.HtmlTrim();
 
         _cursor.GoFurther().SkipWhile(c => c.InnerText.HtmlTrim() == "");
-        
+
         if (!key.EndsWith(":"))
             if (_cursor.Node?.InnerText.HtmlTrim().StartsOrEndsWith(':') != true)
                 return;

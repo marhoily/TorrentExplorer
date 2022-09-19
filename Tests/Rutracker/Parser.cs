@@ -85,8 +85,6 @@ public static class Parser
     public static Topic? ParseRussianFantasyTopic(this Dictionary<string, object> post)
     {
         var topicId = post.FindTag("topic-id")!.ParseInt();
-        if (topicId == 6043436)
-            1.ToString();
         var year = post.FindTag("Год выпуска")?.TrimEnd('.', 'г', ' ');
         var lastName = post.FindTags("Фамилия автора", "Фамилии авторов", "Фамилия авторов",
             "Aвтор", "Автор" /* different "A"? */, "Автора", "Авторы");

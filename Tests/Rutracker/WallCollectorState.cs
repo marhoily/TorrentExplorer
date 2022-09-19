@@ -1,51 +1,46 @@
 ﻿using System.Net;
+using Newtonsoft.Json.Linq;
 
 namespace Tests.Rutracker;
 
 internal sealed class WallCollectorState
 {
-    public int? TopicId { get; }
-    private List<string> _currentHeaders = new();
-    private List<string> _currentSpoilers = new();
-    private readonly Dictionary<string, object> _currentSection = new();
-    public List<Dictionary<string, object>> Sections { get; } = new();
+    private JArray _headers = new();
+    private JArray _spoilers = new();
+    private readonly JObject _attributes = new();
 
-    public WallCollectorState(int? topicId)
-    {
-        TopicId = topicId;
-    }
+    public JArray Sections { get; } = new();
+
 
     public void PushCurrentSection()
     {
-        if (_currentSection.Count <= 0) return;
-        var tmp = new Dictionary<string, object>();
-        if (TopicId != null)
+        if (_attributes.Count <= 0) return;
+        var tmp = new JObject
         {
-            tmp["topic-id"] = TopicId;
-            tmp["url"] = $"https://rutracker.org/forum/viewtopic.php?t={TopicId}";
-        }
+            ["headers"] = _headers
+        };
 
-        tmp["headers"] = _currentHeaders;
-        foreach (var (k, v) in _currentSection) tmp.Add(k, v);
-        if (_currentSpoilers.Count > 0)
+        foreach (var (k, v) in _attributes) 
+            tmp.Add(k, v);
+        if (_spoilers.Count > 0)
         {
-            tmp["spoilers"] = _currentSpoilers;
-            _currentSpoilers = new List<string>();
+            tmp["spoilers"] = _spoilers;
+            _spoilers = new JArray();
         }
         Sections.Add(tmp);
-        _currentHeaders = new List<string>();
-        _currentSection.Clear();
+        _headers = new JArray();
+        _attributes.RemoveAll();
     }
 
     public void AddHeader(string value) =>
-        _currentHeaders.Add(WebUtility.HtmlDecode(value));
+        _headers.Add(WebUtility.HtmlDecode(value));
 
     public void AddAttribute(string key, string value)
     {
-        if (!_currentSection.ContainsKey(key))
-            _currentSection.Add(key, WebUtility.HtmlDecode(value));
+        if (!_attributes.ContainsKey(key))
+            _attributes.Add(key, WebUtility.HtmlDecode(value));
     }
 
     public void AddSpoiler(string value) =>
-        _currentSpoilers.Add(WebUtility.HtmlDecode(value));
+        _spoilers.Add(WebUtility.HtmlDecode(value));
 }
