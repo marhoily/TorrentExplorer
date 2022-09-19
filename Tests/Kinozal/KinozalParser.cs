@@ -45,7 +45,7 @@ public static class KinozalParser
         writer.WriteStartElement("root");
         writer.WriteAttributeString("topic-id", id.ToString());
         foreach (var div in post.SelectSubNodes("div[@class='bx1 justify']"))
-            div.WriteTo(writer);
+            div.CleanUpAndWriteTo(writer);
         writer.WriteEndElement();
         writer.Flush();
         return new KinozalForumPost(id, seriesId, sb.ToString());

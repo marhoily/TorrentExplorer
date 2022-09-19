@@ -13,6 +13,9 @@
       <FixtureTestSelector>
         <FixtureName>Tests.Rutracker.CherryPickParsing</FixtureName>
       </FixtureTestSelector>
+      <NamedTestSelector>
+        <TestName>Tests.Rutracker.Search.Do</TestName>
+      </NamedTestSelector>
     </IgnoredTests>
   </Settings>
 </ProjectConfiguration>

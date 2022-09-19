@@ -33,7 +33,7 @@ public class Step0
 
     private async Task<KinozalBook[]> GetKinozalForumPosts()
     {
-        var headerPages = await Task.WhenAll(Enumerable.Range(0, 60)
+        int[][] headerPages = await Task.WhenAll(Enumerable.Range(0, 60)
             .Select(async i =>
             {
                 var page = await _http.DownloadKinozalFantasyHeaders(i);
