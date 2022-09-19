@@ -59,20 +59,13 @@ public sealed class WallCollector
     private HtmlNode? ProcessTag(HtmlNode node)
     {
         var key = node.InnerText.Replace("&nbsp;", " ").TrimEnd();
-        var seenColon = key.EndsWith(":");
-        var start = node;
 
-        if (!seenColon)
-        {
-            node = SkipEmpty(node);
-            if (node == null)
-                return null;
-            var text = node.InnerText.Trim();
-            if (!text.EndsWith(":") && !text.StartsWith(":"))
-                return node;
-        }        
+        var colon = key.EndsWith(":") ? node : SkipEmpty(node);
+        if (colon?.InnerText.Trim() is not { } text ||
+            !text.StartsWith(":") && !text.EndsWith(":"))
+            return colon;
 
-        var goFurther = start != node ? node : node.GoFurther();
+        var goFurther = node != colon ? colon : colon.GoFurther();
         while (goFurther?.InnerText.Trim() is ":" or "")
             goFurther = goFurther.GoFurther();
 
