@@ -29,7 +29,7 @@ public class WallParsing
 
         await Output.SaveJson(
             posts.Select(html => html.ParseHtml())
-                .Select(x => ParseOne(x.ChildNodes[0]))
+                .Select(ParseOne)
                 .ToList());
     }
 }

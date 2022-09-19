@@ -47,7 +47,8 @@ public static class HtmlExtensions
     {
         var htmlDocument = new HtmlDocument();
         htmlDocument.LoadHtml(html);
-        return htmlDocument.DocumentNode;
+        return htmlDocument.DocumentNode.ChildNodes
+            .FirstOrDefault(n=>n.NodeType == HtmlNodeType.Element)!;
     }
 
     public static HtmlNode? SelectSubNode(this HtmlNode node, string xpath)

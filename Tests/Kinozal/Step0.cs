@@ -7,6 +7,8 @@ namespace Tests.Kinozal;
 
 public class Step0
 {
+    public const string Output= @"C:\temp\TorrentsExplorerData\Extract\kinozal\step0.xml";
+
     [Fact]
     public async Task DownloadRawHtml()
     {
@@ -37,7 +39,7 @@ public class Step0
                 return sb.ToString();
             });
         var htmlNodes = await Task.WhenAll(headers);
-        SavePrettyXml(@"C:\temp\TorrentsExplorerData\Extract\kinozal\step0.xml ", htmlNodes);
+        SavePrettyXml(Output, htmlNodes);
     }
 
     private static void SavePrettyXml(string file, string[] xmlList)
