@@ -74,7 +74,7 @@ public class Search
                     result => result.ValidateSearchResultMatches(topic));
                 if (result != null)
                 {
-                    await Save(topic.TopicId, new { topic, q, result });
+                    await Save(topic.TopicId, new { topic, q, result }, Outcome.Positive);
                     return true;
                 }
 
@@ -84,7 +84,7 @@ public class Search
             if (finished) return true;
         }
 
-        await Save(topic.TopicId, new { topic, q, negativeSearchResults });
+        await Save(topic.TopicId, new { topic, q, negativeSearchResults }, Outcome.Negative);
         return false;
     }
 

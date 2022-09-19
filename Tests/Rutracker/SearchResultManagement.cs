@@ -10,11 +10,14 @@ public static class SearchResultManagement
         Negative
     }
 
-    public static async Task Save<T>(int id, T obj)
+    public static async Task Save<T>(int id, T obj, Outcome outcome)
     {
-        var oppositeName = FileName(id);
-        if (File.Exists(oppositeName))
-            File.Delete(oppositeName);
+        if (outcome == Outcome.Positive)
+        {
+            if (!File.Exists(FileName(id)))
+                return;
+        }
+
         await FileName(id).SaveJson(obj);
     }
 
@@ -26,7 +29,8 @@ public static class SearchResultManagement
         if (readJson == null)
             return null;
         return readJson.ContainsKey("result")
-            ? Outcome.Positive : Outcome.Negative;
+            ? Outcome.Positive
+            : Outcome.Negative;
     }
 
     public enum RefreshWhen
@@ -53,5 +57,4 @@ public static class SearchResultManagement
             _ => throw new ArgumentOutOfRangeException(nameof(refreshWhen), refreshWhen, null)
         };
     }
-
 }

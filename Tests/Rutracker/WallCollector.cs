@@ -1,31 +1,8 @@
 ﻿using HtmlAgilityPack;
+using ServiceStack;
 using Tests.Utilities;
 
 namespace Tests.Rutracker;
-
-public sealed class Cursor
-{
-    private readonly string _ceiling;
-    public HtmlNode? Node { get; private set; }
-
-    public Cursor(HtmlNode node)
-    {
-        Node = node;
-        _ceiling = node.XPath;
-    }
-
-    public void Set(HtmlNode? value) =>
-        Node = value?.XPath.StartsWith(_ceiling) != true ? null : value;
-
-    public void GoFurther() => Set(Node?.GoFurther());
-    public void GoDeeper() => Set(Node?.GoDeeper());
-}
-
-public static class WallCollectorExt
-{
-    public static List<Dictionary<string, object>> ParseWall(this HtmlNode htmlNode) =>
-        new WallCollector().Parse(htmlNode);
-}
 
 public sealed class WallCollector
 {
@@ -83,23 +60,19 @@ public sealed class WallCollector
     {
         var key = node.InnerText.Replace("&nbsp;", " ").TrimEnd();
         var seenColon = key.EndsWith(":");
-        var moved = false;
-        while (!seenColon)
+        var start = node;
+
+        if (!seenColon)
         {
-            if (node.NextSibling != null)
-            {
-                moved = true;
-                node = node.NextSibling;
-            }
-            else node = node.ParentNode;
-
+            node = SkipEmpty(node);
+            if (node == null)
+                return null;
             var text = node.InnerText.Trim();
-            seenColon = text.EndsWith(":") || text.StartsWith(":");
-            if (!seenColon && !string.IsNullOrWhiteSpace(text))
+            if (!text.EndsWith(":") && !text.StartsWith(":"))
                 return node;
-        }
+        }        
 
-        var goFurther = moved ? node : node.GoFurther();
+        var goFurther = start != node ? node : node.GoFurther();
         while (goFurther?.InnerText.Trim() is ":" or "")
             goFurther = goFurther.GoFurther();
 
@@ -111,5 +84,17 @@ public sealed class WallCollector
                     .Replace("&#776;", "")
                     .Trim());
         return goFurther;
+    }
+
+    private static HtmlNode? SkipEmpty(HtmlNode start)
+    {
+        var current = start;
+        do
+        {
+            current = current.GoFurther();
+            if (current == null) break;
+        } while (string.IsNullOrWhiteSpace(current.InnerText));
+
+        return current;
     }
 }
