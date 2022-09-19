@@ -1,5 +1,4 @@
-﻿using System.Runtime.CompilerServices;
-using Tests.Utilities;
+﻿using Tests.Utilities;
 
 namespace Tests.Rutracker;
 

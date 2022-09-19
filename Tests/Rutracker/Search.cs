@@ -14,7 +14,7 @@ public class Search
     private readonly ITestOutputHelper _testOutputHelper;
 
     private static readonly Http Html = new(
-        new SqliteCache(CachingStrategy.Normal),
+        new SqliteCache(),
         Encoding.Default);
 
     public Search(ITestOutputHelper testOutputHelper)

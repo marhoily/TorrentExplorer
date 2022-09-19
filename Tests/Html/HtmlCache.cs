@@ -16,7 +16,7 @@ public sealed class SqliteCache : IHtmlCache
 {
     private readonly IDbConnection _db;
 
-    public SqliteCache(CachingStrategy cachingStrategy)
+    public SqliteCache()
     {
         var dbFactory = new OrmLiteConnectionFactory(
             @"C:\temp\TorrentsExplorerData\HtmlCache.db",
