@@ -1,5 +1,4 @@
 ﻿using HtmlAgilityPack;
-using ServiceStack;
 using Tests.Utilities;
 
 namespace Tests.Rutracker;
@@ -20,8 +19,6 @@ public sealed class WallCollector
 
     private void MoveOn()
     {
-        if (_state.TopicId == 3470993)
-            1.ToString();
         var body = false;
         while (_cursor.Node != null)
         {
@@ -56,30 +53,26 @@ public sealed class WallCollector
         }
     }
 
-    private HtmlNode? ProcessTag(HtmlNode start)
+    private HtmlNode? ProcessTag(HtmlNode keyNode)
     {
-        var key = start.InnerText.Replace("&nbsp;", " ").TrimEnd();
+        var key = keyNode.InnerText.HtmlTrim();
 
-        var colonNode = !key.EndsWith(":") 
-            ? start.GoFurther()?.SkipWhile(c => c.InnerText.HtmlTrim() == "") 
-            : start;
-        if (colonNode?.InnerText.Trim() is not { } text ||
-            !text.Replace("&nbsp;", "").StartsWith(":") && 
-            !text.Replace("&nbsp;", "").EndsWith(":"))
-            return colonNode;
+        var afterKey = !key.EndsWith(":") 
+            ? keyNode.GoFurther()?.SkipWhile(c => c.InnerText.HtmlTrim() == "") 
+            : keyNode;
+        if (afterKey?.InnerText.HtmlTrim().StartsOrEndsWith(':') != true)
+            return afterKey;
 
-        var next = start != colonNode ? colonNode : colonNode.GoFurther();
-        var valueNode = next?
-            .SkipWhile(c => c.InnerText.HtmlTrim() is ":" or "");
+        var interim = afterKey == keyNode ? afterKey.GoFurther() : afterKey;
+        var valueNode = interim?.SkipWhile(c => c.InnerText.HtmlTrim() is ":" or "");
 
         if (valueNode != null)
             _state.AddAttribute(
-                key.TrimEnd(':').Trim(),
+                key.TrimEnd(':').TrimEnd(),
                 valueNode.InnerText
                     .TrimStart(':', ' ')
                     .Replace("&#776;", "")
                     .Trim());
         return valueNode;
     }
-
 }

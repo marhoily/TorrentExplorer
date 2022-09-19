@@ -27,6 +27,9 @@ public static class StringExt
 
     public static string Quote(this string s) => $"'{s}'";
 
+    public static bool StartsOrEndsWith(this string s, char c) =>
+        s.StartsWith(c) || s.EndsWith(c);
+
     public static string HtmlTrim(this string s) =>
         s.Replace("&nbsp;", " ").Trim();
 
