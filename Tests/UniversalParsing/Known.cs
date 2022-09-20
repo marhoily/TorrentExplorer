@@ -1,19 +1,18 @@
-﻿namespace Tests.UniversalParsing;
+﻿using Tests.Utilities;
+
+namespace Tests.UniversalParsing;
 
 public static class Known
 {
     public static bool IsKnownTag(this string value)
     {
-        var strip = value.Replace("&nbsp;", "");
-        return !string.IsNullOrWhiteSpace(strip) &&
-               Tags.Any(t => Eq(strip, t));
+        var input = value.Replace("&nbsp;", "");
+        return Tags.HasPrefixOver(input) is > 0 and var i &&
+               input[i..].Trim() is "" or ":";
     }
+    
 
-    private static bool Eq(string value, string tag) =>
-        value.StartsWith(tag) &&
-        value[tag.Length..].Trim() is "" or ":";
-
-    private static readonly string[] Tags =
+    private static readonly TrieSet Tags =new()
     {
         "Название",
         "Выпущено",
