@@ -120,14 +120,14 @@ public static class HtmlExtensions
                 node.WriteAttributes(writer);
                 if (node.HasChildNodes)
                     foreach (var childNode in node.ChildNodes)
-                        childNode.WriteTo(writer);
+                        childNode.CleanUpAndWriteTo(writer);
                 writer.WriteEndElement();
                 break;
             case HtmlNodeType.Comment:
                 writer.WriteComment(((HtmlCommentNode) node).GetXmlComment());
                 break;
             case HtmlNodeType.Text:
-                writer.WriteString(((HtmlTextNode) node).Text);
+                writer.WriteString(((HtmlTextNode) node).Text.CleanUp());
                 break;
             default:
                 throw new ArgumentOutOfRangeException(node.NodeType.ToString());

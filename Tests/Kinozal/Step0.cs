@@ -65,11 +65,8 @@ public class Step0
                     $"id={post.Id}&pagesd={post.SeriesId}");
                 var sb = new StringBuilder();
                 await using var writer = XmlWriter.Create(sb, Settings);
-                var clean = html.CleanUp();
-                $"<p>{clean}</p>".ParseHtml().CleanUpAndWriteTo(writer);
+                $"<p>{html}</p>".ParseHtml().CleanUpAndWriteTo(writer);
                 await writer.FlushAsync();
-            
-
                 return new KinozalBook(post, XElement.Parse(sb.ToString()));
             });
 
