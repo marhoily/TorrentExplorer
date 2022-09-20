@@ -1,4 +1,4 @@
-﻿using HtmlAgilityPack;
+﻿using System.Xml.Linq;
 using Tests.Utilities;
 
 namespace Tests.Rutracker;
@@ -10,15 +10,12 @@ namespace Tests.Rutracker;
 /// </summary>
 public sealed class Cursor
 {
-    private readonly string _ceiling;
-    public HtmlNode? Node { get; private set; }
-    public static implicit operator HtmlNode?(Cursor c) => c.Node;
+    private readonly XNode _ceiling;
+    public XNode? Node { get; private set; }
+    public XElement? Element => Node as XElement;
+    public static implicit operator XNode?(Cursor c) => c.Node;
 
-    public Cursor(HtmlNode node)
-    {
-        Node = node;
-        _ceiling = node.XPath;
-    }
+    public Cursor(XNode node) => _ceiling = Node = node;
 
     // ReSharper disable once UnusedMethodReturnValue.Global
     public Cursor GoFurther()
@@ -35,12 +32,12 @@ public sealed class Cursor
     }
 
     // ReSharper disable once UnusedMethodReturnValue.Global
-    public Cursor SkipWhile(Func<HtmlNode, bool> predicate)
+    public Cursor SkipWhile(Func<XNode, bool> predicate)
     {
         Set(Node?.SkipWhile(predicate));
         return this;
     }
 
-    private void Set(HtmlNode? value) =>
-        Node = value?.XPath.StartsWith(_ceiling) != true ? null : value;
+    private void Set(XNode? value) =>
+        Node = value?.Ancestors().Contains(_ceiling) == true ? value : null;
 }

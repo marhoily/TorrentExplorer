@@ -15,7 +15,7 @@ public class KinozalStep1
 
         static JObject Selector(KinozalBook post)
         {
-            var jArray = post.Post.Xml.ToString().ParseHtml().ParseWall();
+            var jArray = post.Post.Xml.ParseWall();
             var jObj = (JObject)jArray[0];
             if (post.Series != null)
                 jObj.Add("Цикл", post.Series.ToString());

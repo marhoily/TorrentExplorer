@@ -9,7 +9,7 @@ public class CherryPickOnJson
     [Fact]
     public async Task Do()
     {
-        var posts = await WallParsing.Output.ReadJson<Dictionary<string, object>[][]>();
+        var posts = await Step1.Output.ReadJson<Dictionary<string, object>[][]>();
         await Output.SaveJson(posts!
             .SelectMany(p => p)
             .WhereNotNull()

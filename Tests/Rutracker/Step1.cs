@@ -1,20 +1,21 @@
-using HtmlAgilityPack;
+using System.Xml.Linq;
 using Newtonsoft.Json.Linq;
 using Tests.Utilities;
 
 namespace Tests.Rutracker;
 
-public class WallParsing
+public class Step1
 {
     public const string Output = @"C:\temp\TorrentsExplorerData\Extract\Rutracker\wall.json";
 
     [Fact]
-    public async Task Parse()
+    public async Task WallParse()
     {
-        var raw = await Step0.Output.ReadJson<string[]>();
-        var posts = raw ?? Array.Empty<string>();
+        await using var file = File.OpenRead(Step0.Output);
+        var many = await XDocument.LoadAsync(
+            file, LoadOptions.PreserveWhitespace, CancellationToken.None);
 
-        static JArray ParseOne(HtmlNode post)
+        static JArray ParseOne(XNode post)
         {
             var topicId = post.GetTopicId();
             var result = post.ParseWall();
@@ -27,9 +28,8 @@ public class WallParsing
             return result;
         }
 
-        await Output.SaveJson(
-            posts.Select(html => html.ParseHtml())
-                .Select(ParseOne)
-                .ToList());
+
+        var xElements = many.Elements().Single().Elements();
+        await Output.SaveJson(xElements.Select(ParseOne).ToList());
     }
 }

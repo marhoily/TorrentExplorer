@@ -9,8 +9,10 @@ using Http = Tests.Html.Http;
 
 namespace Tests.Rutracker;
 
+[UsedImplicitly]
 public sealed record SearchResult(string Url, List<SearchResultItem> Items);
 
+[UsedImplicitly]
 public sealed record SearchResultItem(
     string? Url,
     string Title,
@@ -205,6 +207,7 @@ public static class SearchEngines
         var book = await http.ReadliNet(bookRef.Href()!);
         var series = book
             .SelectSubNode("//div[@class='js-from-4']")?
+            .CleanUpToXml()!
             .ParseWall().OfType<JObject>()
             .Single()
             .FindTags("Серия");

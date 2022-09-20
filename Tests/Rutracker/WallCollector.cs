@@ -1,4 +1,5 @@
-﻿using HtmlAgilityPack;
+﻿using System.Xml.Linq;
+using System.Xml.XPath;
 using Newtonsoft.Json.Linq;
 using Tests.Utilities;
 
@@ -9,7 +10,7 @@ public sealed class WallCollector
     private readonly WallCollectorState _state;
     private readonly Cursor _cursor;
 
-    public WallCollector(HtmlNode htmlNode)
+    public WallCollector(XNode htmlNode)
     {
         _state = new WallCollectorState();
         _cursor = new Cursor(htmlNode);
@@ -27,7 +28,7 @@ public sealed class WallCollector
         var body = false;
         while (_cursor.Node != null)
         {
-            if (_cursor.Node.IsHeader())
+            if (_cursor.Element?.IsHeader() == true)
             {
                 if (body)
                 {
@@ -35,19 +36,19 @@ public sealed class WallCollector
                     body = false;
                 }
 
-                _state.AddHeader(_cursor.Node.InnerText);
+                _state.AddHeader(_cursor.Element.InnerText());
                 _cursor.GoFurther();
             }
-            else if (_cursor.Node.InnerText.IsKnownTag())
+            else if (_cursor.Node.InnerText().IsKnownTag())
             {
                 ProcessTag();
                 body = true;
             }
-            else if (_cursor.Node.HasClass("sp-wrap"))
+            else if (_cursor.Element?.HasClass("sp-wrap") == true)
             {
-                _state.AddSpoiler(_cursor.Node
-                    .SelectSubNode("div[@class='sp-head folded']")!
-                    .InnerText);
+                _state.AddSpoiler(_cursor.Element
+                    .XPathSelectElement("div[@class='sp-head folded']")!
+                    .InnerText());
                 _cursor.GoFurther();
                 body = true;
             }
@@ -61,20 +62,20 @@ public sealed class WallCollector
     private void ProcessTag()
     {
         var keyNode = _cursor.Node!;
-        var key = keyNode.InnerText.HtmlTrim();
+        var key = keyNode.InnerText().HtmlTrim();
 
-        _cursor.GoFurther().SkipWhile(c => c.InnerText.HtmlTrim() == "");
+        _cursor.GoFurther().SkipWhile(c => c.InnerText().HtmlTrim() == "");
 
         if (!key.EndsWith(":"))
-            if (_cursor.Node?.InnerText.HtmlTrim().StartsOrEndsWith(':') != true)
+            if (_cursor.Node?.InnerText().HtmlTrim().StartsOrEndsWith(':') != true)
                 return;
 
-        _cursor.SkipWhile(c => c.InnerText.HtmlTrim() is ":" or "");
+        _cursor.SkipWhile(c => c.InnerText().HtmlTrim() is ":" or "");
 
         if (_cursor.Node != null)
             _state.AddAttribute(
                 key.TrimEnd(':').TrimEnd(),
-                _cursor.Node.InnerText
+                _cursor.Node.InnerText()
                     .TrimStart(':', ' ')
                     .Replace("&#776;", "")
                     .Trim());
