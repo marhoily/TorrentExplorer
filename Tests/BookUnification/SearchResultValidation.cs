@@ -1,6 +1,7 @@
-﻿using Tests.Utilities;
+﻿using Tests.Rutracker;
+using Tests.Utilities;
 
-namespace Tests.Rutracker;
+namespace Tests.BookUnification;
 
 public static class SearchResultValidation
 {
@@ -22,7 +23,7 @@ public static class SearchResultValidation
                 return false;
         }
 
-        if (CompareTitles(result, topic)) 
+        if (CompareTitles(result, topic))
             return true;
         return false;
     }
@@ -56,7 +57,7 @@ public static class SearchResultValidation
         .Replace('a', 'а') //русский..topic
         .Replace('o', 'о') //русский..topic
         .Replace('x', 'х') //русский..topic
-        .Replace('–', '-') 
+        .Replace('–', '-')
         .Replace("«", "")
         .Replace("»", "")
         .Replace("\"", "")
@@ -100,9 +101,9 @@ public static class SearchResultValidation
         if (formal.Contains(',') || manual.Contains(','))
         {
             foreach (var f in formal.Split(',', StringSplitOptions.RemoveEmptyEntries))
-            foreach (var m in manual.Split(',', StringSplitOptions.RemoveEmptyEntries))
-                if (CompareAuthors(f, m))
-                    return true;
+                foreach (var m in manual.Split(',', StringSplitOptions.RemoveEmptyEntries))
+                    if (CompareAuthors(f, m))
+                        return true;
         }
 
         var ff = formal.Split(' ', StringSplitOptions.RemoveEmptyEntries).ToHashSet();

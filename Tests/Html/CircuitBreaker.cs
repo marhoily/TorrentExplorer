@@ -1,4 +1,4 @@
-﻿namespace Tests.Rutracker;
+﻿namespace Tests.Html;
 
 public sealed class CircuitBreaker
 {

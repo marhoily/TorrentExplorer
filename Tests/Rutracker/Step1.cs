@@ -1,5 +1,6 @@
 using System.Xml.Linq;
 using Newtonsoft.Json.Linq;
+using Tests.UniversalParsing;
 using Tests.Utilities;
 
 namespace Tests.Rutracker;

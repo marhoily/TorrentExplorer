@@ -4,10 +4,12 @@ using HtmlAgilityPack;
 using JetBrains.Annotations;
 using Newtonsoft.Json.Linq;
 using Tests.Html;
+using Tests.Rutracker;
+using Tests.UniversalParsing;
 using Tests.Utilities;
 using Http = Tests.Html.Http;
 
-namespace Tests.Rutracker;
+namespace Tests.BookUnification;
 
 [UsedImplicitly]
 public sealed record SearchResult(string Url, List<SearchResultItem> Items);

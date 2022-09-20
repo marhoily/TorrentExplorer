@@ -3,7 +3,7 @@ using System.Xml.XPath;
 using Newtonsoft.Json.Linq;
 using Tests.Utilities;
 
-namespace Tests.Rutracker;
+namespace Tests.UniversalParsing;
 
 public sealed class WallCollector
 {

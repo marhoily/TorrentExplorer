@@ -18,14 +18,6 @@ public static class StringExt
 
     public static string? NullifyWhenEmpty(this string x) => x == "" ? null : x;
 
-    public static int ParseHtmlInt(this string s)
-    {
-        var m = s.Replace("&nbsp;", "").Replace(",", "");
-        return !int.TryParse(m, out var result)
-            ? throw new Exception($"Words count '{m}' is not a valid int")
-            : result;
-    }
-
     public static string Quote(this string s) => $"'{s}'";
 
     public static bool StartsOrEndsWith(this string s, char c) =>
@@ -70,20 +62,6 @@ public static class StringExt
         return s;
     }
 
-    public static int ParseIntOrWord(this string s)
-    {
-        return int.TryParse(s, out var result)
-            ? result
-            : s switch
-            {
-                // книга..
-                "первая" => 1,
-                "вторая" => 2,
-                "третья" => 3,
-                _ => throw new Exception($"Words count '{s}' is not a valid int")
-            };
-    }
-
     public static int? TryParseIntOrWord(this string s)
     {
         return int.TryParse(s, out var result)
@@ -108,8 +86,6 @@ public static class StringExt
         return input.EndsWith(postfix) ? input[..^postfix.Length] : input;
     }
 
-    public static string TrimPrefix(this string input, string prefix)
-    {
-        return input.StartsWith(prefix) ? input[prefix.Length..] : input;
-    }
+    public static string TrimPrefix(this string input, string prefix) => 
+        input.StartsWith(prefix) ? input[prefix.Length..] : input;
 }

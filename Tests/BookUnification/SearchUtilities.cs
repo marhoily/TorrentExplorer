@@ -1,6 +1,6 @@
 ﻿using System.Text.RegularExpressions;
 
-namespace Tests.Rutracker;
+namespace Tests.BookUnification;
 
 public static class SearchUtilities
 {

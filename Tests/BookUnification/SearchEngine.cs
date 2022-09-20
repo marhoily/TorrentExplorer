@@ -1,8 +1,9 @@
 ﻿using JetBrains.Annotations;
 using Tests.Html;
+using Tests.Rutracker;
 using StringExtensions = ServiceStack.StringExtensions;
 
-namespace Tests.Rutracker;
+namespace Tests.BookUnification;
 
 public sealed class SearchEngine
 {

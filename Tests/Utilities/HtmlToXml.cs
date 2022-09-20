@@ -8,7 +8,33 @@ namespace Tests.Utilities;
 
 public static class HtmlToXml
 {
-    public static void WriteAttributes(this HtmlNode node, XmlWriter writer)
+    public static XNode? CleanUpToXml(this HtmlNode node) => 
+        node.CleanUpTo(new XElement("x")).FirstNode;
+
+    public static void CleanUpAndWriteTo(this HtmlNode node, XmlWriter writer)
+    {
+        switch (node.NodeType)
+        {
+            case HtmlNodeType.Element:
+                writer.WriteStartElement(node.OriginalName);
+                node.WriteAttributes(writer);
+                if (node.HasChildNodes)
+                    foreach (var childNode in node.ChildNodes)
+                        childNode.CleanUpAndWriteTo(writer);
+                writer.WriteEndElement();
+                break;
+            case HtmlNodeType.Comment:
+                writer.WriteComment(((HtmlCommentNode) node).GetXmlComment());
+                break;
+            case HtmlNodeType.Text:
+                writer.WriteString(((HtmlTextNode) node).Text.CleanUp());
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(node.NodeType.ToString());
+        }
+    }
+
+    private static void WriteAttributes(this HtmlNode node, XmlWriter writer)
     {
         if (!node.HasAttributes) return;
         foreach (var htmlAttribute in node.Attributes)
@@ -17,7 +43,7 @@ public static class HtmlToXml
                 WebUtility.HtmlDecode(htmlAttribute.Value));
     }
 
-    public static string GetXmlName(string name, bool isAttribute, bool preserveXmlNamespaces)
+    private static string GetXmlName(string name, bool isAttribute, bool preserveXmlNamespaces)
     {
         string empty = string.Empty;
         bool flag = true;
@@ -46,36 +72,13 @@ public static class HtmlToXml
         return flag ? empty : "_" + empty;
     }
 
-    public static string GetXmlComment(this HtmlCommentNode comment)
+    private static string GetXmlComment(this HtmlCommentNode comment)
     {
         string comment1 = comment.Comment;
         return comment1.Substring(4, comment1.Length - 7).Replace("--", " - -");
     }
 
-    public static void CleanUpAndWriteTo(this HtmlNode node, XmlWriter writer)
-    {
-        switch (node.NodeType)
-        {
-            case HtmlNodeType.Element:
-                writer.WriteStartElement(node.OriginalName);
-                node.WriteAttributes(writer);
-                if (node.HasChildNodes)
-                    foreach (var childNode in node.ChildNodes)
-                        childNode.CleanUpAndWriteTo(writer);
-                writer.WriteEndElement();
-                break;
-            case HtmlNodeType.Comment:
-                writer.WriteComment(((HtmlCommentNode) node).GetXmlComment());
-                break;
-            case HtmlNodeType.Text:
-                writer.WriteString(((HtmlTextNode) node).Text.CleanUp());
-                break;
-            default:
-                throw new ArgumentOutOfRangeException(node.NodeType.ToString());
-        }
-    }
-    
-    public static void AddAttributesTo(this HtmlNode node, XElement target)
+    private static void AddAttributesTo(this HtmlNode node, XElement target)
     {
         if (!node.HasAttributes) return;
         foreach (var htmlAttribute in node.Attributes)
@@ -83,11 +86,8 @@ public static class HtmlToXml
                 GetXmlName(htmlAttribute.Name, true, true),
                 WebUtility.HtmlDecode(htmlAttribute.Value)));
     }
-    
-    public static XNode? CleanUpToXml(this HtmlNode node) => 
-        node.CleanUpTo(new XElement("x")).FirstNode;
 
-    public static XElement CleanUpTo(this HtmlNode node, XElement target)
+    private static XElement CleanUpTo(this HtmlNode node, XElement target)
     {
         switch (node.NodeType)
         {
@@ -111,5 +111,4 @@ public static class HtmlToXml
 
         return target;
     }
-
 }

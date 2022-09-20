@@ -3,19 +3,19 @@ using Tests.Utilities;
 
 namespace Tests.Rutracker;
 
-public class CherryPickOnJson
+public class Step2
 {
     public const string Output = @"C:\temp\TorrentsExplorerData\Extract\Rutracker\cherry-pick.json";
 
     [Fact]
-    public async Task Do()
+    public async Task CherryPickOnJson()
     {
         var posts = await Step1.Output.ReadJson<JObject[][]>();
         await Output.SaveJson(posts!
             .SelectMany(p => p)
             .WhereNotNull()
             .Select(section => section.ParseRussianFantasyTopic())
-            .Where(result => result != null)
+            .WhereNotNull()
             .ToList());
     }
 }

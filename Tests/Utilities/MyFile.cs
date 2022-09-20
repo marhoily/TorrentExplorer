@@ -22,10 +22,9 @@ public static class MyFile
         Directory.CreateDirectory(folder);
     }
 
-    public static async Task SaveJson<T>(this string file, T obj)
-    {
-        await WriteAllTextAsync(file, JsonConvert.SerializeObject(obj, CommonSettings.Json));
-    }
+    public static async Task SaveJson<T>(this string file, T obj) => 
+        await WriteAllTextAsync(file, JsonConvert.SerializeObject(obj, JsonSettings));
+
     public static void SaveXml<T>(this string file, T obj)
     {
         var serializer = new YAXSerializer(typeof(T));
@@ -54,11 +53,18 @@ public static class MyFile
     public static async Task<T?> ReadJson<T>(this string file)
     {
         var json = await file.ReadAllTextOrNullAsync();
-        return json == null ? default : JsonConvert.DeserializeObject<T>(json, CommonSettings.Json);
+        return json == null ? default : JsonConvert.DeserializeObject<T>(json, JsonSettings);
     }
     public static T? ReadXml<T>(this string file)
     {
         var serializer = new YAXSerializer(typeof(T));
         return (T?)serializer.DeserializeFromFile(file);
     }
+
+    private static readonly JsonSerializerSettings JsonSettings = new()
+    {
+        Formatting = Formatting.Indented,
+        NullValueHandling = NullValueHandling.Ignore,
+        DefaultValueHandling = DefaultValueHandling.Ignore
+    };
 }

@@ -2,12 +2,13 @@
 using System.Text.RegularExpressions;
 using FluentAssertions;
 using Tests.Html;
+using Tests.Rutracker;
 using Tests.Utilities;
 using Xunit.Abstractions;
 using static System.StringComparison;
-using static Tests.Rutracker.SearchResultManagement;
+using static Tests.BookUnification.SearchResultManagement;
 
-namespace Tests.Rutracker;
+namespace Tests.BookUnification;
 
 public class Search
 {
@@ -29,7 +30,7 @@ public class Search
     {
         var negative = 0;
         var positive = 0;
-        var topics = await CherryPickOnJson.Output.ReadJson<List<Story>>();
+        var topics = await Step2.Output.ReadJson<List<Story>>();
         var circuitBreaker = new CircuitBreaker();
         foreach (var topic in topics!)
         {
@@ -71,7 +72,7 @@ public class Search
             {
                 var results = await searchEngine.Search(Html, topic, q);
                 var result = results.Items
-                    .FirstOrDefault(result => 
+                    .FirstOrDefault(result =>
                         result.ValidateSearchResultMatches(topic));
                 if (result != null)
                 {

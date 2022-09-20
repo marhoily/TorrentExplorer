@@ -1,6 +1,7 @@
-﻿using Tests.Utilities;
+﻿using Tests.Rutracker;
+using Tests.Utilities;
 
-namespace Tests.Rutracker;
+namespace Tests.BookUnification;
 
 public static class SearchResultManagement
 {

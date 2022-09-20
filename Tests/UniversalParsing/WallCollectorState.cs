@@ -1,7 +1,7 @@
 ﻿using System.Net;
 using Newtonsoft.Json.Linq;
 
-namespace Tests.Rutracker;
+namespace Tests.UniversalParsing;
 
 internal sealed class WallCollectorState
 {
@@ -20,7 +20,7 @@ internal sealed class WallCollectorState
             ["headers"] = _headers
         };
 
-        foreach (var (k, v) in _attributes) 
+        foreach (var (k, v) in _attributes)
             tmp.Add(k, v);
         if (_spoilers.Count > 0)
         {

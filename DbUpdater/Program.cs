@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics;
 using Humanizer;
-using Tests.Rutracker;
+using Tests.BookUnification;
 using Xunit.Abstractions;
 
 var startNew = Stopwatch.StartNew();

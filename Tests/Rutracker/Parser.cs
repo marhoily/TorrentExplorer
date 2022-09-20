@@ -1,55 +1,14 @@
 ﻿using System.Text.RegularExpressions;
+using System.Xml.Linq;
 using HtmlAgilityPack;
 using JetBrains.Annotations;
 using Newtonsoft.Json.Linq;
 using RegExtract;
+using Tests.UniversalParsing;
 using Tests.Utilities;
 using static System.StringSplitOptions;
 
 namespace Tests.Rutracker;
-
-public static class Known
-{
-    public static bool IsKnownTag(this string value)
-    {
-        var strip = value.Replace("&nbsp;", "");
-        return !string.IsNullOrWhiteSpace(strip) &&
-               Tags.Any(t => Eq(strip, t));
-    }
-
-    private static bool Eq(string value, string tag) =>
-        value.StartsWith(tag) &&
-        value[tag.Length..].Trim() is "" or ":";
-
-    private static readonly string[] Tags =
-    {
-        "Название",
-        "Выпущено",
-        "Озвучивает",
-        "Описание",
-        
-        "Год выпуска",
-        "Фамилия автора",
-        "Фамилии авторов",
-        "Фамилия авторов",
-        "Aвтор",
-        "Автор",
-        "Автора",
-        "Авторы",
-        "Имя автора",
-        "Имена авторов",
-        "Исполнитель",
-        "Исполнители",
-        "Исполнитель и звукорежиссёр",
-        "Цикл",
-        "Цикл/серия",
-        "Серия",
-        "Теги",
-        "Номер книги",
-        "Жанр",
-        "Время звучания"
-    };
-}
 
 public record Header(int Id);
 
@@ -271,5 +230,15 @@ public static class Parser
 
             return replace.Extract<string>(@"Цикл ξ(.*)ξ");
         }
+    }
+
+    public static int? GetTopicId(this XNode node)
+    {
+        if (node is not XElement element) return null;
+        var attributeValue = element.Attribute("data-ext_link_data")?.Value;
+        if (attributeValue == null) return null;
+        var jObject = JObject.Parse(attributeValue);
+        var topicId = jObject["t"]!.Value<int>();
+        return topicId;
     }
 }

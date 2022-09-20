@@ -1,10 +1,10 @@
 ﻿using Newtonsoft.Json.Linq;
-using Tests.Rutracker;
+using Tests.UniversalParsing;
 using Tests.Utilities;
 
 namespace Tests.Kinozal;
 
-public class KinozalStep1
+public class Step1
 {
     private const string Output = @"C:\temp\TorrentsExplorerData\Extract\kinozal\Step1.json";
 

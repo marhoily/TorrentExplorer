@@ -1,7 +1,7 @@
 ﻿using System.Xml.Linq;
 using Tests.Utilities;
 
-namespace Tests.Rutracker;
+namespace Tests.UniversalParsing;
 
 /// <summary>
 /// Enforces 2 contracts:

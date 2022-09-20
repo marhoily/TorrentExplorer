@@ -1,7 +1,7 @@
 ﻿using System.Xml.Linq;
 using Newtonsoft.Json.Linq;
 
-namespace Tests.Rutracker;
+namespace Tests.UniversalParsing;
 
 public static class WallCollectorExt
 {

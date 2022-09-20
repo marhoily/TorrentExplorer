@@ -1,4 +1,5 @@
 ﻿using System.Xml.Linq;
+using ServiceStack;
 using static System.StringSplitOptions;
 
 namespace Tests.Utilities;
@@ -42,7 +43,7 @@ public static class XmlExtensions
         return node
             .GetStyle("font-size")?
             .TrimPostfix("px")
-            .ParseInt();
+            .ToInt();
     }
 
     public static bool HasClass(this XElement node, string needle)
