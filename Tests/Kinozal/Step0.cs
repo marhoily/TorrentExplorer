@@ -27,8 +27,7 @@ public class Step0
     [Fact]
     public async Task DownloadRawHtml()
     {
-        var htmlNodes = await GetKinozalForumPosts();
-        await Output.SaveJson(htmlNodes);
+        await Output.SaveJson(await GetKinozalForumPosts());
     }
 
     private async Task<KinozalBook[]> GetKinozalForumPosts()
