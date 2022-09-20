@@ -1,6 +1,4 @@
-﻿using System.Text;
-using System.Xml;
-using System.Xml.Linq;
+﻿using System.Xml.Linq;
 using HtmlAgilityPack;
 using JetBrains.Annotations;
 using RegExtract;
@@ -28,13 +26,7 @@ public static class KinozalParser
             .OfType<int>()
             .ToArray();
     }
-
-    private static readonly XmlWriterSettings Settings = new()
-    {
-        OmitXmlDeclaration = true,
-        Async = true
-    };
-
+    
     public static KinozalForumPost GetKinozalForumPost(this HtmlNode node)
     {
         var post = node.SelectSubNode("//div[@class='mn1_content']")!;
@@ -49,14 +41,11 @@ public static class KinozalParser
             .GetAttributeValue("onclick", null)
             .Extract<int>($"showtab\\({id},(\\d+)\\); return false;");
 
-        var sb = new StringBuilder();
-        using var writer = XmlWriter.Create(sb, Settings);
-        writer.WriteStartElement("root");
-        writer.WriteAttributeString("topic-id", id.ToString());
-        foreach (var div in post.SelectSubNodes("div[@class='bx1 justify']"))
-            div.CleanUpAndWriteTo(writer);
-        writer.WriteEndElement();
-        writer.Flush();
-        return new KinozalForumPost(id, seriesId, XElement.Parse(sb.ToString()));
+        var sections = post
+            .SelectSubNodes("div[@class='bx1 justify']")
+            .Select(div => div.CleanUpToXml());
+        var root = new XElement("root", new XAttribute("topic-id", id));
+        foreach (var section in sections) root.Add(section);
+        return new KinozalForumPost(id, seriesId, root);
     }
 }
