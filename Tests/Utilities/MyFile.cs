@@ -1,6 +1,4 @@
-﻿using System.Globalization;
-using CsvHelper;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using YAXLib;
 
 namespace Tests.Utilities;
@@ -29,12 +27,6 @@ public static class MyFile
     {
         var serializer = new YAXSerializer(typeof(T));
         serializer.SerializeToFile(obj, file);
-    }
-    public static async Task SaveCsv<T>(this string file, IEnumerable<T> records)
-    {
-        await using var writer = new StreamWriter(file);
-        await using var csv = new CsvWriter(writer, CultureInfo.InvariantCulture);
-        await csv.WriteRecordsAsync(records);
     }
     public static async Task WriteAllTextAsync(this string file, string text)
     {
