@@ -1,4 +1,6 @@
 ﻿using System.Text;
+using System.Xml;
+using HtmlAgilityPack;
 using Tests.Html;
 using Tests.Utilities;
 
@@ -6,7 +8,7 @@ namespace Tests.Rutracker;
 
 public class Step0
 {
-    public const string Output = @"C:\temp\TorrentsExplorerData\Extract\Rutracker\step0.json";
+    public const string Output = @"C:\temp\TorrentsExplorerData\Extract\Rutracker\step0.xml";
 
     [Fact]
     public async Task DownloadRawHtml()
@@ -27,7 +29,22 @@ public class Step0
                 var topic = await http.DownloadRussianFantasyTopic(header.Id);
                 return topic.GetForumPost();
             });
-        var htmlNodes = await Task.WhenAll(headers);
-        await Output.SaveJson(htmlNodes.Select(x => x.OuterHtml));
+        await SaveToXml(await Task.WhenAll(headers));
     }
+
+    private static async Task SaveToXml(HtmlNode[] htmlNodes)
+    {
+        await using var fileStream = File.OpenWrite(Output);
+        await using var writer = XmlWriter.Create(fileStream, Settings);
+        writer.WriteStartElement("many");
+        foreach (var htmlNode in htmlNodes)
+            htmlNode.CleanUpAndWriteTo(writer);
+        await writer.WriteEndElementAsync();
+    }
+
+    private static readonly XmlWriterSettings Settings = new()
+    {
+        OmitXmlDeclaration = true,
+        Async = true
+    };
 }

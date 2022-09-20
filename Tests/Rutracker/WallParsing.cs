@@ -14,7 +14,7 @@ public class WallParsing
         var raw = await Step0.Output.ReadJson<string[]>();
         var posts = raw ?? Array.Empty<string>();
 
-        JArray ParseOne(HtmlNode post)
+        static JArray ParseOne(HtmlNode post)
         {
             var topicId = post.GetTopicId();
             var result = post.ParseWall();
