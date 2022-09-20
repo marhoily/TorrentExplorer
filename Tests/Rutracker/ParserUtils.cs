@@ -1,5 +1,4 @@
-﻿using System.Net;
-using HtmlAgilityPack;
+﻿using HtmlAgilityPack;
 using Newtonsoft.Json.Linq;
 
 namespace Tests.Rutracker;
@@ -75,38 +74,4 @@ public static class ParserUtils
 
     public static string? FindTag(this JObject dic, string key) =>
         dic.TryGetValue(key, out var result) ? result.ToString() : default;
-
-    public static string TagValue(this HtmlNode node)
-    {
-        var seenComma = node.InnerText.TrimEnd().EndsWith(":");
-        var moved = false;
-        while (!seenComma)
-        {
-            if (node.NextSibling != null)
-            {
-                moved = true;
-                node = node.NextSibling;
-            }
-            else node = node.ParentNode;
-
-            var text = node.InnerText.Trim();
-            seenComma = text.EndsWith(":") || text.StartsWith(":");
-        }
-
-        while (!moved || node.InnerText.Trim() == ":")
-        {
-            if (node.NextSibling != null)
-            {
-                moved = true;
-                node = node.NextSibling;
-            }
-            else node = node.ParentNode;
-        }
-
-        var tagValue = node.InnerText
-            .TrimStart(':', ' ')
-            .Replace("&#776;", "")
-            .Trim();
-        return WebUtility.HtmlDecode(tagValue);
-    }
 }
