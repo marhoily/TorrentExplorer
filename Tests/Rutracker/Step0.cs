@@ -35,16 +35,15 @@ public class Step0
     private static async Task SaveToXml(HtmlNode[] htmlNodes)
     {
         await using var fileStream = File.OpenWrite(Output);
-        await using var writer = XmlWriter.Create(fileStream, Settings);
+        await using var writer = XmlWriter.Create(fileStream,
+            new XmlWriterSettings
+            {
+                OmitXmlDeclaration = true,
+                Async = true
+            });
         writer.WriteStartElement("many");
         foreach (var htmlNode in htmlNodes)
             htmlNode.CleanUpAndWriteTo(writer);
         await writer.WriteEndElementAsync();
     }
-
-    private static readonly XmlWriterSettings Settings = new()
-    {
-        OmitXmlDeclaration = true,
-        Async = true
-    };
 }

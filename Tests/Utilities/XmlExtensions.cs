@@ -52,10 +52,7 @@ public static class XmlExtensions
     }
 
     public static XNode? GoFurther(this XNode n) =>
-        n.NextNode ?? (
-            n.Parent != null 
-                ? GoFurther(n.Parent) 
-                : null);
+        n.NextNode ?? (n.Parent != null ? GoFurther(n.Parent) : null);
 
     public static XNode? GoDeeper(this XNode n) =>
         (n is XElement e ? e.FirstNode : null) ?? GoFurther(n);

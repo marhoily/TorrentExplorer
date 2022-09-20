@@ -8,7 +8,6 @@ namespace Tests.Utilities;
 
 public static class HtmlToXml
 {
-
     public static void WriteAttributes(this HtmlNode node, XmlWriter writer)
     {
         if (!node.HasAttributes) return;
@@ -85,13 +84,10 @@ public static class HtmlToXml
                 WebUtility.HtmlDecode(htmlAttribute.Value)));
     }
     
-    public static XNode? CleanUpToXml(this HtmlNode node)
-    {
-        var xElement = new XElement("x");
-        CleanUpTo(node, xElement);
-        return xElement.FirstNode;
-    }
-    public static void CleanUpTo(this HtmlNode node, XElement target)
+    public static XNode? CleanUpToXml(this HtmlNode node) => 
+        node.CleanUpTo(new XElement("x")).FirstNode;
+
+    public static XElement CleanUpTo(this HtmlNode node, XElement target)
     {
         switch (node.NodeType)
         {
@@ -112,6 +108,8 @@ public static class HtmlToXml
             default:
                 throw new ArgumentOutOfRangeException(node.NodeType.ToString());
         }
+
+        return target;
     }
 
 }
