@@ -1,6 +1,7 @@
 ﻿using System.Globalization;
 using CsvHelper;
 using Newtonsoft.Json;
+using YAXLib;
 
 namespace Tests.Utilities;
 
@@ -20,10 +21,15 @@ public static class MyFile
         CreateIfNeeded(Path.GetDirectoryName(folder));
         Directory.CreateDirectory(folder);
     }
-    
+
     public static async Task SaveJson<T>(this string file, T obj)
     {
         await WriteAllTextAsync(file, JsonConvert.SerializeObject(obj, CommonSettings.Json));
+    }
+    public static void SaveXml<T>(this string file, T obj)
+    {
+        var serializer = new YAXSerializer(typeof(T));
+        serializer.SerializeToFile(obj, file);
     }
     public static async Task SaveCsv<T>(this string file, IEnumerable<T> records)
     {
@@ -37,7 +43,7 @@ public static class MyFile
         {
             await File.WriteAllTextAsync(file, text);
         }
-        catch 
+        catch
         {
             await File.WriteAllTextAsync(file.CreateDirIfNeeded(), text);
         }
@@ -49,5 +55,10 @@ public static class MyFile
     {
         var json = await file.ReadAllTextOrNullAsync();
         return json == null ? default : JsonConvert.DeserializeObject<T>(json, CommonSettings.Json);
+    }
+    public static T? ReadXml<T>(this string file)
+    {
+        var serializer = new YAXSerializer(typeof(T));
+        return (T?)serializer.DeserializeFromFile(file);
     }
 }

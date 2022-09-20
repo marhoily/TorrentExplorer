@@ -11,11 +11,11 @@ public class KinozalStep1
     [Fact]
     public async Task Convert()
     {
-        var books = await Step0.Output.ReadJson<KinozalBook[]>();
+        var books = Step0.Output.ReadXml<KinozalBook[]>();
 
         static JObject Selector(KinozalBook post)
         {
-            var jArray = post.Post.Xml.ParseHtml().ParseWall();
+            var jArray = post.Post.Xml.ToString().ParseHtml().ParseWall();
             var jObj = (JObject)jArray[0];
             if (post.Series != null)
                 jObj.Add("Цикл", post.Series);

@@ -1,10 +1,18 @@
-﻿using System.Text;
+﻿using JetBrains.Annotations;
+using System.Text;
 using Tests.Html;
 using Tests.Utilities;
 
 namespace Tests.Kinozal;
 
-public sealed record KinozalBook(KinozalForumPost Post, string? Series);
+public sealed record KinozalBook(KinozalForumPost Post, string? Series)
+{
+    [UsedImplicitly]
+    [Obsolete("For deserialization only", true)]
+    public KinozalBook() : this(null!, null!)
+    {
+    }
+}
 
 public class Step0
 {
@@ -27,7 +35,7 @@ public class Step0
     [Fact]
     public async Task DownloadRawHtml()
     {
-        await Output.SaveJson(await GetKinozalForumPosts());
+        Output.SaveXml(await GetKinozalForumPosts());
     }
 
     private async Task<KinozalBook[]> GetKinozalForumPosts()

@@ -1,13 +1,22 @@
 ﻿using System.Text;
 using System.Xml;
+using System.Xml.Linq;
 using HtmlAgilityPack;
+using JetBrains.Annotations;
 using RegExtract;
 using ServiceStack;
 using Tests.Utilities;
 
 namespace Tests.Kinozal;
 
-public sealed record KinozalForumPost(int Id, int? SeriesId, string Xml);
+public sealed record KinozalForumPost(int Id, int? SeriesId, XElement Xml)
+{
+    [UsedImplicitly]
+    [Obsolete("For deserialization only", true)]
+    public KinozalForumPost() : this(0, null!, null!)
+    {
+    }
+}
 
 public static class KinozalParser
 {
@@ -48,6 +57,6 @@ public static class KinozalParser
             div.CleanUpAndWriteTo(writer);
         writer.WriteEndElement();
         writer.Flush();
-        return new KinozalForumPost(id, seriesId, sb.ToString());
+        return new KinozalForumPost(id, seriesId, XElement.Parse(sb.ToString()));
     }
 }

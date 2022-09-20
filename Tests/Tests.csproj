@@ -26,7 +26,8 @@
 
         <PackageReference Include="FluentAssertions" Version="6.7.0" />
         <PackageReference Include="HtmlAgilityPack" Version="1.11.45" />
-        <PackageReference Include="Newtonsoft.Json" Version="13.0.2-beta2" />        
+        <PackageReference Include="Newtonsoft.Json" Version="13.0.2-beta2" />
+        <PackageReference Include="YAXLib" Version="4.0.0-pre.1" />        
     </ItemGroup>
 
 </Project>
