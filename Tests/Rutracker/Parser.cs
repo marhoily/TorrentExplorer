@@ -88,7 +88,7 @@ public static class Parser
     public static HtmlNode GetForumPost(this HtmlNode node) =>
         node.SelectSingleNode("//div[@class='post_body']");
 
-    public static Topic? ParseRussianFantasyTopic(this Dictionary<string, object> post)
+    public static Topic? ParseRussianFantasyTopic(this JObject post)
     {
         var topicId = post.FindTag("topic-id")!.ParseInt();
         var year = post.FindTag("Год выпуска")?.TrimEnd('.', 'г', ' ');
@@ -111,7 +111,7 @@ public static class Parser
             genre, playTime);
     }
 
-    private static string? GetTitle(Dictionary<string, object> post, string? series, string? firstName,
+    private static string? GetTitle(JObject post, string? series, string? firstName,
         string? secondName)
     {
         var title = GetRawTitle(post, series);
@@ -128,7 +128,7 @@ public static class Parser
             .Unbrace('<', '>')
             .CompressIfPossible();
 
-        static string? GetRawTitle(Dictionary<string, object> post, string? series)
+        static string? GetRawTitle(JObject post, string? series)
         {
             var titleOptions = GetTitleOptions(post);
             var first = titleOptions.FirstOrDefault();
@@ -140,12 +140,10 @@ public static class Parser
                 .Unquote();
         }
 
-        static List<string> GetTitleOptions(Dictionary<string, object> post)
-        {
-            return post.TryGetValue("headers", out var arr) && arr is JArray jArr
+        static List<string> GetTitleOptions(JObject post) =>
+            post.TryGetValue("headers", out var arr) && arr is JArray jArr
                 ? jArr.Select(token => token.Value<string>()).ToList()!
                 : new List<string>();
-        }
 
         static string? RemoveExplicitJunkFromTitle(string? input)
         {
@@ -226,7 +224,7 @@ public static class Parser
         return a + " " + b;
     }
 
-    private static (string?, string?) GetSeries(Dictionary<string, object> post)
+    private static (string?, string?) GetSeries(JObject post)
     {
         var rawSeries = post.FindTags("Цикл/серия", "Цикл", "Серия");
         if (rawSeries != null && string.IsNullOrWhiteSpace(rawSeries))
@@ -246,7 +244,7 @@ public static class Parser
             .Unbrace('«', '»');
         return (s, match.Groups["num"].Value);
 
-        static string? GetSeriesFromSpoiler(Dictionary<string, object> post)
+        static string? GetSeriesFromSpoiler(JObject post)
         {
             var src = post.TryGetValue("spoilers", out var arr) && arr is JArray jArr
                 ? jArr.Select(token => token.Value<string>()).ToList()!

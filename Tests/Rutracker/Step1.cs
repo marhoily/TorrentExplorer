@@ -28,7 +28,6 @@ public class Step1
             return result;
         }
 
-
         var xElements = many.Elements().Single().Elements();
         await Output.SaveJson(xElements.Select(ParseOne).ToList());
     }

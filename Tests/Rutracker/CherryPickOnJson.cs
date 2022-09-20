@@ -1,4 +1,5 @@
-﻿using Tests.Utilities;
+﻿using Newtonsoft.Json.Linq;
+using Tests.Utilities;
 
 namespace Tests.Rutracker;
 
@@ -9,7 +10,7 @@ public class CherryPickOnJson
     [Fact]
     public async Task Do()
     {
-        var posts = await Step1.Output.ReadJson<Dictionary<string, object>[][]>();
+        var posts = await Step1.Output.ReadJson<JObject[][]>();
         await Output.SaveJson(posts!
             .SelectMany(p => p)
             .WhereNotNull()
