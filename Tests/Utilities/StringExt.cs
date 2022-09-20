@@ -1,4 +1,5 @@
-﻿using System.Text.RegularExpressions;
+﻿using System.Net;
+using System.Text.RegularExpressions;
 
 namespace Tests.Utilities;
 
@@ -32,6 +33,9 @@ public static class StringExt
 
     public static string HtmlTrim(this string s) =>
         s.Replace("&nbsp;", " ").Trim();
+
+    public static string CleanUp(this string s) =>
+        WebUtility.HtmlDecode(s.Replace("&nbsp;", " ").Replace("&quot;", "\""));
 
     public static string Unquote(this string s, char quote = '\"')
     {

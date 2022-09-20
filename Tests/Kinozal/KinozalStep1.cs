@@ -18,7 +18,7 @@ public class KinozalStep1
             var jArray = post.Post.Xml.ToString().ParseHtml().ParseWall();
             var jObj = (JObject)jArray[0];
             if (post.Series != null)
-                jObj.Add("Цикл", post.Series);
+                jObj.Add("Цикл", post.Series.ToString());
             return jObj;
         }
 

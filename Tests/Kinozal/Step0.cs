@@ -1,11 +1,13 @@
 ﻿using JetBrains.Annotations;
 using System.Text;
+using System.Xml;
+using System.Xml.Linq;
 using Tests.Html;
 using Tests.Utilities;
 
 namespace Tests.Kinozal;
 
-public sealed record KinozalBook(KinozalForumPost Post, string? Series)
+public sealed record KinozalBook(KinozalForumPost Post, XElement? Series)
 {
     [UsedImplicitly]
     [Obsolete("For deserialization only", true)]
@@ -37,7 +39,11 @@ public class Step0
     {
         Output.SaveXml(await GetKinozalForumPosts());
     }
-
+    private static readonly XmlWriterSettings Settings = new()
+    {
+        OmitXmlDeclaration = true,
+        Async = true
+    };
     private async Task<KinozalBook[]> GetKinozalForumPosts()
     {
         int[][] headerPages = await Task.WhenAll(Enumerable.Range(0, 60)
@@ -57,7 +63,14 @@ public class Step0
                 var html = await _httpUtf8.Get(
                     "http://kinozal.tv/get_srv_details.php?" +
                     $"id={post.Id}&pagesd={post.SeriesId}");
-                return new KinozalBook(post, html);
+                var sb = new StringBuilder();
+                await using var writer = XmlWriter.Create(sb, Settings);
+                var clean = html.CleanUp();
+                $"<p>{clean}</p>".ParseHtml().CleanUpAndWriteTo(writer);
+                await writer.FlushAsync();
+            
+
+                return new KinozalBook(post, XElement.Parse(sb.ToString()));
             });
 
         return await Task.WhenAll(headers);
