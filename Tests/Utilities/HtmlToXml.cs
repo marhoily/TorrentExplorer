@@ -3,6 +3,7 @@ using System.Net;
 using System.Text;
 using System.Xml.Linq;
 using System.Xml;
+using FluentAssertions;
 
 namespace Tests.Utilities;
 
@@ -117,20 +118,25 @@ public static class HtmlToXml
         }
     }
 
+    public static T? Unwrap<T>(this XNode node, string name)
+    where T : XNode
+    {
+        var wrapper = node as XElement;
+        return wrapper?.Nodes().Count() == 1 && wrapper.Name == name
+            ? wrapper.FirstNode as T ?? node as T
+            : node as T;
+    }
     public static XNode CleanUpToXml(this HtmlNode node)
     {
-        var raw = ConvertRecursive(node);
-        var wrapper = raw as XElement;
-        return wrapper?.Nodes().Count() == 1 && wrapper.Name == "x"
-            ? wrapper.FirstNode ?? raw
-            : raw;
+        return ConvertRecursive(node).Unwrap<XNode>("x")!;
 
         static XNode ConvertRecursive(HtmlNode node)
         {
             switch (node.NodeType)
             {
                 case HtmlNodeType.Document:
-                    return new XElement("x", node.ChildNodes.Select(ConvertRecursive));
+                    var xNodes = node.ChildNodes.Select(ConvertRecursive).ToList();
+                    return new XElement("x", xNodes);
                 case HtmlNodeType.Element:
                     var xElement = new XElement(node.OriginalName);
                     node.AddAttributesTo(xElement);
@@ -146,5 +152,26 @@ public static class HtmlToXml
                     throw new ArgumentOutOfRangeException(node.NodeType.ToString());
             }
         }
+    }
+
+    public sealed class HtmlToXmlTests
+    {
+
+        [Fact]
+        public void FactMethodName()
+        {
+            var cleanUpToXml = (XElement)@"<html>
+                <div class=center>
+                    <b>first</b>
+                </div>
+                <br /> 
+                <b>second</b> 
+                </html>"
+                .ParseHtml().CleanUpToXml();
+            cleanUpToXml.Name.LocalName.Should().NotBe("x");
+            var innerText = cleanUpToXml.InnerText();
+            innerText.Should().NotBeEmpty();
+        }
+
     }
 }
