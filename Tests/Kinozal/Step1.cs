@@ -18,7 +18,7 @@ public class Step1
             var jArray = post.Post.Xml.ParseWall();
             var jObj = (JObject)jArray[0];
             if (post.Series != null)
-                jObj.Add("Цикл", post.Series.ToString());
+                jObj.Add("Цикл", new JArray(post.Series.GetSeries()));
             return jObj;
         }
 

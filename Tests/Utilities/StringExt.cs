@@ -18,8 +18,6 @@ public static class StringExt
 
     public static string? NullifyWhenEmpty(this string x) => x == "" ? null : x;
 
-    public static string Quote(this string s) => $"'{s}'";
-
     public static bool StartsOrEndsWith(this string s, char c) =>
         s.StartsWith(c) || s.EndsWith(c);
 

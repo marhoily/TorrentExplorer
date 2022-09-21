@@ -1,4 +1,6 @@
-﻿using System.Xml.Linq;
+﻿using System.Text.RegularExpressions;
+using System.Xml.Linq;
+using FluentAssertions;
 using HtmlAgilityPack;
 using JetBrains.Annotations;
 using RegExtract;
@@ -26,7 +28,7 @@ public static class KinozalParser
             .OfType<int>()
             .ToArray();
     }
-    
+
     public static KinozalForumPost GetKinozalForumPost(this HtmlNode node)
     {
         var post = node.SelectSubNode("//div[@class='mn1_content']")!;
@@ -47,5 +49,56 @@ public static class KinozalParser
         var root = new XElement("root", new XAttribute("topic-id", id));
         foreach (var section in sections) root.Add(section);
         return new KinozalForumPost(id, seriesId, root);
+    }
+
+    private static readonly Regex EmptySeriesFormat = new(
+        "\\s*Цикл( книг)?\\s*:", RegexOptions.Compiled);
+    private static readonly Regex SeriesFormat = new(
+        "\\s*Цикл( книг)?\\s+(?<name>.*?)\\s*:(.*)", RegexOptions.Compiled);
+
+    public static IEnumerable<string> ParseKinozalFormat(this string input)
+    {
+        if (EmptySeriesFormat.IsMatch(input)) yield break;
+        var match = SeriesFormat.Match(input);
+        if (!match.Success) yield break;
+        var series = match.Groups["name"].Value.Unquote().Unbrace('«', '»').Trim();
+        if (series.Length > 40)
+            Console.WriteLine(
+                input.EncodeJson().Quoted() + ", " +
+                series.EncodeJson().Quoted());
+        yield return series;
+
+    }
+
+    public static IEnumerable<string>  GetSeries(this XElement kinozalFormat)
+    {
+        var innerText = kinozalFormat.InnerText();
+        return ParseKinozalFormat(innerText);
+    }
+}
+
+public sealed class SeriesFormatTests
+{
+    [Theory]
+    [InlineData("Цикл книг:\n01. «Крутые наследнички»\n02. «За всеми...")]
+    public void ParseKinozalFormat_NoResults(string input)
+    {
+        input.ParseKinozalFormat().Should().BeEmpty();
+    }
+    [Theory]
+    [InlineData("Цикл \"Вадим Арсеньев\":\n1. Зов Полярной...", "Вадим Арсеньев")]
+    [InlineData("Цикл книг «Неверный ленинец»:\nКнига 1. Провок..", "Неверный ленинец")]
+    [InlineData("Цикл \" Сам себе цикл\":\n1. Сам себе к", "Сам себе цикл")]
+    [InlineData("Цикл \"Красные Цепи\":1. Красные Цепи 2. Молот Ведьм3. КультЦикл \"Единая теория всего\":1. Единая", "Красные Цепи")]
+    public void ParseKinozalFormat(string input, string? expectedOutput)
+    {
+        input.ParseKinozalFormat().Should().Equal(expectedOutput);
+    }
+    [Fact]
+    public void ParseKinozalFormat_MultipleResults()
+    {
+        "Цикл «Мечник Континента» / «Долгая дорога в стаб»:\n1. Долгая дорога в стаб\n2. Фагоцит\n3. Вера в будущее\n4. За пределами"
+            .ParseKinozalFormat().Should()
+            .Equal("Мечник Континента","Долгая дорога в стаб");
     }
 }
