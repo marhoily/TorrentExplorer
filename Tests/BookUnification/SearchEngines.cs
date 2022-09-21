@@ -209,7 +209,7 @@ public static class SearchEngines
         var book = await http.ReadliNet(bookRef.Href()!);
         var series = book
             .SelectSubNode("//div[@class='js-from-4']")?
-            .CleanUpToXml()!
+            .CleanUpToXml()
             .ParseWall().OfType<JObject>()
             .Single()
             .FindTags("Серия");

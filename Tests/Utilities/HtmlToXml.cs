@@ -8,13 +8,15 @@ namespace Tests.Utilities;
 
 public static class HtmlToXml
 {
-    public static XNode? CleanUpToXml(this HtmlNode node) => 
-        node.CleanUpTo(new XElement("x")).FirstNode;
-
     public static void CleanUpAndWriteTo(this HtmlNode node, XmlWriter writer)
     {
         switch (node.NodeType)
         {
+            case HtmlNodeType.Document:
+                if (node.HasChildNodes)
+                    foreach (var childNode in node.ChildNodes)
+                        childNode.CleanUpAndWriteTo(writer);
+                break;
             case HtmlNodeType.Element:
                 writer.WriteStartElement(node.OriginalName);
                 node.WriteAttributes(writer);
@@ -24,10 +26,10 @@ public static class HtmlToXml
                 writer.WriteEndElement();
                 break;
             case HtmlNodeType.Comment:
-                writer.WriteComment(((HtmlCommentNode) node).GetXmlComment());
+                writer.WriteComment(((HtmlCommentNode)node).GetXmlComment());
                 break;
             case HtmlNodeType.Text:
-                writer.WriteString(((HtmlTextNode) node).Text.CleanUp());
+                writer.WriteString(((HtmlTextNode)node).Text.CleanUp());
                 break;
             default:
                 throw new ArgumentOutOfRangeException(node.NodeType.ToString());
@@ -49,11 +51,11 @@ public static class HtmlToXml
         bool flag = true;
         for (int index = 0; index < name.Length; ++index)
         {
-            if (name[index] >= 'a' && name[index] <= 'z' || 
+            if (name[index] >= 'a' && name[index] <= 'z' ||
                 name[index] >= 'A' && name[index] <= 'Z' ||
                 name[index] >= '0' && name[index] <= '9' ||
-                isAttribute | preserveXmlNamespaces && name[index] == ':' || 
-                name[index] == '_' || 
+                isAttribute | preserveXmlNamespaces && name[index] == ':' ||
+                name[index] == '_' ||
                 name[index] == '-' ||
                 name[index] == '.')
             {
@@ -87,10 +89,15 @@ public static class HtmlToXml
                 WebUtility.HtmlDecode(htmlAttribute.Value)));
     }
 
-    private static XElement CleanUpTo(this HtmlNode node, XElement target)
+    private static void CleanUpTo(this HtmlNode node, XElement target)
     {
         switch (node.NodeType)
         {
+            case HtmlNodeType.Document:
+                if (node.HasChildNodes)
+                    foreach (var childNode in node.ChildNodes)
+                        childNode.CleanUpTo(target);
+                break;
             case HtmlNodeType.Element:
                 var xElement = new XElement(node.OriginalName);
                 node.AddAttributesTo(xElement);
@@ -100,15 +107,44 @@ public static class HtmlToXml
                 target.Add(xElement);
                 break;
             case HtmlNodeType.Comment:
-                target.Add(new XComment(GetXmlComment(((HtmlCommentNode) node))));
+                target.Add(new XComment(GetXmlComment(((HtmlCommentNode)node))));
                 break;
             case HtmlNodeType.Text:
-                target.Add(new XText(((HtmlTextNode) node).Text.CleanUp()));
+                target.Add(new XText(((HtmlTextNode)node).Text.CleanUp()));
                 break;
             default:
                 throw new ArgumentOutOfRangeException(node.NodeType.ToString());
         }
+    }
 
-        return target;
+    public static XNode CleanUpToXml(this HtmlNode node)
+    {
+        var raw = ConvertRecursive(node);
+        var wrapper = raw as XElement;
+        return wrapper?.Nodes().Count() == 1 && wrapper.Name == "x"
+            ? wrapper.FirstNode ?? raw
+            : raw;
+
+        static XNode ConvertRecursive(HtmlNode node)
+        {
+            switch (node.NodeType)
+            {
+                case HtmlNodeType.Document:
+                    return new XElement("x", node.ChildNodes.Select(ConvertRecursive));
+                case HtmlNodeType.Element:
+                    var xElement = new XElement(node.OriginalName);
+                    node.AddAttributesTo(xElement);
+                    if (node.HasChildNodes)
+                        foreach (var childNode in node.ChildNodes)
+                            childNode.CleanUpTo(xElement);
+                    return xElement;
+                case HtmlNodeType.Comment:
+                    return new XComment(GetXmlComment(((HtmlCommentNode)node)));
+                case HtmlNodeType.Text:
+                    return new XText(((HtmlTextNode)node).Text.CleanUp());
+                default:
+                    throw new ArgumentOutOfRangeException(node.NodeType.ToString());
+            }
+        }
     }
 }

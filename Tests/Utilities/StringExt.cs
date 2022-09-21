@@ -48,7 +48,7 @@ public static class StringExt
     public static int ParseInt(this string s)
     {
         return !int.TryParse(s, out var result)
-            ? throw new Exception($"Words count '{s}' is not a valid int")
+            ? throw new Exception($"'{s}' is not a valid int")
             : result;
     }
 

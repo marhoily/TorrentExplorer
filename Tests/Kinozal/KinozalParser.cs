@@ -71,14 +71,12 @@ public static class KinozalParser
         var prelim = GetFirstMatch(input,
             SeriesFormatWithColon,
             SeriesFormatWithQuotes,
-            SeriesFormatWithDashAndNewLine);
-        if (input.StartsWith("Ведьмак"))
-            1.ToString();
-        if (prelim == null)
-        {
-
+            SeriesFormatWithDashAndNewLine) ??
+            LaconicStyle(input);
+        if (JustNumberedList(input))
             yield break;
-        }
+        if (prelim == null)
+            yield break;
         var list = GetAllNamedMatches(MultiEntryFormat, "name", prelim).ToList();
         if (list.Count > 1)
         {
@@ -93,6 +91,26 @@ public static class KinozalParser
         static string Peel(string input) =>
             input.Unquote().Unbrace('«', '»').Trim();
 
+        static bool JustNumberedList(string input)
+        {
+            var readLines = input.ReadLines().ToList();
+            if (readLines.Count < 2) return false;
+            var numbers = readLines
+                .Select(l => l.LeftPart('.').ParseIntOrNull())
+                .ToList();
+            return numbers.All(i => i != null);
+        }
+
+        static string? LaconicStyle(string input)
+        {
+            var readLines = input.ReadLines().ToList();
+            if (readLines.Count < 2) return null;
+            var numbers = readLines
+                .Select(l => l.LeftPart('.').ParseIntOrNull())
+                .ToList();
+            if (numbers[0] != null) return null;
+            return numbers.Skip(1).All(i => i != null) ? readLines[0] : null;
+        }
         static string? GetFirstMatch(string input, params Regex[] regexList)
         {
             foreach (var regex in regexList)
@@ -147,6 +165,7 @@ public sealed class SeriesFormatTests
     [InlineData("цикл «Расследования Макара Илюшина и Сергея Бабкина»\n(по версии сайта \"ЛитРес\")\n[1 книга][Рассказ] Мужская логика 8-го Марта\n[2 книга][Роман] Знак Истинного Пути\n[3 книга][Роман] Остров сбывшейся мечты\n[4 книга][Роман] Тёмная сторона души\n[5 книга][Роман] Водоворот чужих желаний\n[6 книга][Роман] Рыцарь нашего времени\n[7 книга][Роман] Призрак в кривом зеркале\n[8 книга][Роман] Танцы марионеток\n[9 книга][Роман] Улыбка пересмешника\n[10 книга][Роман] Дудочка крысолова\n[11 книга][Роман] Манускрипт дьявола\n[12 книга][Роман] Золушка и Дракон\n[13 книга][Рассказ] Убийственная библиотека\n[14 книга][Роман] Комната старинных ключей\n[15 книга][Роман] Пари с морским дьяволом\n[16 книга][Роман] Охота на крылатого льва\n[17 книга][Роман] Нежные листья, ядовитые корни\n[18 книга][Роман] Чёрный пудель, рыжий кот, или Свадьба с препятствиями\n[19 книга][Роман] Бумажный занавес, стеклянная корона\n[20 книга][Роман] Пирог из горького миндаля\n[21 книга][Роман] Закрой дверь за совой\n[22 книга][Роман] Нет кузнечика в траве\n[23 книга][Роман] След лисицы на камнях\n[24 книга][Роман] Кто остался под холмом\n[25 книга][Роман] Человек из дома напротив\n[26 книга][Роман] Самая хитрая рыба\n[27 книга][Роман]Тот, кто ловит мотыльков\n[28 книга][Роман]Лягушачий король\n[29 книга][Роман]Тигровый, черный, золотой\n+ [Рассказ]Черная кошка в белой комнате", "Расследования Макара Илюшина и Сергея Бабкина")]
     [InlineData("цикл крестный отец\n1. Крестный отец\n3. Омерта\n( По версии Литрес)", "крестный отец")]
     [InlineData("Ведьмак\n1. Последнее желание\n2. Меч Предназначения\n3. Кровь эльфов\n4. Час Презрения\n5. Крещение огнём\n6. Башня Ласточки\n7. Владычица Озера\n8. Сезон гроз", "Ведьмак")]
+    [InlineData("Хайнский цикл (Книги цикла сюжетно не связаны)\n01. Обделённые (1974) + За день до революции (1974)\n02. Слово для «леса» и «мира» одно (1972)\n03. Мир Роканнона (1966)\n04. Обширней и медлительней империй (1971)\n05. Планета изгнания (1966)\n06. Город иллюзий (1967)\n07. Левая рука Тьмы (1969)+Король планеты Зима (1969) + Взросление в Кархайде (1995)\n08. Толкователи (2000)\n09. Рыбак из Внутриморья [цикл] (История «шобиков» (1990), Танцуя Ганам (1993), Ещё одна история, или Рыбак из Внутриморья (1994))\n10. Четыре пути к прощению (1995) [роман-сборник] (Предательства (1994), День прощения (1994), Муж рода (1995), Освобождение женщины (1995), Старая Музыка и рабыни (1999), Заметки об Уэреле и Йеове (1995))\n11. Рассказы (Невыбранная любовь (1994), Законы гор (1996), Дело о Сеггри (1994), Одиночество (1994))", "Хайнский цикл (Книги цикла сюжетно не связаны)")]
     public void ParseKinozalFormat(string input, string? expectedOutput)
     {
         input.ParseKinozalFormat().Should().Equal(expectedOutput);
