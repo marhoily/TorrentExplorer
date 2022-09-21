@@ -8,7 +8,7 @@ namespace Tests.Rutracker;
 
 public class Step0
 {
-    public const string Output = @"C:\temp\TorrentsExplorerData\Extract\Rutracker\step0.xml";
+    public const string Output = @"C:\temp\TorrentsExplorerData\Extract\Rutracker\step-0.xml";
 
     [Fact]
     public async Task DownloadRawHtml()

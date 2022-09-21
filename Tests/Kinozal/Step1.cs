@@ -6,7 +6,7 @@ namespace Tests.Kinozal;
 
 public class Step1
 {
-    private const string Output = @"C:\temp\TorrentsExplorerData\Extract\kinozal\Step1.json";
+    private const string Output = @"C:\temp\TorrentsExplorerData\Extract\kinozal\step-1.json";
 
     [Fact]
     public async Task Convert()

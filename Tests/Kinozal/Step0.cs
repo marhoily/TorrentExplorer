@@ -19,7 +19,7 @@ public sealed class Step0
 {
     private readonly Http _http;
     private readonly Http _httpUtf8;
-    public const string Output = @"C:\temp\TorrentsExplorerData\Extract\kinozal\step0.xml";
+    public const string Output = @"C:\temp\TorrentsExplorerData\Extract\kinozal\step-0.xml";
 
     static Step0()
     {
