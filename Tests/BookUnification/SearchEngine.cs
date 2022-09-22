@@ -1,5 +1,4 @@
-﻿using JetBrains.Annotations;
-using Tests.Html;
+﻿using Tests.Html;
 using Tests.Rutracker;
 using StringExtensions = ServiceStack.StringExtensions;
 
@@ -9,8 +8,7 @@ public sealed class SearchEngine
 {
     private readonly string _name;
     private readonly Func<Http, Story, string, Task<SearchResult>> _search;
-    [UsedImplicitly]
-    private readonly Uri _uri;
+    public Uri Uri { get; }
     private readonly SqliteCache _cache;
 
     public SearchEngine(string name,
@@ -19,7 +17,7 @@ public sealed class SearchEngine
     {
         _name = name;
         _search = search;
-        _uri = new Uri(url);
+        Uri = new Uri(url);
         _cache = new SqliteCache(cachingStrategy);
     }
 

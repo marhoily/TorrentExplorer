@@ -1,19 +1,18 @@
-﻿namespace Tests.Html;
+﻿using ServiceStack;
+
+namespace Tests.Html;
 
 public sealed class CircuitBreaker
 {
-    private int _successCount;
-    private int _millisecondsDelay = 100;
-
-    public async Task<TResult?> Execute<TResult>(Func<Task<TResult>> action)
+    private readonly Dictionary<string, Thread> _threads = new();
+    private sealed class Thread
     {
-        try
-        {
-            var result = await action();
-            _successCount++;
-            return result;
-        }
-        catch (Exception)
+        private int _successCount;
+        private int _millisecondsDelay = 100;
+        
+        public void Success() => _successCount++;
+
+        public async Task<int> Fail()
         {
             await Task.Delay(_millisecondsDelay = _successCount switch
             {
@@ -23,7 +22,25 @@ public sealed class CircuitBreaker
                 _ => _millisecondsDelay
             });
             _successCount = 0;
+            return _millisecondsDelay;
+        }
+    }
+
+    public async Task<TResult?> Execute<TResult>(string threadId, Func<Task<TResult>> action)
+    {
+        try
+        {
+            var result = await action();
+            GetThread(threadId).Success();
+            return result;
+        }
+        catch (Exception)
+        {
+            Console.WriteLine($"{threadId}: {await GetThread(threadId).Fail()}");
         }
         return default;
     }
+
+    private Thread GetThread(string threadId) => 
+        _threads.GetOrAdd(threadId, _ => new Thread());
 }

@@ -68,7 +68,8 @@ public class Search
         var negativeSearchResults = new List<SearchResult>();
         foreach (var searchEngine in SearchEngines.List)
         {
-            var finished = await circuitBreaker.Execute(async () =>
+            var threadId = searchEngine.Uri.ToString();
+            var finished = await circuitBreaker.Execute(threadId, async () =>
             {
                 var results = await searchEngine.Search(Html, topic, q);
                 var result = results.Items
