@@ -110,13 +110,14 @@ public static class SiteUrls
 
     public static async Task<HtmlNode> AuthorToday(this Http http, string key, string localUrl)
     {
-        var requestUri = new Uri(new Uri("https://author.today.ru"), localUrl);
-        const string cookie = "cf_clearance=A5_mD_kB1YWIoFzfEeU0zIbqvj.z10Msu0RtAitJLqs-1663341274-0-150; backend_route=web08; mobile-mode=false; CSRFToken=R5hHyUTpt0v1r-AfEUQq3d8VQBMc87bWeVNyYVoXZ24kEAsFxSb_fJqUmZEmBrXkELGfvGl2VMberYKix1z-tF3oL2A1; ngSessnCookie=AAAAANqSJGN1LP2AAZMgBg==";
+        var requestUri = new Uri(new Uri("https://author.today"), localUrl);
+        const string cookie = "cf_clearance=PtNKqnivIZM5ntn1Xt5imjYT_Z1oIgargOEMvhBXhGE-1663796156-0-150; mobile-mode=false; _ga=GA1.2.1851698772.1662849743; _ym_uid=1662849743100916213; _ym_d=1662849743; LoginCookie=ARgXhi0Dz5NI7O-yAiZxPWeB0Vg1s9E0_RR-IGkEW6CEsh1bUJN_FkIPxgHZt6tTkrykcRnQRrql3296TYon9FMknHO1z_ksAx_MbLmGJAgW3KNsb854WQqv-VpHwxEP9uWpOp2j0L367gn5n0z0w4Sc0K5rF-abbtv9GUMRHgydGs0BVom9PmngFbtWDyYLYJqaoE4V-eP4MR4niWcorie9YjU7C0ZJDm5GFTsa9QOSaHCXQhRJa9Ux8x90lbIhRAD7O7PIQ06JirXt5A64ZhzWiHjGketv33o8jPQfEmd3vqFxZQDWVpRaE5Ye-_MX86eOyItHwSzXoSDaUES0DZvnkpNjA-jD42Ed22CMbiVRdc3E0GDuMF8wuYADmTu85lRtju-JGiMYd3r6FSS4tAhtHVaRiHstRsTC5qFu83CUiuSJgvrjJ7NJx0h5Ul0O1BjN8WfPvswhZmiCAOaHX7_S2lTYkACJZlOm1iy_mO_mDRpZQfCzbCqG1_rqACciQ0G2Iqtu3pQpY6W1oxMDAByUwCoTy42xf9LH1OYTNg8M78BBbrFk_1mhTXKeqpmg2lAPRMc5S4TWTYajj3Nh4OED8ovqFMLaNcx3c1lT7xMehI9I; ngLoginCookie=dba552a71244044cfb7391d71a8ef62d; cf_chl_2=54c1df25e188d29; cf_chl_prog=x13; backend_route=web10; CSRFToken=4Q2KQiPRl72V7qMG0aTtNPEgsaaierke5obfvRXsMzIdtpFYpNVq-o7CD0DYMYS7NDGER7PpTzus5DaZjv8Vio6mTsk1; ngSessnCookie=AAAAAL2DK2Ngf9uNAZM2Bg==; _gid=GA1.2.592254428.1663796158; _ym_isad=1; _ym_visorc=b";
         var html = await http.Get(key,
             new HttpRequestMessage(HttpMethod.Get, requestUri)
             {
                 Headers =
                 {
+                    { "User-Agent", Firefox },
                     { "Cookie", cookie }
                 }
             });

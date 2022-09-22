@@ -238,7 +238,6 @@ public static class Parser
         var attributeValue = element.Attribute("data-ext_link_data")?.Value;
         if (attributeValue == null) return null;
         var jObject = JObject.Parse(attributeValue);
-        var topicId = jObject["t"]!.Value<int>();
-        return topicId;
+        return jObject["t"]!.Value<int>();
     }
 }
