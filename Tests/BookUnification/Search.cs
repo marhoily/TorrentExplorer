@@ -32,23 +32,31 @@ public class Search
         var positive = 0;
         var topics = await Step2.Output.ReadJson<List<Story>>();
         var circuitBreaker = new CircuitBreaker();
-        foreach (var topic in topics!)
-        {
-            if (topic.Title == null) continue;
-            if (topic.Title.StartsWith("Цикл", OrdinalIgnoreCase)) continue;
-            if (topic.Title.StartsWith("Серия", OrdinalIgnoreCase)) continue;
-            if (topic.Title.Contains("Полный Сезон", OrdinalIgnoreCase)) continue;
-            if (topic.Title.Contains("Антология", OrdinalIgnoreCase)) continue;
-            if (topic.NumberInSeries is { } n)
-                if (Regex.IsMatch(n, "\\s*\\d+\\s*-\\s*\\d+\\s*"))
-                    continue;
-            if (await GoThroughSearchEngines(circuitBreaker, topic))
-                positive++;
-            else
-                negative++;
-        }
+        await Task.WhenAll(topics!
+            .Where(t => !IsSeries(t))
+            .Select(async topic =>
+            {
+                if (await GoThroughSearchEngines(circuitBreaker, topic))
+                    positive++;
+                else
+                    negative++;
+            }));
+
 
         _testOutputHelper.WriteLine($"Positive: {positive}; Negative: {negative}");
+    }
+
+    public static bool IsSeries(Story topic)
+    {
+        if (topic.Title == null) return true;
+        if (topic.Title.StartsWith("Цикл", OrdinalIgnoreCase)) return true;
+        if (topic.Title.StartsWith("Серия", OrdinalIgnoreCase)) return true;
+        if (topic.Title.Contains("Полный Сезон", OrdinalIgnoreCase)) return true;
+        if (topic.Title.Contains("Антология", OrdinalIgnoreCase)) return true;
+        if (topic.NumberInSeries is { } n)
+            if (Regex.IsMatch(n, "\\s*\\d+\\s*-\\s*\\d+\\s*"))
+                return true;
+        return false;
     }
 
     [Fact]

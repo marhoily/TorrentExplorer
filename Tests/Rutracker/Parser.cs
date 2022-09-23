@@ -209,10 +209,9 @@ public static class Parser
                 ? jArr.Select(token => token.Value<string>()).ToList()!
                 : new List<string>();
 
-            var singleOrDefault = src
-                .SingleOrDefault(s => s.Contains("Цикл"));
-            if (singleOrDefault == null) return null;
-            var replace = singleOrDefault
+            var spoiler = src.FirstOrDefault(s => s.Contains("Цикл"));
+            if (spoiler == null) return null;
+            var replace = spoiler
                 .Replace("Цикл/серия", "Цикл")
                 .Replace("Цикл книг", "Цикл")
                 .Replace("&#34;", "ξ")

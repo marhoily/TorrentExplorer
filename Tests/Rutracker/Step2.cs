@@ -3,7 +3,7 @@ using Tests.Utilities;
 
 namespace Tests.Rutracker;
 
-public class Step2
+public sealed class Step2
 {
     public const string Output = @"C:\temp\TorrentsExplorerData\Extract\Rutracker\step-2.json";
 

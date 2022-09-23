@@ -34,7 +34,7 @@ public class Step0
 
     private static async Task SaveToXml(HtmlNode[] htmlNodes)
     {
-        await using var fileStream = File.OpenWrite(Output);
+        await using var fileStream = MyFile.CreateText(Output);
         await using var writer = XmlWriter.Create(fileStream,
             new XmlWriterSettings
             {

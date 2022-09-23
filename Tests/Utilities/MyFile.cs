@@ -59,4 +59,17 @@ public static class MyFile
         NullValueHandling = NullValueHandling.Ignore,
         DefaultValueHandling = DefaultValueHandling.Ignore
     };
+
+    public static StreamWriter CreateText(string fileName)
+    {
+        try
+        {
+            return File.CreateText(fileName);
+        }
+        catch (DirectoryNotFoundException)
+        {
+            CreateDirIfNeeded(fileName);
+            return File.CreateText(fileName);
+        }
+    }
 }
