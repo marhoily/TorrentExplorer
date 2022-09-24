@@ -32,16 +32,13 @@ public class Search
         var positive = 0;
         var topics = await Step2.Output.ReadJson<List<Story>>();
         var circuitBreaker = new CircuitBreaker();
-        await Task.WhenAll(topics!
-            .Where(t => !IsSeries(t))
-            .Select(async topic =>
-            {
-                if (await GoThroughSearchEngines(circuitBreaker, topic))
-                    positive++;
-                else
-                    negative++;
-            }));
-
+        foreach (var story in topics!.Where(t => !IsSeries(t)))
+        {
+            if (await GoThroughSearchEngines(circuitBreaker, story))
+                positive++;
+            else
+                negative++;
+        }
 
         _testOutputHelper.WriteLine($"Positive: {positive}; Negative: {negative}");
     }

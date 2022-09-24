@@ -1,4 +1,4 @@
-using System.Net;
+﻿using System.Net;
 using System.Text;
 
 namespace Tests.Html;
@@ -52,6 +52,8 @@ public class Http
         var content = result.IsSuccessStatusCode
             ? _encoding.GetString(await result.Content.ReadAsByteArrayAsync())
             : $"<{result.StatusCode}/>";
+        if (content.Contains("Сервер находится под высокой нагрузкой"))
+            throw new Exception("Overloaded");
         await _cache.SaveValue(key, content);
         return content;
     }
