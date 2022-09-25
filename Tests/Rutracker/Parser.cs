@@ -52,8 +52,8 @@ public static class Parser
         var topicId = post.FindTag("topic-id")!.ParseInt();
         var year = post.FindTag("Год выпуска")?.TrimEnd('.', 'г', ' ');
         var lastName = post.FindTags("Фамилия автора", "Фамилии авторов", 
-            "Фамилия авторов", "Фамилия автора сценария", "Фамилии и имена авторов",
-            "Aвтор", "Автор" /* different "A"? */, "Автора", "Авторы");
+            "Фамилия авторов", "Фамилия автора сценария", 
+            "Фамилии и имена авторов", "Автор", "Автора", "Авторы");
         var firstName = post.FindTags("Имя автора", "Имена авторов");
         var performer = post.FindTags("Исполнитель", "Исполнители", "Исполнитель и звукорежиссёр");
         var (series, num) = GetSeries(post);

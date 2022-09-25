@@ -12,7 +12,7 @@ public class Step2
     [Fact]
     public async Task WallParse()
     {
-        await using var file = File.OpenRead(Step0.Output);
+        await using var file = File.OpenRead(Step1.Output);
         var many = await XDocument.LoadAsync(
             file, LoadOptions.PreserveWhitespace, CancellationToken.None);
 
