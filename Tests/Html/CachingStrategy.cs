@@ -3,5 +3,6 @@
 public enum CachingStrategy
 {
     Normal,
-    AlwaysMiss
+    AlwaysMiss,
+    Skip
 }

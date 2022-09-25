@@ -29,13 +29,18 @@ public sealed class SqliteCache : IHtmlCache
 
     public async Task<string?> TryGetValue(string key)
     {
-        if (_cachingStrategy == CachingStrategy.AlwaysMiss) return null;
+        if (_cachingStrategy is CachingStrategy.AlwaysMiss or CachingStrategy.Skip) 
+            return null;
         var cacheLine = await _db.SingleByIdAsync<CacheLine>(key);
         return cacheLine?.Value;
     }
 
-    public async Task SaveValue(string key, string value) => 
+    public async Task SaveValue(string key, string value)
+    {
+        if (_cachingStrategy is CachingStrategy.Skip)
+            return;
         await _db.SaveAsync(new CacheLine(key, value));
+    }
 }
 
 public sealed class HtmlCache : IHtmlCache

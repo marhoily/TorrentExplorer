@@ -51,7 +51,8 @@ public static class Parser
     {
         var topicId = post.FindTag("topic-id")!.ParseInt();
         var year = post.FindTag("Год выпуска")?.TrimEnd('.', 'г', ' ');
-        var lastName = post.FindTags("Фамилия автора", "Фамилии авторов", "Фамилия авторов",
+        var lastName = post.FindTags("Фамилия автора", "Фамилии авторов", 
+            "Фамилия авторов", "Фамилия автора сценария", "Фамилии и имена авторов",
             "Aвтор", "Автор" /* different "A"? */, "Автора", "Авторы");
         var firstName = post.FindTags("Имя автора", "Имена авторов");
         var performer = post.FindTags("Исполнитель", "Исполнители", "Исполнитель и звукорежиссёр");
@@ -70,8 +71,7 @@ public static class Parser
             genre, playTime);
     }
 
-    private static string? GetTitle(JObject post, string? series, string? firstName,
-        string? secondName)
+    private static string? GetTitle(JObject post, string? series, string? firstName, string? secondName)
     {
         var title = GetRawTitle(post, series);
         var noJunk = RemoveExplicitJunkFromTitle(title);
