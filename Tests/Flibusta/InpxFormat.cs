@@ -41,7 +41,8 @@ public record GenreData(
 
 public record AuthorData(
     string? FirstName,
-    string? MiddleName, string? LastName);
+    string? MiddleName, 
+    string? LastName);
 
 public enum BookProp { IsLocal = 1, IsDeleted, HasReview }
 
