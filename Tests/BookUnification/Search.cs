@@ -30,7 +30,7 @@ public class Search
     {
         var negative = 0;
         var positive = 0;
-        var topics = await Step2.Output.ReadJson<List<Story>>();
+        var topics = await Step3.Output.ReadJson<List<Story>>();
         var circuitBreaker = new CircuitBreaker();
         foreach (var story in topics!.Where(t => !IsSeries(t)))
         {

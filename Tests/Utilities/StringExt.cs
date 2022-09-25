@@ -27,6 +27,55 @@ public static class StringExt
     public static string CleanUp(this string s) =>
         WebUtility.HtmlDecode(s.Replace("&nbsp;", " ").Replace("&quot;", "\""));
 
+    private const string Ru = "абвгдеёжзийёклмнопрстуфхцчшщъыьэюя" +
+                              "АБВГДЕЁЖЗИЙЁКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ";
+    private const string Eng = "abcdefghijklmnopqrstuvwxyz" +
+                               "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    private const string SuspiciousEng = "MPTHBecaoxECAOXp";
+    private const string SuspiciousRu = "МРТНВесаохЕСАОХр";
+    
+    public static string LanguageMixFix(this string input)
+    {
+        return HasMix(input) != 0 
+            ? input.Split(' ').Select(FixIfNeeded).StrJoin(" ") 
+            : input;
+
+        string FixIfNeeded(string word)
+        {
+            var balance = HasMix(word);
+            if (balance == 0) return word;
+            return balance > 0
+                ? Replace(word, SuspiciousRu, SuspiciousEng)
+                : Replace(word, SuspiciousEng, SuspiciousRu);
+        }
+        static string Replace(string input, string from, string to)
+        {
+            for (var i = 0; i < from.Length; i++)
+                input = input.Replace(from[i], to[i]);
+            return input;
+        }
+        int HasMix(string s)
+        {
+            var eng = 0;
+            var ru = 0;
+            for (int i = 0; i < s.Length; i++)
+            {
+                if (!char.IsLetterOrDigit(s[i]) && s[i] != '_')
+                {
+                    if (eng > 0 && ru > 0)
+                        return eng - ru;
+                    eng = ru = 0;
+                }
+
+                if (Eng.IndexOf(s[i]) != -1)
+                    eng++;
+                if (Ru.IndexOf(s[i]) != -1)
+                    ru++;
+            }
+            return eng > 0 && ru > 0 ? eng - ru : 0;
+        }
+    }
+
     public static string Unquote(this string s, char quote = '\"')
     {
         return s.StartsWith(quote) && s.EndsWith(quote) ? s.Trim('\"') : s;
@@ -84,6 +133,6 @@ public static class StringExt
         return input.EndsWith(postfix) ? input[..^postfix.Length] : input;
     }
 
-    public static string TrimPrefix(this string input, string prefix) => 
+    public static string TrimPrefix(this string input, string prefix) =>
         input.StartsWith(prefix) ? input[prefix.Length..] : input;
 }
