@@ -73,6 +73,12 @@ public sealed class AuthorClassificationTests
             .Should().Be(new Single(0, "Суржиков", "Роман"));
 
     [Fact]
+    public void CommonLastMixWithinSingle() =>
+        new RawAuthor(6260419, "Андрей, Мария", "Круз", null, null, null, null)
+            .Classify()
+            .Should().Be(new CommonLastMix(6260419, "Андрей, Мария", "Круз"));
+
+    [Fact]
     public void PluralWithinSingle() =>
         new RawAuthor(5333164, "Юрий, Николай", "Брайдер, Чадович", null, null, null, null)
             .Classify()

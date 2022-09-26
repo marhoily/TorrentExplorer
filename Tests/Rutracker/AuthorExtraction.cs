@@ -28,10 +28,7 @@ public static class AuthorExtraction
                 x.ContainsAny(",")
                     ? new PluralMix(raw.Id, x)
                     : new SingleMix(raw.Id, x),
-            ({ } f, { } l, null, null, null, null) =>
-                f.ContainsAny(",") && l.ContainsAny(",")
-                    ? new Plural(raw.Id, f, l)
-                    : new Single(raw.Id, f, l),
+            ({ } f, { } l, null, null, null, null) => Single(f, l),
             ({ } f, null, null, { } l, null, null) =>
                 new CommonLastMix(raw.Id, f, l),
             (null, null, { } f, { } l, null, null) =>
@@ -65,6 +62,15 @@ public static class AuthorExtraction
             if (parts.Length == 3 && parts[1] == "и")
                 return input.Contains(parts[0]) && input.Contains(parts[2]);
             return false;
+        }
+
+        ClassifiedAuthor Single(string f, string l)
+        {
+            if (f.ContainsAny(",") && l.ContainsAny(","))
+                return new Plural(raw.Id, f, l);
+            if (f.ContainsAny(",") && !l.ContainsAny(","))
+                return new CommonLastMix(raw.Id, f, l);
+            return new Single(raw.Id, f, l);
         }
     }
 
