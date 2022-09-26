@@ -22,6 +22,8 @@ public static class MyFile
 
     public static async Task SaveJson<T>(this string file, T obj) => 
         await WriteAllTextAsync(file, JsonConvert.SerializeObject(obj, JsonSettings));
+    public static async Task SaveTypedJson<T>(this string file, T obj) => 
+        await WriteAllTextAsync(file, JsonConvert.SerializeObject(obj, TypedJsonSettings));
 
     public static void SaveXml<T>(this string file, T obj)
     {
@@ -47,6 +49,11 @@ public static class MyFile
         var json = await file.ReadAllTextOrNullAsync();
         return json == null ? default : JsonConvert.DeserializeObject<T>(json, JsonSettings);
     }
+    public static async Task<T?> ReadTypedJson<T>(this string file)
+    {
+        var json = await file.ReadAllTextOrNullAsync();
+        return json == null ? default : JsonConvert.DeserializeObject<T>(json, TypedJsonSettings);
+    }
     public static T? ReadXml<T>(this string file)
     {
         var serializer = new YAXSerializer(typeof(T));
@@ -58,6 +65,13 @@ public static class MyFile
         Formatting = Formatting.Indented,
         NullValueHandling = NullValueHandling.Ignore,
         DefaultValueHandling = DefaultValueHandling.Ignore
+    };
+    private static readonly JsonSerializerSettings TypedJsonSettings = new()
+    {
+        Formatting = Formatting.Indented,
+        NullValueHandling = NullValueHandling.Ignore,
+        DefaultValueHandling = DefaultValueHandling.Ignore,
+        TypeNameHandling = TypeNameHandling.Auto,
     };
 
     public static StreamWriter CreateText(string fileName)

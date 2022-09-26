@@ -17,7 +17,6 @@ public sealed record Plural(string FirstNames, string LastNames) : ClassifiedAut
 public sealed record SingleMix(string Name) : ClassifiedAuthor;
 public sealed record PluralMix(string Names) : ClassifiedAuthor;
 public sealed record CommonLastMix(string FirstNames, string CommonLastName) : ClassifiedAuthor;
-public sealed record Unknown(string Name) : ClassifiedAuthor;
 public sealed record Empty : ClassifiedAuthor;
 
 public static class AuthorExtraction
