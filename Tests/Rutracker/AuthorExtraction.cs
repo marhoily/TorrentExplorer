@@ -11,11 +11,11 @@ public sealed record PluralMix(int TopicId, string Names) : ClassifiedAuthor(Top
 public sealed record CommonLastMix(int TopicId, string FirstNames, string CommonLastName) : ClassifiedAuthor(TopicId);
 public sealed record Empty(int TopicId) : ClassifiedAuthor(TopicId);
 
-public abstract record PurifiedAuthor;
-public record FirstLast(string FirstName, string LastName) : PurifiedAuthor;
-public sealed record UnrecognizedFirstLast(string FirstName, string LastName) : FirstLast(FirstName, LastName);
-public sealed record Only(string Name) : PurifiedAuthor;
-public sealed record ThreePartsName(string FirstName, string MiddleName, string LastName) : PurifiedAuthor;
+public abstract record PurifiedAuthor(int TopicId);
+public record FirstLast(int TopicId, string FirstName, string LastName) : PurifiedAuthor(TopicId);
+public sealed record UnrecognizedFirstLast(int TopicId, string FirstName, string LastName) : FirstLast(TopicId, FirstName, LastName);
+public sealed record Only(int TopicId, string Name) : PurifiedAuthor(TopicId);
+public sealed record ThreePartsName(int TopicId, string FirstName, string MiddleName, string LastName) : PurifiedAuthor(TopicId);
 
 public static class AuthorExtraction
 {
@@ -29,7 +29,7 @@ public static class AuthorExtraction
                 x.ContainsAny(",")
                     ? new PluralMix(raw.Id, x)
                     : new SingleMix(raw.Id, x),
-            ({ } f, { } l, null, null, null, null) => 
+            ({ } f, { } l, null, null, null, null) =>
                 Single(f.Replace(';', ','), l.Replace(';', ',')),
             ({ } f, null, null, { } l, null, null) =>
                 new CommonLastMix(raw.Id, f, l),
@@ -83,11 +83,11 @@ public static class AuthorExtraction
             CommonLastMix mix => CommonLastMix(mix.FirstNames, mix.CommonLastName),
             Plural plural => Plural(plural.FirstNames, plural.LastNames),
             PluralMix pluralMix => PluralMix(pluralMix.Names),
-            Single single => new PurifiedAuthor[] { new FirstLast(single.FirstName, single.LastName) },
+            Single single => new PurifiedAuthor[] { new FirstLast(author.TopicId, single.FirstName, single.LastName) },
             SingleMix singleMix => SingleMix(singleMix.Name),
             _ => throw new ArgumentOutOfRangeException(nameof(author), author.ToString())
         };
-        static PurifiedAuthor[] SingleMix(string name)
+        PurifiedAuthor[] SingleMix(string name)
         {
             var parts = name.Split(' ');
             var idxOfAnd = Array.IndexOf(parts, "и");
@@ -95,46 +95,46 @@ public static class AuthorExtraction
             {
                 (2, _) => new PurifiedAuthor[]
                 {
-                    new FirstLast(parts[1], parts[0])
+                    new FirstLast(author.TopicId, parts[1], parts[0])
                 },
                 (4, 1) => new PurifiedAuthor[]
                 {
-                    new FirstLast(parts[0], parts[3]),
-                    new FirstLast(parts[2], parts[3])
+                    new FirstLast(author.TopicId, parts[0], parts[3]),
+                    new FirstLast(author.TopicId, parts[2], parts[3])
                 },
                 (4, 2) => new PurifiedAuthor[]
                 {
-                    new FirstLast(parts[1], parts[0]),
-                    new FirstLast(parts[3], parts[0])
+                    new FirstLast(author.TopicId, parts[1], parts[0]),
+                    new FirstLast(author.TopicId, parts[3], parts[0])
                 },
                 (5, 2) => new PurifiedAuthor[]
                 {
-                    new FirstLast(parts[1], parts[0]),
-                    new FirstLast(parts[4], parts[3])
+                    new FirstLast(author.TopicId, parts[1], parts[0]),
+                    new FirstLast(author.TopicId, parts[4], parts[3])
                 },
                 (_, -1) => new PurifiedAuthor[]
                 {
-                    new Only(name)
+                    new Only(author.TopicId, name)
                 },
                 _ => throw new ArgumentOutOfRangeException(nameof(name), name)
             };
         }
-        static PurifiedAuthor[] PluralMix(string name) =>
+        PurifiedAuthor[] PluralMix(string name) =>
             ListSplit(name).SelectMany(SingleMix).ToArray();
 
-        static PurifiedAuthor[] Plural(string firstNames, string lastNames) =>
+        PurifiedAuthor[] Plural(string firstNames, string lastNames) =>
             ListSplit(firstNames)
                 .Zip(ListSplit(lastNames))
-                .Select(t => new FirstLast(t.First, t.Second))
+                .Select(t => new FirstLast(author.TopicId, t.First, t.Second))
                 .OfType<PurifiedAuthor>()
                 .ToArray();
 
         static IEnumerable<string> ListSplit(string input) =>
             input.Split(',').Select(x => x.Trim());
 
-        static PurifiedAuthor[] CommonLastMix(string firstNames, string commonLastName) =>
+        PurifiedAuthor[] CommonLastMix(string firstNames, string commonLastName) =>
             ListSplit(firstNames)
-                .Select(firstName => new FirstLast(firstName, commonLastName))
+                .Select(firstName => new FirstLast(author.TopicId, firstName, commonLastName))
                 .OfType<PurifiedAuthor>()
                 .ToArray();
     }
