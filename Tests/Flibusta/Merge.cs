@@ -60,7 +60,8 @@ public sealed class Fixer
         if (_byFirstName.Contains(input.LastName) &&
             _byLastName.Contains(input.FirstName))
             return new FirstLast(input.LastName, input.FirstName);
-        return input;
+
+        return new UnrecognizedFirstLast(input.FirstName, input.LastName);
     }
 
     public Only Fix(Only input)

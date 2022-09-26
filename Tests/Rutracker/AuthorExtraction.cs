@@ -12,7 +12,8 @@ public sealed record CommonLastMix(int TopicId, string FirstNames, string Common
 public sealed record Empty(int TopicId) : ClassifiedAuthor(TopicId);
 
 public abstract record PurifiedAuthor;
-public sealed record FirstLast(string FirstName, string LastName) : PurifiedAuthor;
+public record FirstLast(string FirstName, string LastName) : PurifiedAuthor;
+public sealed record UnrecognizedFirstLast(string FirstName, string LastName) : FirstLast(FirstName, LastName);
 public sealed record Only(string Name) : PurifiedAuthor;
 
 public static class AuthorExtraction
