@@ -1,14 +1,6 @@
 ﻿using ServiceStack;
-using Tests.Utilities;
-using static System.StringSplitOptions;
 
 namespace Tests.Rutracker;
-
-public record AuthorInfo(
-    string? FirstName,
-    string? LastName,
-    string? UnknownName,
-    string? Malformed);
 
 public abstract record ClassifiedAuthor;
 
@@ -18,6 +10,10 @@ public sealed record SingleMix(string Name) : ClassifiedAuthor;
 public sealed record PluralMix(string Names) : ClassifiedAuthor;
 public sealed record CommonLastMix(string FirstNames, string CommonLastName) : ClassifiedAuthor;
 public sealed record Empty : ClassifiedAuthor;
+
+public abstract record PurifiedAuthor;
+public sealed record FirstLast(string FirstName, string LastName) : PurifiedAuthor;
+public sealed record Only(string Name) : PurifiedAuthor;
 
 public static class AuthorExtraction
 {
@@ -50,95 +46,48 @@ public static class AuthorExtraction
             return false;
         }
     }
-    
-    static List<AuthorInfo>? Single(string? firstName, string? lastName)
+
+    public static PurifiedAuthor[] Extract(this ClassifiedAuthor author)
     {
-        if (firstName == null && lastName == null) return null;
-        if (firstName == null)
-            return SingleMix(lastName);
-        if (lastName == null)
-            return SingleMix(lastName);
-        if (firstName.Contains(' ') && lastName[^1] is 'и' or 'ы')
+        return author switch
         {
-            var firstNames = firstName.Split(' ', RemoveEmptyEntries);
-            if (firstNames.Length != 3 || firstNames[1] != "и")
-                return new List<AuthorInfo>
+          //  CommonLastMix commonLastMix => throw new NotImplementedException(),
+          //  Empty empty => throw new NotImplementedException(),
+            Plural plural => Plural(plural.FirstNames, plural.LastNames),
+            PluralMix pluralMix => PluralMix(pluralMix.Names),
+            Single single => new PurifiedAuthor[] { new FirstLast(single.FirstName, single.LastName) },
+            SingleMix singleMix => SingleMix(singleMix.Name),
+            _ => throw new ArgumentOutOfRangeException(nameof(author), author.ToString())
+        };
+        static PurifiedAuthor[] SingleMix(string name)
+        {
+            var parts = name.Split(' ');
+            return parts.Length switch
+            {
+                1 => new PurifiedAuthor[]{new Only(parts[0])},
+                2 => new PurifiedAuthor[]{new FirstLast(parts[1], parts[0])},
+                3 => new PurifiedAuthor[]{new Only(name)},
+                4 => parts[2] is "и" 
+                    ? new PurifiedAuthor[]
                     {
-                        new(firstName, lastName, null, null),
-                    };
-            return new List<AuthorInfo>
-                {
-                    new(firstNames[0], lastName, null, null),
-                    new(firstNames[2], lastName, null, null)
-                };
+                        new FirstLast(parts[1], parts[0]),
+                        new FirstLast(parts[3], parts[0])
+                    }
+                    : throw new ArgumentOutOfRangeException(name),
+                _ => throw new ArgumentOutOfRangeException(name)
+            };
         }
+        static PurifiedAuthor[] PluralMix(string name) => 
+            ListSplit(name).SelectMany(SingleMix).ToArray();
 
-        if ((firstName + lastName).ContainsAny("/", ",", ";"))
-            return Multiple(firstName, lastName);
-        return new List<AuthorInfo> { new(firstName, lastName, null, null) };
+        static PurifiedAuthor[] Plural(string firstNames, string lastNames) =>
+            ListSplit(firstNames)
+                .Zip(ListSplit(lastNames))
+                .Select(t => new FirstLast(t.First, t.Second))
+                .OfType<PurifiedAuthor>()
+                .ToArray();
+
+        static IEnumerable<string> ListSplit(string input) =>
+            input.Split(',').Select(x => x.Trim());
     }
-    static List<AuthorInfo>? Multiple(string? firstNames, string? lastNames)
-    {
-        if (firstNames == null && lastNames == null) return null;
-        if (firstNames == null)
-            return MultipleMix(lastNames);
-        if (lastNames == null)
-            throw new Exception();
-        var ff = firstNames.Split(',', ';', RemoveEmptyEntries).Select(x => x.Trim()).ToArray();
-        var ss = lastNames.Split(',', ';', RemoveEmptyEntries).Select(x => x.Trim()).ToArray();
-        if (ff.Any(x => x.Contains(' ')) || ss.Any(x => x.Contains(' ')))
-        {
-            return new List<AuthorInfo>()
-                {
-                    new(null, null, null, ff.Concat(ss).StrJoin(" "))
-                };
-        }
-        if (ff.Concat(ss).Any(x => x.Contains(" ")))
-            throw new Exception(firstNames + " " + lastNames);
-
-        return ff.Zip(ss)
-            .Select(p => new AuthorInfo(p.First, p.Second, null, null))
-            .ToList();
-    }
-
-    static List<AuthorInfo>? SingleMix(string? name)
-    {
-        if (name == null && name == null) return null;
-        return new List<AuthorInfo> { new(null, null, name, null) };
-    }
-    static List<AuthorInfo>? MultipleMix(string? names)
-    {
-        if (names == null) return null;
-        var result = new List<AuthorInfo>();
-        foreach (var s in names.Split(',', '/', ';', '.'))
-        {
-            var strings = s.Split(' ', RemoveEmptyEntries);
-            if (strings.Length == 4)
-            {
-                if (strings[2] == "и")
-                {
-                    result.Add(new AuthorInfo(strings[1], strings[0], null, null));
-                    result.Add(new AuthorInfo(strings[2], strings[0], null, null));
-                }
-                if (strings[1] == "и")
-                {
-                    result.Add(new AuthorInfo(strings[0], strings[1], null, null));
-                    result.Add(new AuthorInfo(strings[0], strings[2], null, null));
-                }
-                return result;
-            }
-
-            if (strings.Length == 5 && strings[2] == "и")
-            {
-                result.Add(new AuthorInfo(strings[0], strings[1], null, null));
-                result.Add(new AuthorInfo(strings[3], strings[4], null, null));
-                return result;
-            }
-            if (strings.Length > 3)
-                throw new Exception(names);
-            result.Add(new AuthorInfo(null, null, s, null));
-        }
-        return result;
-    }
-
 }
