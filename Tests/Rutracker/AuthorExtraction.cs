@@ -15,6 +15,7 @@ public abstract record PurifiedAuthor;
 public record FirstLast(string FirstName, string LastName) : PurifiedAuthor;
 public sealed record UnrecognizedFirstLast(string FirstName, string LastName) : FirstLast(FirstName, LastName);
 public sealed record Only(string Name) : PurifiedAuthor;
+public sealed record ThreePartsName(string FirstName, string MiddleName, string LastName) : PurifiedAuthor;
 
 public static class AuthorExtraction
 {

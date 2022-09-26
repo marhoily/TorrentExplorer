@@ -3,7 +3,7 @@ using Tests.Utilities;
 
 namespace Tests.Flibusta;
 
-public sealed class Merge
+public sealed class FixAuthorTests
 {
     public const string Output = @"C:\temp\TorrentsExplorerData\Extract\Rutracker\authors-fixed.json";
 
@@ -12,33 +12,33 @@ public sealed class Merge
     {
         var fixData = await @"c:\temp\TorrentsExplorerData\Extract\AuthorData.json"
             .ReadJson<AuthorData[]>();
-        var fixer = new Fixer(fixData!);
+        var fixer = new AuthorFixer(fixData!);
 
         var rutracker = await AuthorExtractionTests
             .Output.ReadTypedJson<PurifiedAuthor[]>();
         await Output.SaveTypedJson(fixer.Fix(rutracker!));
     }
 }
-public static class FixerExt
+public static class AuthorFixerExt
 {
-    public static IEnumerable<PurifiedAuthor> Fix(this Fixer fixer, PurifiedAuthor[] src)
+    public static IEnumerable<PurifiedAuthor> Fix(this AuthorFixer authorFixer, PurifiedAuthor[] src)
     {
         foreach (var author in src)
             yield return author switch
             {
-                FirstLast fl => fixer.Fix(fl),
-                Only o => fixer.Fix(o),
+                FirstLast fl => authorFixer.Fix(fl),
+                Only o => authorFixer.Fix(o),
                 _ => throw new ArgumentOutOfRangeException()
             };
     }
 }
-public sealed class Fixer
+public sealed class AuthorFixer
 {
     private readonly ILookup<string, AuthorData> _byFirstName;
     private readonly ILookup<string, AuthorData> _byMiddleName;
     private readonly ILookup<string, AuthorData> _byLastName;
 
-    public Fixer(AuthorData[] authors)
+    public AuthorFixer(AuthorData[] authors)
     {
         _byFirstName = authors
             .Where(a => a.FirstName != null)
@@ -51,7 +51,7 @@ public sealed class Fixer
             .ToLookup(a => a.LastName!);
     }
 
-    public FirstLast Fix(FirstLast input)
+    public PurifiedAuthor Fix(FirstLast input)
     {
         if (_byFirstName.Contains(input.FirstName) &&
             _byLastName.Contains(input.LastName))
@@ -61,6 +61,15 @@ public sealed class Fixer
             _byLastName.Contains(input.FirstName))
             return new FirstLast(input.LastName, input.FirstName);
 
+        if (input.FirstName.Contains(' '))
+        {
+            var parts = input.FirstName.Split(' ');
+            if (_byFirstName.Contains(parts[0]) &&
+                _byMiddleName.Contains(parts[1]) &&
+                _byLastName.Contains(input.LastName))
+                return new ThreePartsName(parts[0], parts[1], input.LastName);
+
+        }
         return new UnrecognizedFirstLast(input.FirstName, input.LastName);
     }
 
