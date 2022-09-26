@@ -42,6 +42,13 @@ public sealed class AuthorExtractionTests
             .Extract().Should().Equal(
                 new FirstLast("Марина", "Дяченко"),
                 new FirstLast("Сергей", "Дяченко"));
+    
+    [Fact]
+    public void SingleMixWithAndSeparatedNames() =>
+        new SingleMix(6208654, "Фалий Светлана и Сандрацкая Алина")
+            .Extract().Should().Equal(
+                new FirstLast("Светлана", "Фалий"),
+                new FirstLast("Алина", "Сандрацкая"));
 
     [Fact]
     public void SingleMixWith3Words() =>
