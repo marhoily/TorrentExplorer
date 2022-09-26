@@ -30,7 +30,7 @@ public static class AuthorExtraction
                     ? new PluralMix(raw.Id, x)
                     : new SingleMix(raw.Id, x),
             ({ } f, { } l, null, null, null, null) =>
-                Single(f.Replace(';', ','), l.Replace(';', ',')),
+                Single(f.Replace(';', ',').Replace(" и ", ", "), l.Replace(';', ',')),
             ({ } f, null, null, { } l, null, null) =>
                 new CommonLastMix(raw.Id, f, l),
             (null, null, { } f, { } l, null, null) =>

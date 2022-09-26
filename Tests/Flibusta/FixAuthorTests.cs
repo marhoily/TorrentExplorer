@@ -6,6 +6,7 @@ namespace Tests.Flibusta;
 public sealed class FixAuthorTests
 {
     public const string Output = @"C:\temp\TorrentsExplorerData\Extract\Rutracker\authors-fixed.json";
+    public const string OutputUnrecognized = @"C:\temp\TorrentsExplorerData\Extract\Rutracker\authors-unrecognized.json";
 
     [Fact]
     public async Task LocalAuthorsToAtoms()
@@ -16,7 +17,9 @@ public sealed class FixAuthorTests
 
         var rutracker = await AuthorExtractionTests
             .Output.ReadTypedJson<PurifiedAuthor[]>();
-        await Output.SaveTypedJson(fixer.Fix(rutracker!));
+        var result = fixer.Fix(rutracker!).ToList();
+        await Output.SaveTypedJson(result);
+        await OutputUnrecognized.SaveTypedJson(result.OfType<UnrecognizedFirstLast>());
     }
 }
 public static class AuthorFixerExt
