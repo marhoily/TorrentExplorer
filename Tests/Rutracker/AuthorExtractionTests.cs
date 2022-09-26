@@ -19,45 +19,45 @@ public sealed class AuthorExtractionTests
 
     [Fact]
     public void SingleMix() =>
-        new SingleMix("Суржиков Роман")
+        new SingleMix(0, "Суржиков Роман")
             .Extract().Should().Equal(
                 new FirstLast("Роман", "Суржиков"));
 
     [Fact]
     public void SingleMixOnlyLast() =>
-        new SingleMix("SadSlim")
+        new SingleMix(0, "SadSlim")
             .Extract().Should().Equal(
                 new Only("SadSlim"));
 
     [Fact]
     public void SingleMixWithAnd() =>
-        new SingleMix("Дяченко Марина и Сергей")
+        new SingleMix(0, "Дяченко Марина и Сергей")
             .Extract().Should().Equal(
                 new FirstLast("Марина", "Дяченко"),
                 new FirstLast("Сергей", "Дяченко"));
 
     [Fact]
     public void SingleMixWith3Words() =>
-        new SingleMix("Гай Юлий Орловский")
+        new SingleMix(0, "Гай Юлий Орловский")
             .Extract().Should().Equal(
                 new Only("Гай Юлий Орловский"));
 
     [Fact]
     public void Single() =>
-        new Single("Роман", "Суржиков")
+        new Single(0, "Роман", "Суржиков")
             .Extract().Should().Equal(
                 new FirstLast("Роман", "Суржиков"));
 
     [Fact]
     public void PluralMix() =>
-        new PluralMix("Круз Андрей, Царев Андрей")
+        new PluralMix(0, "Круз Андрей, Царев Андрей")
             .Extract().Should().Equal(
                 new FirstLast("Андрей", "Круз"),
                 new FirstLast("Андрей", "Царев"));
 
     [Fact]
     public void Plural() =>
-        new Plural("Ерофей, Андрей", "Трофимов, Земляной")
+        new Plural(0, "Ерофей, Андрей", "Трофимов, Земляной")
             .Extract().Should().Equal(
                 new FirstLast("Ерофей", "Трофимов"),
                 new FirstLast("Андрей", "Земляной"));

@@ -2,14 +2,14 @@
 
 namespace Tests.Rutracker;
 
-public abstract record ClassifiedAuthor;
+public abstract record ClassifiedAuthor(int TopicId);
 
-public sealed record Single(string FirstName, string LastName) : ClassifiedAuthor;
-public sealed record Plural(string FirstNames, string LastNames) : ClassifiedAuthor;
-public sealed record SingleMix(string Name) : ClassifiedAuthor;
-public sealed record PluralMix(string Names) : ClassifiedAuthor;
-public sealed record CommonLastMix(string FirstNames, string CommonLastName) : ClassifiedAuthor;
-public sealed record Empty : ClassifiedAuthor;
+public sealed record Single(int TopicId, string FirstName, string LastName) : ClassifiedAuthor(TopicId);
+public sealed record Plural(int TopicId, string FirstNames, string LastNames) : ClassifiedAuthor(TopicId);
+public sealed record SingleMix(int TopicId, string Name) : ClassifiedAuthor(TopicId);
+public sealed record PluralMix(int TopicId, string Names) : ClassifiedAuthor(TopicId);
+public sealed record CommonLastMix(int TopicId, string FirstNames, string CommonLastName) : ClassifiedAuthor(TopicId);
+public sealed record Empty(int TopicId) : ClassifiedAuthor(TopicId);
 
 public abstract record PurifiedAuthor;
 public sealed record FirstLast(string FirstName, string LastName) : PurifiedAuthor;
@@ -23,16 +23,16 @@ public static class AuthorExtraction
                 raw.FirstNames, raw.LastNames,
                 raw.Name, raw.Names) switch
         {
-            ({ } x, null, null, null, null, null) => x.ContainsAny(",") ? new PluralMix(x) : new SingleMix(x),
-            ({ } f, { } l, null, null, null, null) => new Single(f, l),
-            ({ } f, null, null, { } l, null, null) => new CommonLastMix(f, l),
-            (null, null, { } f, { } l, null, null) => new Plural(f, l),
-            (null, null, null, null, { } x, null) => new SingleMix(x),
-            (null, null, null, null, null, { } x) => new PluralMix(x),
-            ({ } d, null, null, null, null, { } x) => IsDuplicate(x, d) ? new PluralMix(x) : throw new ArgumentOutOfRangeException(raw.ToString()),
-            (null, { } x, null, null, null, null) => x.ContainsAny(",") ? new PluralMix(x) : new SingleMix(x),
-            (null, null, null, { } x, null, null) => new PluralMix(x),
-            (null, null, null, null, null, null) => new Empty(),
+            ({ } x, null, null, null, null, null) => x.ContainsAny(",") ? new PluralMix(raw.Id, x) : new SingleMix(raw.Id, x),
+            ({ } f, { } l, null, null, null, null) => new Single(raw.Id, f, l),
+            ({ } f, null, null, { } l, null, null) => new CommonLastMix(raw.Id, f, l),
+            (null, null, { } f, { } l, null, null) => new Plural(raw.Id, f, l),
+            (null, null, null, null, { } x, null) => new SingleMix(raw.Id, x),
+            (null, null, null, null, null, { } x) => new PluralMix(raw.Id, x),
+            ({ } d, null, null, null, null, { } x) => IsDuplicate(x, d) ? new PluralMix(raw.Id, x) : throw new ArgumentOutOfRangeException(raw.ToString()),
+            (null, { } x, null, null, null, null) => x.ContainsAny(",") ? new PluralMix(raw.Id, x) : new SingleMix(raw.Id, x),
+            (null, null, null, { } x, null, null) => new PluralMix(raw.Id, x),
+            (null, null, null, null, null, null) => new Empty(raw.Id),
             _ => throw new ArgumentOutOfRangeException(raw.ToString())
         };
 
