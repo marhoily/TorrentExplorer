@@ -4,8 +4,6 @@ using HtmlAgilityPack;
 using JetBrains.Annotations;
 using Newtonsoft.Json.Linq;
 using RegExtract;
-using ServiceStack;
-using Tests.Flibusta;
 using Tests.UniversalParsing;
 using Tests.Utilities;
 using static System.StringSplitOptions;
@@ -13,8 +11,6 @@ using static System.StringSplitOptions;
 namespace Tests.Rutracker;
 
 public record Header(int Id);
-
-public abstract record Topic;
 
 [UsedImplicitly]
 public sealed record Story(
@@ -27,14 +23,7 @@ public sealed record Story(
     string? Series,
     string? NumberInSeries,
     string? Genre,
-    string? PlayTime) : Topic;
-
-public sealed record Series : Topic;
-
-public record AuthorInfo(
-    string? FirstName,
-    string? LastName,
-    string? UnknownName);
+    string? PlayTime);
 
 public static class Parser
 {
@@ -53,108 +42,9 @@ public static class Parser
 
     public static HtmlNode GetForumPost(this HtmlNode node) =>
         node.SelectSingleNode("//div[@class='post_body']");
-    public static List<AuthorInfo> GetAuthors(JObject post)
+
+    public static Story? ParseRussianFantasyTopic(this JObject post)
     {
-        // TODO: what if both "Фамилии авторов" and "Фамилия авторов" present?
-        var dic = new Dictionary<string, string?>
-        {
-            ["FirstName"] = post.FindTags("Имя автора"),
-            ["LastName"] = post.FindTags("Фамилия автора", "Фамилия автора сценария"),
-            ["FirstNames"] = post.FindTags("Имена авторов"),
-            ["LastNames"] = post.FindTags("Фамилии авторов", "Фамилия авторов"),
-            ["Name"] = post.FindTags("Автор"),
-            ["Names"] = post.FindTags("Фамилии и имена авторов", "Автора", "Авторы")
-        };
-        AllowedMix("FirstName", "LastName");
-        AllowedMix("FirstNames", "LastNames");
-        AllowedMix("Name");
-        AllowedMix("Names");
-        return Single(dic["FirstName"], dic["LastName"]) ??
-               Multiple(dic["FirstNames"], dic["LastNames"]) ??
-               SingleMix(dic["Name"]) ??
-               MultipleMix(dic["Names"]) ??
-               new List<AuthorInfo>();
-
-        void AllowedMix(params string[] keys)
-        {
-            var keyed = keys.Select(k => dic[k]);
-            var rest = dic
-                .Where(pair => !keys.Contains(pair.Key))
-                .Select(pair => pair.Value);
-
-            if (keyed.All(p => p != null) && rest.Any(p => p != null))
-                    throw new Exception();
-        }
-
-        static List<AuthorInfo>? Single(string? firstName, string? lastName)
-        {
-            if (firstName == null && lastName == null) return null;
-            if (firstName == null)
-                return SingleMix(lastName);
-            if (lastName == null)
-                throw new Exception();
-            if (firstName.Contains(' ') && lastName[^1] is 'и' or 'ы')
-            {
-                var firstNames = firstName.Split(' ', RemoveEmptyEntries);
-                if (firstNames.Length != 3 || firstNames[1] != "и")
-                    throw new Exception();
-                return new List<AuthorInfo>
-                {
-                    new(firstNames[0], lastName, null),
-                    new(firstNames[2], lastName, null)
-                };
-            }
-
-            if ((firstName + lastName).ContainsAny(" ", "/", ",", ";"))
-                return Multiple(firstName, lastName);
-            return new List<AuthorInfo> { new(firstName, lastName, null) };
-        }
-        static List<AuthorInfo>? Multiple(string? firstNames, string? lastNames)
-        {
-            if (firstNames == null && lastNames == null) return null;
-            if (firstNames == null)
-                return MultipleMix(lastNames);
-            if (lastNames == null)
-                throw new Exception();
-            var ff = firstNames.Split(',', ';', RemoveEmptyEntries).Select(x => x.Trim()).ToArray();
-            var ss = lastNames.Split(',', ';', RemoveEmptyEntries).Select(x => x.Trim()).ToArray();
-            if (ff.Concat(ss).Any(x => x.Contains(" ")))
-                throw new Exception();
-
-            return ff.Zip(ss)
-                .Select(p => new AuthorInfo(p.First, p.Second, null))
-                .ToList();
-        }
-
-        static List<AuthorInfo>? SingleMix(string? name)
-        {
-            if (name == null && name == null) return null;
-            return new List<AuthorInfo> { new(null, null, name) };
-        }
-        static List<AuthorInfo>? MultipleMix(string? names)
-        {
-            if (names == null) return null;
-            var result = new List<AuthorInfo>();
-            foreach (var s in names.Split(',', '/',';'))
-            {
-                var strings = s.Split(' ', RemoveEmptyEntries);
-                if (strings.Length == 4 && strings[2] == "и")
-                {
-                    result.Add(new AuthorInfo(strings[1], strings[0], null));
-                    result.Add(new AuthorInfo(strings[2], strings[0], null));
-                    return result;
-                }
-                if (strings.Length > 2)
-                    throw new Exception();
-                result.Add(new AuthorInfo(null, null, s));
-            }
-            return result;
-        }
-    }
-
-    public static Topic? ParseRussianFantasyTopic(this JObject post)
-    {
-        GetAuthors(post);
         var topicId = post.FindTag("topic-id")!.ParseInt();
         var year = post.FindTag("Год выпуска")?.TrimEnd('.', 'г', ' ');
         var lastName = post.FindTags("Фамилия автора", "Фамилии авторов",
