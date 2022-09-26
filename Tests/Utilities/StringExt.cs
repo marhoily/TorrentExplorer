@@ -36,9 +36,10 @@ public static class StringExt
     
     public static string LanguageMixFix(this string input)
     {
-        return HasMix(input) != 0 
+        var result = HasMix(input) != 0 
             ? input.Split(' ').Select(FixIfNeeded).StrJoin(" ") 
             : input;
+        return result.Replace("ё", "ё").Replace("Ё", "Ё");
 
         string FixIfNeeded(string word)
         {
