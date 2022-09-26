@@ -14,7 +14,7 @@ public sealed class AuthorExtractionTests
             .Output.ReadTypedJson<ClassifiedAuthor[]>();
         await Output.SaveTypedJson(authors!
             .Where(a => a is not Empty)
-            .Select(a => a.Extract()));
+            .SelectMany(a => a.Extract()));
     }
 
     [Fact]

@@ -23,17 +23,36 @@ public static class AuthorExtraction
                 raw.FirstNames, raw.LastNames,
                 raw.Name, raw.Names) switch
         {
-            ({ } x, null, null, null, null, null) => x.ContainsAny(",") ? new PluralMix(raw.Id, x) : new SingleMix(raw.Id, x),
-            ({ } f, { } l, null, null, null, null) => new Single(raw.Id, f, l),
-            ({ } f, null, null, { } l, null, null) => new CommonLastMix(raw.Id, f, l),
-            (null, null, { } f, { } l, null, null) => new Plural(raw.Id, f, l),
+            ({ } x, null, null, null, null, null) =>
+                x.ContainsAny(",")
+                    ? new PluralMix(raw.Id, x)
+                    : new SingleMix(raw.Id, x),
+            ({ } f, { } l, null, null, null, null) =>
+                f.ContainsAny(",") && l.ContainsAny(",")
+                    ? new Plural(raw.Id, f, l)
+                    : new Single(raw.Id, f, l),
+            ({ } f, null, null, { } l, null, null) =>
+                new CommonLastMix(raw.Id, f, l),
+            (null, null, { } f, { } l, null, null) =>
+                new Plural(raw.Id, f, l),
             (null, null, null, null, { } x, null) =>
-                x.ContainsAny(",") ? new PluralMix(raw.Id, x) : new SingleMix(raw.Id, x),
-            (null, null, null, null, null, { } x) => new PluralMix(raw.Id, x.Replace(';', ',').Replace('.', ',')),
-            ({ } d, null, null, null, null, { } x) => IsDuplicate(x, d) ? new PluralMix(raw.Id, x) : throw new ArgumentOutOfRangeException(raw.ToString()),
-            (null, { } x, null, null, null, null) => x.ContainsAny(",") ? new PluralMix(raw.Id, x) : new SingleMix(raw.Id, x),
-            (null, null, null, { } x, null, null) => new PluralMix(raw.Id, x),
-            (null, null, null, null, null, null) => new Empty(raw.Id),
+                x.ContainsAny(",")
+                    ? new PluralMix(raw.Id, x)
+                    : new SingleMix(raw.Id, x),
+            (null, null, null, null, null, { } x) =>
+                new PluralMix(raw.Id, x.Replace(';', ',').Replace('.', ',')),
+            ({ } d, null, null, null, null, { } x) =>
+                IsDuplicate(x, d)
+                    ? new PluralMix(raw.Id, x)
+                    : throw new ArgumentOutOfRangeException(raw.ToString()),
+            (null, { } x, null, null, null, null) =>
+                x.ContainsAny(",")
+                    ? new PluralMix(raw.Id, x)
+                    : new SingleMix(raw.Id, x),
+            (null, null, null, { } x, null, null) =>
+                new PluralMix(raw.Id, x),
+            (null, null, null, null, null, null) =>
+                new Empty(raw.Id),
             _ => throw new ArgumentOutOfRangeException(raw.ToString())
         };
 

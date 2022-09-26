@@ -3,7 +3,7 @@ using Tests.Utilities;
 
 namespace Tests.Flibusta;
 
-public class InpxTests
+public sealed class InpxTests
 {
     [Fact]
     public void FactMethodName()
@@ -24,16 +24,6 @@ public class InpxTests
             .SaveJson(bookRecords.SelectMany(b => b.Authors).Distinct());
     }
 
-    [Fact]
-    public async Task LocalAuthorsToAtoms()
-    {
-        var authors = await @"c:\temp\TorrentsExplorerData\Extract\AuthorData.json"
-            .ReadJson<AuthorData[]>();
-        await @"c:\temp\TorrentsExplorerData\Extract\AuthorAtoms.json".SaveJson(
-            authors!.SelectMany(a => new[] { a.LastName, a.FirstName, a.MiddleName })
-                .WhereNotNull()
-                .Distinct());
-    }
 
     [Fact]
     public async Task PurgeLocalAuthors()
