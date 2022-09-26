@@ -85,6 +85,12 @@ public sealed class AuthorClassificationTests
             .Should().Be(new Plural(5333164, "Юрий, Николай", "Брайдер, Чадович"));
 
     [Fact]
+    public void PluralWithinSingleWithSemicolon() =>
+        new RawAuthor(5793057, "Александр, Юлия", "Михайловский; Маркова", null, null, null, null)
+            .Classify()
+            .Should().Be(new Plural(5793057, "Александр, Юлия", "Михайловский, Маркова"));
+
+    [Fact]
     public void PluralMix() =>
         new RawAuthor(0, null, null, null, null, null, "Круз Андрей, Царев Андрей")
             .Classify()

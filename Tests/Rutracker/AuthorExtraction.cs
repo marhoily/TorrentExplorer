@@ -28,7 +28,8 @@ public static class AuthorExtraction
                 x.ContainsAny(",")
                     ? new PluralMix(raw.Id, x)
                     : new SingleMix(raw.Id, x),
-            ({ } f, { } l, null, null, null, null) => Single(f, l),
+            ({ } f, { } l, null, null, null, null) => 
+                Single(f.Replace(';', ','), l.Replace(';', ',')),
             ({ } f, null, null, { } l, null, null) =>
                 new CommonLastMix(raw.Id, f, l),
             (null, null, { } f, { } l, null, null) =>
