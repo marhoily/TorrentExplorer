@@ -12,7 +12,7 @@ public sealed class AuthorExtractionTests
     {
         var authors = await AuthorClassificationTests
             .Output.ReadTypedJson<ClassifiedAuthor[]>();
-        await Output.SaveJson(authors!
+        await Output.SaveTypedJson(authors!
             .Where(a => a is not Empty)
             .Select(a => a.Extract()));
     }
@@ -75,4 +75,11 @@ public sealed class AuthorExtractionTests
             .Extract().Should().Equal(
                 new FirstLast("Ерофей", "Трофимов"),
                 new FirstLast("Андрей", "Земляной"));
+
+    [Fact]
+    public void CommonLastMix() =>
+        new CommonLastMix(5651029, "Аркадий Натанович, Борис Натанович", "Стругацкие") 
+            .Extract().Should().Equal(
+                new FirstLast("Аркадий Натанович", "Стругацкие"),
+                new FirstLast("Борис Натанович", "Стругацкие"));
 }

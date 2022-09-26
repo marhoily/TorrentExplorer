@@ -52,8 +52,7 @@ public static class AuthorExtraction
     {
         return author switch
         {
-            //  CommonLastMix commonLastMix => throw new NotImplementedException(),
-            //  Empty empty => throw new NotImplementedException(),
+            CommonLastMix mix => CommonLastMix(mix.FirstNames, mix.CommonLastName),
             Plural plural => Plural(plural.FirstNames, plural.LastNames),
             PluralMix pluralMix => PluralMix(pluralMix.Names),
             Single single => new PurifiedAuthor[] { new FirstLast(single.FirstName, single.LastName) },
@@ -104,6 +103,12 @@ public static class AuthorExtraction
 
         static IEnumerable<string> ListSplit(string input) =>
             input.Split(',').Select(x => x.Trim());
+
+        static PurifiedAuthor[] CommonLastMix(string firstNames, string commonLastName) =>
+            ListSplit(firstNames)
+                .Select(firstName => new FirstLast(firstName, commonLastName))
+                .OfType<PurifiedAuthor>()
+                .ToArray();
     }
 
 }
