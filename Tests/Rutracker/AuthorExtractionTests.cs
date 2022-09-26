@@ -30,8 +30,15 @@ public sealed class AuthorExtractionTests
                 new Only("SadSlim"));
 
     [Fact]
-    public void SingleMixWithAnd() =>
+    public void SingleMixWithAndIn3RdPosition() =>
         new SingleMix(0, "Дяченко Марина и Сергей")
+            .Extract().Should().Equal(
+                new FirstLast("Марина", "Дяченко"),
+                new FirstLast("Сергей", "Дяченко"));
+    
+    [Fact]
+    public void SingleMixWithAndIn2RdPosition() =>
+        new SingleMix(0, "Марина и Сергей Дяченко")
             .Extract().Should().Equal(
                 new FirstLast("Марина", "Дяченко"),
                 new FirstLast("Сергей", "Дяченко"));

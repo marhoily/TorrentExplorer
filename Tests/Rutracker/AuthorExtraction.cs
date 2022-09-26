@@ -29,7 +29,7 @@ public static class AuthorExtraction
             (null, null, { } f, { } l, null, null) => new Plural(raw.Id, f, l),
             (null, null, null, null, { } x, null) =>
                 x.ContainsAny(",") ? new PluralMix(raw.Id, x) : new SingleMix(raw.Id, x),
-            (null, null, null, null, null, { } x) => new PluralMix(raw.Id, x.Replace(';', ',')),
+            (null, null, null, null, null, { } x) => new PluralMix(raw.Id, x.Replace(';', ',').Replace('.', ',')),
             ({ } d, null, null, null, null, { } x) => IsDuplicate(x, d) ? new PluralMix(raw.Id, x) : throw new ArgumentOutOfRangeException(raw.ToString()),
             (null, { } x, null, null, null, null) => x.ContainsAny(",") ? new PluralMix(raw.Id, x) : new SingleMix(raw.Id, x),
             (null, null, null, { } x, null, null) => new PluralMix(raw.Id, x),
@@ -66,15 +66,9 @@ public static class AuthorExtraction
             return parts.Length switch
             {
                 2 => new PurifiedAuthor[] { new FirstLast(parts[1], parts[0]) },
-                4 => parts[2] is "и"
-                    ? new PurifiedAuthor[]
-                    {
-                        new FirstLast(parts[1], parts[0]),
-                        new FirstLast(parts[3], parts[0])
-                    }
-                    : throw new ArgumentOutOfRangeException(name),
+                4 => CommonLastName(parts, name),
                 _ => !parts.Contains("и")
-                    ? new PurifiedAuthor[] { new Only(parts[0]) }
+                    ? new PurifiedAuthor[] { new Only(name) }
                     : throw new ArgumentOutOfRangeException(nameof(name), name)
             };
         }
@@ -90,5 +84,22 @@ public static class AuthorExtraction
 
         static IEnumerable<string> ListSplit(string input) =>
             input.Split(',').Select(x => x.Trim());
+    }
+
+    private static PurifiedAuthor[] CommonLastName(string[] parts, string name)
+    {
+        if (parts[2] is "и")
+            return new PurifiedAuthor[]
+            {
+                new FirstLast(parts[1], parts[0]),
+                new FirstLast(parts[3], parts[0])
+            };
+        if (parts[1] is "и")
+            return new PurifiedAuthor[]
+            {
+                new FirstLast(parts[0], parts[3]),
+                new FirstLast(parts[2], parts[3])
+            };
+        throw new ArgumentOutOfRangeException(name);
     }
 }
