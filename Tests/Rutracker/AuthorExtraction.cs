@@ -27,8 +27,9 @@ public static class AuthorExtraction
             ({ } f, { } l, null, null, null, null) => new Single(raw.Id, f, l),
             ({ } f, null, null, { } l, null, null) => new CommonLastMix(raw.Id, f, l),
             (null, null, { } f, { } l, null, null) => new Plural(raw.Id, f, l),
-            (null, null, null, null, { } x, null) => new SingleMix(raw.Id, x),
-            (null, null, null, null, null, { } x) => new PluralMix(raw.Id, x),
+            (null, null, null, null, { } x, null) =>
+                x.ContainsAny(",") ? new PluralMix(raw.Id, x) : new SingleMix(raw.Id, x),
+            (null, null, null, null, null, { } x) => new PluralMix(raw.Id, x.Replace(';', ',')),
             ({ } d, null, null, null, null, { } x) => IsDuplicate(x, d) ? new PluralMix(raw.Id, x) : throw new ArgumentOutOfRangeException(raw.ToString()),
             (null, { } x, null, null, null, null) => x.ContainsAny(",") ? new PluralMix(raw.Id, x) : new SingleMix(raw.Id, x),
             (null, null, null, { } x, null, null) => new PluralMix(raw.Id, x),
@@ -51,8 +52,8 @@ public static class AuthorExtraction
     {
         return author switch
         {
-          //  CommonLastMix commonLastMix => throw new NotImplementedException(),
-          //  Empty empty => throw new NotImplementedException(),
+            //  CommonLastMix commonLastMix => throw new NotImplementedException(),
+            //  Empty empty => throw new NotImplementedException(),
             Plural plural => Plural(plural.FirstNames, plural.LastNames),
             PluralMix pluralMix => PluralMix(pluralMix.Names),
             Single single => new PurifiedAuthor[] { new FirstLast(single.FirstName, single.LastName) },
@@ -64,20 +65,20 @@ public static class AuthorExtraction
             var parts = name.Split(' ');
             return parts.Length switch
             {
-                1 => new PurifiedAuthor[]{new Only(parts[0])},
-                2 => new PurifiedAuthor[]{new FirstLast(parts[1], parts[0])},
-                3 => new PurifiedAuthor[]{new Only(name)},
-                4 => parts[2] is "и" 
+                2 => new PurifiedAuthor[] { new FirstLast(parts[1], parts[0]) },
+                4 => parts[2] is "и"
                     ? new PurifiedAuthor[]
                     {
                         new FirstLast(parts[1], parts[0]),
                         new FirstLast(parts[3], parts[0])
                     }
                     : throw new ArgumentOutOfRangeException(name),
-                _ => throw new ArgumentOutOfRangeException(name)
+                _ => !parts.Contains("и")
+                    ? new PurifiedAuthor[] { new Only(parts[0]) }
+                    : throw new ArgumentOutOfRangeException(nameof(name), name)
             };
         }
-        static PurifiedAuthor[] PluralMix(string name) => 
+        static PurifiedAuthor[] PluralMix(string name) =>
             ListSplit(name).SelectMany(SingleMix).ToArray();
 
         static PurifiedAuthor[] Plural(string firstNames, string lastNames) =>

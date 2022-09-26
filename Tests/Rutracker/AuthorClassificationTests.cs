@@ -55,6 +55,16 @@ public sealed class AuthorClassificationTests
         new RawAuthor(0, null, null, null, null, "Суржиков Роман", null)
             .Classify()
             .Should().Be(new SingleMix(0, "Суржиков Роман"));
+    [Fact]
+    public void PluralMixWithinSingleMix() =>
+        new RawAuthor(5579247, null, null, null, null, "Юрий Брайдер, Николай Чадович", null)
+            .Classify()
+            .Should().Be(new PluralMix(5579247, "Юрий Брайдер, Николай Чадович"));
+    [Fact]
+    public void SemicolonWithinPluralMix() =>
+        new RawAuthor(5579247, null, null, null, null, null, "Мазин Александр; Мамонтов Павел")
+            .Classify()
+            .Should().Be(new PluralMix(5579247, "Мазин Александр, Мамонтов Павел"));
 
     [Fact]
     public void Single() =>
