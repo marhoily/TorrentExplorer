@@ -11,7 +11,7 @@ public static class ParserUtils
         keys.Select(dic.FindTag).FirstNonDefaultOrEmpty();
 
     public static string? SkipLong(this string input, int wordsCount) => 
-        input.Split(' ').Skip(wordsCount).Any() == true ? null : input;
+        input.Split(' ').Skip(wordsCount).Any() ? null : input;
 
     public static string? FindTag(this JObject dic, string key) =>
         dic.TryGetValue(key, out var result) ? result.ToString() : default;
