@@ -1,6 +1,4 @@
-﻿using Microsoft.VisualStudio.TestPlatform.Utilities;
-using Newtonsoft.Json.Linq;
-using System.Xml.Linq;
+﻿using Newtonsoft.Json.Linq;
 using FluentAssertions;
 using Tests.UniversalParsing;
 using Tests.Utilities;

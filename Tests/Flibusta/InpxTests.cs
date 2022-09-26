@@ -30,7 +30,7 @@ public class InpxTests
         var authors = await @"c:\temp\TorrentsExplorerData\Extract\AuthorData.json"
             .ReadJson<AuthorData[]>();
         await @"c:\temp\TorrentsExplorerData\Extract\AuthorAtoms.json".SaveJson(
-            authors.SelectMany(a => new[] { a.LastName, a.FirstName, a.MiddleName })
+            authors!.SelectMany(a => new[] { a.LastName, a.FirstName, a.MiddleName })
                 .WhereNotNull()
                 .Distinct());
     }

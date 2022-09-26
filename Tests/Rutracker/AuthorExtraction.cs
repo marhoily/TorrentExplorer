@@ -51,62 +51,7 @@ public static class AuthorExtraction
             return false;
         }
     }
-    /*
-        var single = raw.FirstName != null || raw.LastName != null;
-        var plural = raw.FirstNames != null || raw.LastNames != null;
-        if (raw.Names != null)
-        {
-            if (single)
-            {
-                if (firstName != null && names.Contains(firstName) ||
-                    lastName != null && names.Contains(lastName))
-                {
-                    firstName = lastName = null;
-                    single = false;
-                    dic["FirstName"] = null;
-                    dic["LastName"] = null;
-                }
-
-                if (firstName != null)
-                {
-                    var strings = firstName.Split(' ');
-                    if (strings.Length == 3 && strings.Contains("и"))
-                    {
-                        if (names.Contains(strings[0]) && names.Contains(strings[2]))
-                        {
-                            firstName = lastName = null;
-                            single = false;
-                            dic["FirstName"] = null;
-                            dic["LastName"] = null;
-                        }
-                    }
-                }
-            }
-        }
-        if (single && (plural || name != null || names != null))
-            throw new Exception();
-        AllowedMix("FirstName", "LastName");
-        AllowedMix("FirstNames", "LastNames");
-        AllowedMix("Name");
-        AllowedMix("Names");
-        return Single(firstName, lastName) ??
-               Multiple(firstNames, lastNames) ??
-               SingleMix(name) ??
-               MultipleMix(names) ??
-               new List<AuthorInfo>();
-
-        void AllowedMix(params string[] keys)
-        {
-            var keyed = keys.Select(k => dic[k]);
-            var rest = dic
-                .Where(pair => !keys.Contains(pair.Key))
-                .Select(pair => pair.Value);
-
-            if (keyed.All(p => p != null) && rest.Any(p => p != null))
-                throw new Exception();
-        }
-        */
-
+    
     static List<AuthorInfo>? Single(string? firstName, string? lastName)
     {
         if (firstName == null && lastName == null) return null;
@@ -168,8 +113,6 @@ public static class AuthorExtraction
         var result = new List<AuthorInfo>();
         foreach (var s in names.Split(',', '/', ';', '.'))
         {
-            if (s.Length == 1)
-                1.ToString();
             var strings = s.Split(' ', RemoveEmptyEntries);
             if (strings.Length == 4)
             {

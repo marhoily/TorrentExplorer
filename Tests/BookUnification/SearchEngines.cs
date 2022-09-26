@@ -34,7 +34,7 @@ public static class SearchEngines
             new(nameof(ReadliNet), ReadliNet,"https://readli.net", CachingStrategy.AlwaysMiss),
             new(nameof(MyBookRu), MyBookRu,"https://mybook.ru", CachingStrategy.Normal),
             new(nameof(FanlabRu), FanlabRu,"https://fantlab.ru", CachingStrategy.Normal),
-           // new(nameof(AuthorToday), AuthorToday,"https://author.today", CachingStrategy.Normal),
+            new(nameof(AuthorToday), AuthorToday,"https://author.today", CachingStrategy.Normal),
             //nameof( FlibustaSeries),FlibustaSeries,
         };
 
