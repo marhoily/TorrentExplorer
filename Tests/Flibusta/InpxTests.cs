@@ -6,20 +6,12 @@ namespace Tests.Flibusta;
 public sealed class InpxTests
 {
     [Fact]
-    public void FactMethodName()
-    {
-        var bookRecords = InpxFormat
-            .ReadInpx(@"C:\Users\marho\Downloads\fb2.Flibusta.Net\flibusta_fb2_local.inpx")
-            .ToList();
-        bookRecords.Count.Should().Be(547939);
-    }
-
-    [Fact]
     public async Task ExtractAuthors()
     {
         var bookRecords = InpxFormat
             .ReadInpx(@"C:\Users\marho\Downloads\fb2.Flibusta.Net\flibusta_fb2_local.inpx")
             .ToList();
+        bookRecords.Count.Should().Be(547939);
         await @"c:\temp\TorrentsExplorerData\Extract\AuthorData.json"
             .SaveJson(bookRecords.SelectMany(b => b.Authors).Distinct());
     }
