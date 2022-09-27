@@ -68,6 +68,8 @@ public static class AuthorExtraction
 
         ClassifiedAuthor Single(string f, string l)
         {
+            if (f == l)
+                return new SingleMix(raw.Id, f);
             if (f.ContainsAny(",") && l.ContainsAny(","))
                 return new Plural(raw.Id, f, l);
             if (f.ContainsAny(",") && !l.ContainsAny(","))
@@ -83,7 +85,7 @@ public static class AuthorExtraction
             CommonLastMix mix => CommonLastMix(mix.FirstNames, mix.CommonLastName),
             Plural plural => Plural(plural.FirstNames, plural.LastNames),
             PluralMix pluralMix => PluralMix(pluralMix.Names),
-            Single single => new PurifiedAuthor[] { new FirstLast(author.TopicId, single.FirstName, single.LastName) },
+            Single single => new[] { Single(single.FirstName, single.LastName) },
             SingleMix singleMix => SingleMix(singleMix.Name),
             _ => throw new ArgumentOutOfRangeException(nameof(author), author.ToString())
         };
@@ -122,11 +124,20 @@ public static class AuthorExtraction
         PurifiedAuthor[] PluralMix(string name) =>
             ListSplit(name).SelectMany(SingleMix).ToArray();
 
+        PurifiedAuthor Single(string firstName, string lastName)
+        {
+            if (firstName == lastName)
+                return new Only(author.TopicId, firstName);
+            lastName = lastName.Replace(firstName, "").Trim();
+            firstName = firstName.Replace(lastName, "").Trim();
+            
+            return new FirstLast(author.TopicId, firstName, lastName);
+        }
+
         PurifiedAuthor[] Plural(string firstNames, string lastNames) =>
             ListSplit(firstNames)
                 .Zip(ListSplit(lastNames))
-                .Select(t => new FirstLast(author.TopicId, t.First, t.Second))
-                .OfType<PurifiedAuthor>()
+                .Select(t => Single(t.First, t.Second))
                 .ToArray();
 
         static IEnumerable<string> ListSplit(string input) =>

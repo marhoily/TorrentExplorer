@@ -91,6 +91,18 @@ public sealed class AuthorClassificationTests
             .Should().Be(new Plural(5333164, "Юрий, Николай", "Брайдер, Чадович"));
 
     [Fact]
+    public void FullDuplicateSingle() =>
+        new RawAuthor(5635516, "Гуд|Zen", "Гуд|Zen", null, null, null, null)
+            .Classify()
+            .Should().Be(new SingleMix(5635516, "Гуд|Zen"));
+
+    [Fact]
+    public void PluralWithDuplicateWithinSingle() =>
+        new RawAuthor(5847772, "Зайцев Константин, Алексей", "Зайцев, Тихий", null, null, null, null)
+            .Classify()
+            .Should().Be(new Plural(5847772, "Зайцев Константин, Алексей", "Зайцев, Тихий"));
+
+    [Fact]
     public void PluralWithinSingleWithSemicolon() =>
         new RawAuthor(5793057, "Александр, Юлия", "Михайловский; Маркова", null, null, null, null)
             .Classify()

@@ -16,6 +16,15 @@
       <NamedTestSelector>
         <TestName>Tests.Rutracker.Search.Do</TestName>
       </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Tests.Rutracker.Step0.DownloadRawHtml</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Tests.Kinozal.Step0.DownloadRawHtml</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Tests.Kinozal.Step1.Convert</TestName>
+      </NamedTestSelector>
     </IgnoredTests>
   </Settings>
 </ProjectConfiguration>

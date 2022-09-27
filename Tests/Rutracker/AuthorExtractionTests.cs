@@ -75,6 +75,13 @@ public sealed class AuthorExtractionTests
             .Extract().Should().Equal(
                 new FirstLast(0, "Ерофей", "Трофимов"),
                 new FirstLast(0, "Андрей", "Земляной"));
+    
+    [Fact]
+    public void PluralWithDuplicate() =>
+        new Plural(5847772, "Зайцев Константин, Алексей", "Зайцев, Тихий")
+            .Extract().Should().Equal(
+                new FirstLast(5847772, "Константин", "Зайцев"),
+                new FirstLast(5847772, "Алексей", "Тихий"));
 
     [Fact]
     public void CommonLastMix() =>
