@@ -59,21 +59,23 @@ public sealed class AuthorFixer
 
     public PurifiedAuthor Fix(FirstLast input)
     {
-        if (_byFirstName.Contains(input.FirstName.Simplify()) &&
-            _byLastName.Contains(input.LastName.Simplify()))
+        var firstName = input.FirstName.Simplify();
+        var lastName = input.LastName.Simplify();
+        if (_byFirstName.Contains(firstName) &&
+            _byLastName.Contains(lastName))
             return input;
 
-        if (_byFirstName.Contains(input.LastName.Simplify()) &&
-            _byLastName.Contains(input.FirstName.Simplify()))
+        if (_byFirstName.Contains(lastName) &&
+            _byLastName.Contains(firstName))
             return new FirstLast(
                 input.TopicId, input.LastName, input.FirstName);
 
         if (input.FirstName.Contains(' '))
         {
-            var parts = input.FirstName.Simplify().Split(' ');
+            var parts = firstName.Split(' ');
             if (_byFirstName.Contains(parts[0]) &&
                 _byMiddleName.Contains(parts[1]) &&
-                _byLastName.Contains(input.LastName.Simplify()))
+                _byLastName.Contains(lastName))
                 return new ThreePartsName(
                     input.TopicId, parts[0], parts[1], input.LastName);
 
