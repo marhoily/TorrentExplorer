@@ -1,4 +1,5 @@
 ﻿using ServiceStack;
+using Tests.Utilities;
 
 namespace Tests.Rutracker;
 
@@ -14,6 +15,7 @@ public sealed record Empty(int TopicId) : ClassifiedAuthor(TopicId);
 public abstract record PurifiedAuthor(int TopicId);
 public record FirstLast(int TopicId, string FirstName, string LastName) : PurifiedAuthor(TopicId);
 public sealed record UnrecognizedFirstLast(int TopicId, string FirstName, string LastName) : FirstLast(TopicId, FirstName, LastName);
+public sealed record WithMoniker(int TopicId, PurifiedAuthor RealName, PurifiedAuthor Moniker) : PurifiedAuthor(TopicId);
 public sealed record Only(int TopicId, string Name) : PurifiedAuthor(TopicId);
 public sealed record ThreePartsName(int TopicId, string FirstName, string MiddleName, string LastName) : PurifiedAuthor(TopicId);
 
@@ -130,7 +132,18 @@ public static class AuthorExtraction
                 return new Only(author.TopicId, firstName);
             lastName = lastName.Replace(firstName, "").Trim();
             firstName = firstName.Replace(lastName, "").Trim();
-            
+            (lastName, var arg) = lastName.ExtractRoundBraceArgument();
+            if (arg != null)
+            {
+                var realName = SingleMix(arg);
+                if (realName.Length != 1)
+                    throw new Exception("Double real name?");
+                return new WithMoniker(
+                    author.TopicId, realName[0], 
+                    new FirstLast(author.TopicId, firstName, lastName));
+            }
+          // if (firstName.Contains('.'))
+          //     1.ToString();
             return new FirstLast(author.TopicId, firstName, lastName);
         }
 

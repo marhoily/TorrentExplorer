@@ -1,5 +1,6 @@
 ﻿using System.Net;
 using System.Text.RegularExpressions;
+using FluentAssertions;
 
 namespace Tests.Utilities;
 
@@ -136,4 +137,34 @@ public static class StringExt
 
     public static string TrimPrefix(this string input, string prefix) =>
         input.StartsWith(prefix) ? input[prefix.Length..] : input;
+
+    private static readonly Regex RoundBraceArgument = 
+        new("^\\s*(?<first>.*?)\\s*\\(\\s*(?<last>[^\\)]*?)\\s*\\)\\s*", RegexOptions.Compiled);
+    public static (string, string?) ExtractRoundBraceArgument(this string input)
+    {
+        var match = RoundBraceArgument.Match(input);
+        if (!match.Success || match.Value != input) return (input, null);
+        return (match.Groups["first"].Value, match.Groups["last"].Value);
+    }
+}
+
+public sealed class StringExtTests
+{
+    [Theory]
+    [InlineData("", "", null)]
+    [InlineData("()", "", "")]
+    [InlineData("a()", "a", "")]
+    [InlineData("a ()", "a", "")]
+    [InlineData("a(b)", "a", "b")]
+    [InlineData("a( b)", "a", "b")]
+    [InlineData("a( b )", "a", "b")]
+    [InlineData("a(b )", "a", "b")]
+    [InlineData("a(b) ", "a", "b")]
+    [InlineData(" a b (c)", "a b", "c")]
+    [InlineData("a(b)!", "a(b)!", null)]
+    public void ExtractRoundBraceArgument(string input, string expectedOutput, string? expectedArg)
+    {
+        input.ExtractRoundBraceArgument()
+            .Should().Be((expectedOutput, expectedArg));
+    }
 }

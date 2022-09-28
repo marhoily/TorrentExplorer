@@ -63,6 +63,14 @@ public sealed class AuthorExtractionTests
                 new FirstLast(0, "Роман", "Суржиков"));
 
     [Fact]
+    public void SingleWithMoniker() =>
+        new Single(6253789, "Б.", "Беломор (Борис Батыршин)")
+            .Extract().Should().Equal(
+                new WithMoniker(6253789, 
+                    new FirstLast(6253789, "Батыршин", "Борис"),
+                    new FirstLast(6253789, "Б.", "Беломор")));
+
+    [Fact]
     public void PluralMix() =>
         new PluralMix(0, "Круз Андрей, Царев Андрей")
             .Extract().Should().Equal(

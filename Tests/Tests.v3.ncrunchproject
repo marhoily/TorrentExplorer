@@ -22,6 +22,48 @@
       <NamedTestSelector>
         <TestName>Tests.Kinozal.Step1.Convert</TestName>
       </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Tests.Kinozal.Step0.DownloadRawHtml</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Tests.Rutracker.Step2.WallParse</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Tests.BookUnification.Search.Do</TestName>
+      </NamedTestSelector>
+      <FixtureTestSelector>
+        <FixtureName>Tests.Kinozal.SeriesFormatTests</FixtureName>
+      </FixtureTestSelector>
+      <FixtureTestSelector>
+        <FixtureName>Tests.Kinozal.Step0</FixtureName>
+      </FixtureTestSelector>
+      <FixtureTestSelector>
+        <FixtureName>Tests.Kinozal.Step1</FixtureName>
+      </FixtureTestSelector>
+      <FixtureTestSelector>
+        <FixtureName>Tests.Flibusta.FixAuthorTests</FixtureName>
+      </FixtureTestSelector>
+      <FixtureTestSelector>
+        <FixtureName>Tests.Flibusta.InpxTests</FixtureName>
+      </FixtureTestSelector>
+      <FixtureTestSelector>
+        <FixtureName>Tests.BookUnification.Search</FixtureName>
+      </FixtureTestSelector>
+      <FixtureTestSelector>
+        <FixtureName>Tests.Utilities.HtmlToXml+HtmlToXmlTests</FixtureName>
+      </FixtureTestSelector>
+      <FixtureTestSelector>
+        <FixtureName>Tests.Utilities.SplitLinesTests</FixtureName>
+      </FixtureTestSelector>
+      <FixtureTestSelector>
+        <FixtureName>Tests.Utilities.TrieSetTests</FixtureName>
+      </FixtureTestSelector>
+      <FixtureTestSelector>
+        <FixtureName>Tests.Rutracker.Step1</FixtureName>
+      </FixtureTestSelector>
+      <FixtureTestSelector>
+        <FixtureName>Tests.Rutracker.Step3</FixtureName>
+      </FixtureTestSelector>
     </IgnoredTests>
   </Settings>
 </ProjectConfiguration>
