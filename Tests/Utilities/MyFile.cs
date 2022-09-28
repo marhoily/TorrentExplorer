@@ -28,7 +28,17 @@ public static class MyFile
     public static void SaveXml<T>(this string file, T obj)
     {
         var serializer = new YAXSerializer(typeof(T));
-        serializer.SerializeToFile(obj, file);
+        try
+        {
+            serializer.SerializeToFile(obj, file);
+
+        }
+        catch (DirectoryNotFoundException)
+        {
+            CreateDirIfNeeded(file);
+            serializer.SerializeToFile(obj, file);
+
+        }
     }
     public static async Task WriteAllTextAsync(this string file, string text)
     {
@@ -36,7 +46,7 @@ public static class MyFile
         {
             await File.WriteAllTextAsync(file, text);
         }
-        catch
+        catch (DirectoryNotFoundException)
         {
             await File.WriteAllTextAsync(file.CreateDirIfNeeded(), text);
         }

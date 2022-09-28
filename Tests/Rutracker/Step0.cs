@@ -1,6 +1,4 @@
 ﻿using System.Text;
-using System.Xml;
-using HtmlAgilityPack;
 using Tests.Html;
 using Tests.Utilities;
 
@@ -29,21 +27,8 @@ public class Step0
                 var topic = await http.DownloadRussianFantasyTopic(header.Id);
                 return topic.GetForumPost();
             });
-        await SaveToXml(await Task.WhenAll(headers));
+        await Output.SaveToXml(await Task.WhenAll(headers));
     }
 
-    private static async Task SaveToXml(HtmlNode[] htmlNodes)
-    {
-        await using var fileStream = MyFile.CreateText(Output);
-        await using var writer = XmlWriter.Create(fileStream,
-            new XmlWriterSettings
-            {
-                OmitXmlDeclaration = true,
-                Async = true
-            });
-        writer.WriteStartElement("many");
-        foreach (var htmlNode in htmlNodes)
-            htmlNode.CleanUpAndWriteTo(writer);
-        await writer.WriteEndElementAsync();
-    }
+
 }

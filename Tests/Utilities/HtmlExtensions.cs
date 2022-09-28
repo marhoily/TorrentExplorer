@@ -1,3 +1,4 @@
+using System.Xml;
 using HtmlAgilityPack;
 
 namespace Tests.Utilities;
@@ -30,5 +31,19 @@ public static class HtmlExtensions
         return node.NodeType != HtmlNodeType.Document 
             ? result.Where(y => y.XPath.StartsWith(xPath)) 
             : result;
+    }
+    public static async Task SaveToXml(this string output, IEnumerable<HtmlNode> htmlNodes)
+    {
+        await using var fileStream = MyFile.CreateText(output);
+        await using var writer = XmlWriter.Create(fileStream,
+            new XmlWriterSettings
+            {
+                OmitXmlDeclaration = true,
+                Async = true
+            });
+        writer.WriteStartElement("many");
+        foreach (var htmlNode in htmlNodes)
+            htmlNode.CleanUpAndWriteTo(writer);
+        await writer.WriteEndElementAsync();
     }
 }

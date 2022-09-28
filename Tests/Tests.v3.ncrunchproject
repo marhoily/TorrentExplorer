@@ -20,34 +20,7 @@
         <TestName>Tests.Rutracker.Step0.DownloadRawHtml</TestName>
       </NamedTestSelector>
       <NamedTestSelector>
-        <TestName>Tests.Kinozal.Step0.DownloadRawHtml</TestName>
-      </NamedTestSelector>
-      <NamedTestSelector>
         <TestName>Tests.Kinozal.Step1.Convert</TestName>
-      </NamedTestSelector>
-      <FixtureTestSelector>
-        <FixtureName>Tests.BookUnification.Search</FixtureName>
-      </FixtureTestSelector>
-      <FixtureTestSelector>
-        <FixtureName>Tests.Kinozal.SeriesFormatTests</FixtureName>
-      </FixtureTestSelector>
-      <FixtureTestSelector>
-        <FixtureName>Tests.Kinozal.Step1</FixtureName>
-      </FixtureTestSelector>
-      <FixtureTestSelector>
-        <FixtureName>Tests.Kinozal.Step0</FixtureName>
-      </FixtureTestSelector>
-      <FixtureTestSelector>
-        <FixtureName>Tests.Utilities.SplitLinesTests</FixtureName>
-      </FixtureTestSelector>
-      <FixtureTestSelector>
-        <FixtureName>Tests.Utilities.HtmlToXml+HtmlToXmlTests</FixtureName>
-      </FixtureTestSelector>
-      <FixtureTestSelector>
-        <FixtureName>Tests.Utilities.TrieSetTests</FixtureName>
-      </FixtureTestSelector>
-      <NamedTestSelector>
-        <TestName>Tests.Flibusta.InpxTests.ExtractAuthors</TestName>
       </NamedTestSelector>
     </IgnoredTests>
   </Settings>
