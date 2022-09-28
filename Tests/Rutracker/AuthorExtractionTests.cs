@@ -21,80 +21,87 @@ public sealed class AuthorExtractionTests
     public void SingleMix() =>
         new SingleMix(0, "Суржиков Роман")
             .Extract().Should().Equal(
-                new FirstLast(0, "Роман", "Суржиков"));
+                Flh(0, "Роман", "Суржиков"));
+
+    private static WithHeader<PurifiedAuthor> Flh(
+        int topicId, string firstName, string lastName) => 
+        new(topicId, new FirstLast(firstName, lastName));
+    private static WithHeader<PurifiedAuthor> O(
+        int topicId, string name) => 
+        new(topicId, new Only(name));
 
     [Fact]
     public void SingleMixOnlyLast() =>
-        new SingleMix(0, "SadSlim")
-            .Extract().Should().Equal(
-                new Only(0, "SadSlim"));
+        new SingleMix(0, "SadSlim").Extract()
+            .Should().Equal(O(0, "SadSlim"));
 
     [Fact]
     public void SingleMixWithAndIn3RdPosition() =>
         new SingleMix(0, "Дяченко Марина и Сергей")
             .Extract().Should().Equal(
-                new FirstLast(0, "Марина", "Дяченко"),
-                new FirstLast(0, "Сергей", "Дяченко"));
+                Flh(0,"Марина", "Дяченко"),
+                Flh(0,"Сергей", "Дяченко"));
     
     [Fact]
     public void SingleMixWithAndIn2RdPosition() =>
         new SingleMix(0, "Марина и Сергей Дяченко")
             .Extract().Should().Equal(
-                new FirstLast(0, "Марина", "Дяченко"),
-                new FirstLast(0, "Сергей", "Дяченко"));
+                Flh(0,"Марина", "Дяченко"),
+                Flh(0,"Сергей", "Дяченко"));
     
     [Fact]
     public void SingleMixWithAndSeparatedNames() =>
         new SingleMix(6208654, "Фалий Светлана и Сандрацкая Алина")
             .Extract().Should().Equal(
-                new FirstLast(6208654, "Светлана", "Фалий"),
-                new FirstLast(6208654, "Алина", "Сандрацкая"));
+                Flh(6208654,"Светлана", "Фалий"),
+                Flh(6208654,"Алина", "Сандрацкая"));
 
     [Fact]
     public void SingleMixWith3Words() =>
         new SingleMix(0, "Гай Юлий Орловский")
             .Extract().Should().Equal(
-                new Only(0, "Гай Юлий Орловский"));
+                O(0, "Гай Юлий Орловский"));
 
     [Fact]
     public void Single() =>
         new Single(0, "Роман", "Суржиков")
             .Extract().Should().Equal(
-                new FirstLast(0, "Роман", "Суржиков"));
+                Flh(0,"Роман", "Суржиков"));
 
     [Fact]
     public void SingleWithMoniker() =>
         new Single(6253789, "Б.", "Беломор (Борис Батыршин)")
             .Extract().Should().Equal(
-                new WithMoniker(6253789, 
-                    new FirstLast(6253789, "Батыршин", "Борис"),
-                    new FirstLast(6253789, "Б.", "Беломор")));
+                new WithHeader<PurifiedAuthor>(6253789,
+                    new WithMoniker(
+                        new FirstLast("Батыршин", "Борис"),
+                        new FirstLast("Б.", "Беломор"))));
 
     [Fact]
     public void PluralMix() =>
         new PluralMix(0, "Круз Андрей, Царев Андрей")
             .Extract().Should().Equal(
-                new FirstLast(0, "Андрей", "Круз"),
-                new FirstLast(0, "Андрей", "Царев"));
+                Flh(0, "Андрей", "Круз"),
+                Flh(0, "Андрей", "Царев"));
 
     [Fact]
     public void Plural() =>
         new Plural(0, "Ерофей, Андрей", "Трофимов, Земляной")
             .Extract().Should().Equal(
-                new FirstLast(0, "Ерофей", "Трофимов"),
-                new FirstLast(0, "Андрей", "Земляной"));
+                Flh(0, "Ерофей", "Трофимов"),
+                Flh(0, "Андрей", "Земляной"));
     
     [Fact]
     public void PluralWithDuplicate() =>
         new Plural(5847772, "Зайцев Константин, Алексей", "Зайцев, Тихий")
             .Extract().Should().Equal(
-                new FirstLast(5847772, "Константин", "Зайцев"),
-                new FirstLast(5847772, "Алексей", "Тихий"));
+                Flh(5847772, "Константин", "Зайцев"),
+                Flh(5847772, "Алексей", "Тихий"));
 
     [Fact]
     public void CommonLastMix() =>
         new CommonLastMix(5651029, "Аркадий Натанович, Борис Натанович", "Стругацкие") 
             .Extract().Should().Equal(
-                new FirstLast(5651029, "Аркадий Натанович", "Стругацкие"),
-                new FirstLast(5651029, "Борис Натанович", "Стругацкие"));
+                Flh(5651029, "Аркадий Натанович", "Стругацкие"),
+                Flh(5651029, "Борис Натанович", "Стругацкие"));
 }

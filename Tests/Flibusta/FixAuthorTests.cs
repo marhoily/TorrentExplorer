@@ -67,8 +67,7 @@ public sealed class AuthorFixer
 
         if (_byFirstName.Contains(lastName) &&
             _byLastName.Contains(firstName))
-            return new FirstLast(
-                input.TopicId, input.LastName, input.FirstName);
+            return new FirstLast(input.LastName, input.FirstName);
 
         if (input.FirstName.Contains(' '))
         {
@@ -76,12 +75,10 @@ public sealed class AuthorFixer
             if (_byFirstName.Contains(parts[0]) &&
                 _byMiddleName.Contains(parts[1]) &&
                 _byLastName.Contains(lastName))
-                return new ThreePartsName(
-                    input.TopicId, parts[0], parts[1], input.LastName);
+                return new ThreePartsName(parts[0], parts[1], input.LastName);
 
         }
-        return new UnrecognizedFirstLast(
-            input.TopicId, input.FirstName, input.LastName);
+        return new UnrecognizedFirstLast(input.FirstName, input.LastName);
     }
 
     public Only Fix(Only input)
