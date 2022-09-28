@@ -5,14 +5,14 @@ namespace Tests.Rutracker;
 
 public sealed record WithHeader<T>(int TopicId, T Payload);
 
-public abstract record ClassifiedAuthor(int TopicId);
+public abstract record ClassifiedAuthor;
 
-public sealed record Single(int TopicId, string FirstName, string LastName) : ClassifiedAuthor(TopicId);
-public sealed record Plural(int TopicId, string FirstNames, string LastNames) : ClassifiedAuthor(TopicId);
-public sealed record SingleMix(int TopicId, string Name) : ClassifiedAuthor(TopicId);
-public sealed record PluralMix(int TopicId, string Names) : ClassifiedAuthor(TopicId);
-public sealed record CommonLastMix(int TopicId, string FirstNames, string CommonLastName) : ClassifiedAuthor(TopicId);
-public sealed record Empty(int TopicId) : ClassifiedAuthor(TopicId);
+public sealed record Single(string FirstName, string LastName) : ClassifiedAuthor;
+public sealed record Plural(string FirstNames, string LastNames) : ClassifiedAuthor;
+public sealed record SingleMix(string Name) : ClassifiedAuthor;
+public sealed record PluralMix(string Names) : ClassifiedAuthor;
+public sealed record CommonLastMix(string FirstNames, string CommonLastName) : ClassifiedAuthor;
+public sealed record Empty : ClassifiedAuthor;
 
 public abstract record PurifiedAuthor;
 public record FirstLast(string FirstName, string LastName) : PurifiedAuthor;
@@ -23,42 +23,45 @@ public sealed record ThreePartsName(string FirstName, string MiddleName, string 
 
 public static class AuthorExtraction
 {
-    public static ClassifiedAuthor Classify(this RawAuthor raw)
+    public static WithHeader<T> WithHeader<T>(this T payload, int topicId) => new(topicId, payload);
+
+    public static WithHeader<ClassifiedAuthor> Classify(this RawAuthor raw)
     {
-        return (raw.FirstName, raw.LastName,
+        var result = (raw.FirstName, raw.LastName,
                 raw.FirstNames, raw.LastNames,
                 raw.Name, raw.Names) switch
-        {
-            ({ } x, null, null, null, null, null) =>
-                x.ContainsAny(",")
-                    ? new PluralMix(raw.Id, x)
-                    : new SingleMix(raw.Id, x),
-            ({ } f, { } l, null, null, null, null) =>
-                Single(f.Replace(';', ',').Replace(" и ", ", "), l.Replace(';', ',')),
-            ({ } f, null, null, { } l, null, null) =>
-                new CommonLastMix(raw.Id, f, l),
-            (null, null, { } f, { } l, null, null) =>
-                new Plural(raw.Id, f, l),
-            (null, null, null, null, { } x, null) =>
-                x.ContainsAny(",")
-                    ? new PluralMix(raw.Id, x)
-                    : new SingleMix(raw.Id, x),
-            (null, null, null, null, null, { } x) =>
-                new PluralMix(raw.Id, x.Replace(';', ',').Replace('.', ',')),
-            ({ } d, null, null, null, null, { } x) =>
-                IsDuplicate(x, d)
-                    ? new PluralMix(raw.Id, x)
-                    : throw new ArgumentOutOfRangeException(raw.ToString()),
-            (null, { } x, null, null, null, null) =>
-                x.ContainsAny(",")
-                    ? new PluralMix(raw.Id, x)
-                    : new SingleMix(raw.Id, x),
-            (null, null, null, { } x, null, null) =>
-                new PluralMix(raw.Id, x),
-            (null, null, null, null, null, null) =>
-                new Empty(raw.Id),
-            _ => throw new ArgumentOutOfRangeException(raw.ToString())
-        };
+            {
+                ({ } x, null, null, null, null, null) =>
+                    x.ContainsAny(",")
+                        ? new PluralMix(x)
+                        : new SingleMix(x),
+                ({ } f, { } l, null, null, null, null) =>
+                    Single(f.Replace(';', ',').Replace(" и ", ", "), l.Replace(';', ',')),
+                ({ } f, null, null, { } l, null, null) =>
+                    new CommonLastMix(f, l),
+                (null, null, { } f, { } l, null, null) =>
+                    new Plural(f, l),
+                (null, null, null, null, { } x, null) =>
+                    x.ContainsAny(",")
+                        ? new PluralMix(x)
+                        : new SingleMix(x),
+                (null, null, null, null, null, { } x) =>
+                    new PluralMix(x.Replace(';', ',').Replace('.', ',')),
+                ({ } d, null, null, null, null, { } x) =>
+                    IsDuplicate(x, d)
+                        ? new PluralMix(x)
+                        : throw new ArgumentOutOfRangeException(raw.ToString()),
+                (null, { } x, null, null, null, null) =>
+                    x.ContainsAny(",")
+                        ? new PluralMix(x)
+                        : new SingleMix(x),
+                (null, null, null, { } x, null, null) =>
+                    new PluralMix(x),
+                (null, null, null, null, null, null) =>
+                    new Empty(),
+                _ => throw new ArgumentOutOfRangeException(raw.ToString())
+            };
+        return result.WithHeader(raw.Id);
 
         bool IsDuplicate(string input, string needle)
         {
@@ -73,18 +76,19 @@ public static class AuthorExtraction
         ClassifiedAuthor Single(string f, string l)
         {
             if (f == l)
-                return new SingleMix(raw.Id, f);
+                return new SingleMix(f);
             if (f.ContainsAny(",") && l.ContainsAny(","))
-                return new Plural(raw.Id, f, l);
+                return new Plural(f, l);
             if (f.ContainsAny(",") && !l.ContainsAny(","))
-                return new CommonLastMix(raw.Id, f, l);
-            return new Single(raw.Id, f, l);
+                return new CommonLastMix(f, l);
+            return new Single(f, l);
         }
     }
 
-    public static WithHeader<PurifiedAuthor>[] Extract(this ClassifiedAuthor author)
+    public static WithHeader<PurifiedAuthor>[] Extract<T>(this WithHeader<T> author)
+        where T: ClassifiedAuthor
     {
-        var result = author switch
+        var result = author.Payload switch
         {
             CommonLastMix mix => CommonLastMix(mix.FirstNames, mix.CommonLastName),
             Plural plural => Plural(plural.FirstNames, plural.LastNames),

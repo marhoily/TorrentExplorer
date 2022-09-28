@@ -53,114 +53,114 @@ public sealed class AuthorClassificationTests
     [Fact]
     public void SingleMix() =>
         new RawAuthor(0, null, null, null, null, "Суржиков Роман", null)
-            .Classify()
-            .Should().Be(new SingleMix(0, "Суржиков Роман"));
+            .Classify().Payload
+            .Should().Be(new SingleMix("Суржиков Роман"));
     [Fact]
     public void PluralMixWithinSingleMix() =>
         new RawAuthor(5579247, null, null, null, null, "Юрий Брайдер, Николай Чадович", null)
-            .Classify()
-            .Should().Be(new PluralMix(5579247, "Юрий Брайдер, Николай Чадович"));
+            .Classify().Payload
+            .Should().Be(new PluralMix("Юрий Брайдер, Николай Чадович"));
     [Fact]
     public void SemicolonWithinPluralMix() =>
         new RawAuthor(5579247, null, null, null, null, null, "Мазин Александр; Мамонтов Павел")
-            .Classify()
-            .Should().Be(new PluralMix(5579247, "Мазин Александр, Мамонтов Павел"));
+            .Classify().Payload
+            .Should().Be(new PluralMix("Мазин Александр, Мамонтов Павел"));
 
     [Fact]
     public void Single() =>
         new RawAuthor(0, "Суржиков", "Роман", null, null, null, null)
-            .Classify()
-            .Should().Be(new Single(0, "Суржиков", "Роман"));
+            .Classify().Payload
+            .Should().Be(new Single("Суржиков", "Роман"));
 
     [Fact]
     public void CommonLastMixWithinSingleDividedByAnd() =>
         new RawAuthor(6076530, "Андрей и Мария", "Круз", null, null, null, null)
-            .Classify()
-            .Should().Be(new CommonLastMix(6076530, "Андрей, Мария", "Круз"));
+            .Classify().Payload
+            .Should().Be(new CommonLastMix("Андрей, Мария", "Круз"));
 
     [Fact]
     public void CommonLastMixWithinSingle() =>
         new RawAuthor(6260419, "Андрей, Мария", "Круз", null, null, null, null)
-            .Classify()
-            .Should().Be(new CommonLastMix(6260419, "Андрей, Мария", "Круз"));
+            .Classify().Payload
+            .Should().Be(new CommonLastMix("Андрей, Мария", "Круз"));
 
     [Fact]
     public void PluralWithinSingle() =>
         new RawAuthor(5333164, "Юрий, Николай", "Брайдер, Чадович", null, null, null, null)
-            .Classify()
-            .Should().Be(new Plural(5333164, "Юрий, Николай", "Брайдер, Чадович"));
+            .Classify().Payload
+            .Should().Be(new Plural("Юрий, Николай", "Брайдер, Чадович"));
 
     [Fact]
     public void FullDuplicateSingle() =>
         new RawAuthor(5635516, "Гуд|Zen", "Гуд|Zen", null, null, null, null)
-            .Classify()
-            .Should().Be(new SingleMix(5635516, "Гуд|Zen"));
+            .Classify().Payload
+            .Should().Be(new SingleMix("Гуд|Zen"));
 
     [Fact]
     public void PluralWithDuplicateWithinSingle() =>
         new RawAuthor(5847772, "Зайцев Константин, Алексей", "Зайцев, Тихий", null, null, null, null)
-            .Classify()
-            .Should().Be(new Plural(5847772, "Зайцев Константин, Алексей", "Зайцев, Тихий"));
+            .Classify().Payload
+            .Should().Be(new Plural("Зайцев Константин, Алексей", "Зайцев, Тихий"));
 
     [Fact]
     public void PluralWithinSingleWithSemicolon() =>
         new RawAuthor(5793057, "Александр, Юлия", "Михайловский; Маркова", null, null, null, null)
-            .Classify()
-            .Should().Be(new Plural(5793057, "Александр, Юлия", "Михайловский, Маркова"));
+            .Classify().Payload
+            .Should().Be(new Plural("Александр, Юлия", "Михайловский, Маркова"));
 
     [Fact]
     public void PluralMix() =>
         new RawAuthor(0, null, null, null, null, null, "Круз Андрей, Царев Андрей")
-            .Classify()
-            .Should().Be(new PluralMix(0, "Круз Андрей, Царев Андрей"));
+            .Classify().Payload
+            .Should().Be(new PluralMix("Круз Андрей, Царев Андрей"));
     [Fact]
     public void Empty() =>
         new RawAuthor(0, null, null, null, null, null, null)
-            .Classify()
-            .Should().Be(new Empty(0));
+            .Classify().Payload
+            .Should().Be(new Empty());
     [Fact]
     public void PluralMixInsideLastName() =>
         new RawAuthor(0, null, "Жуков Клим, Зорич Александр", null, null, null, null)
-            .Classify()
-            .Should().Be(new PluralMix(0, "Жуков Клим, Зорич Александр"));
+            .Classify().Payload
+            .Should().Be(new PluralMix("Жуков Клим, Зорич Александр"));
     [Fact]
     public void SingleMixInsideLastName() =>
         new RawAuthor(0, null, "Жуков Клим", null, null, null, null)
-            .Classify()
-            .Should().Be(new SingleMix(0, "Жуков Клим"));
+            .Classify().Payload
+            .Should().Be(new SingleMix("Жуков Клим"));
     [Fact]
     public void Plural() =>
         new RawAuthor(0, null, null, "Ерофей, Андрей", "Трофимов, Земляной", null, null)
-            .Classify()
-            .Should().Be(new Plural(0, "Ерофей, Андрей", "Трофимов, Земляной"));
+            .Classify().Payload
+            .Should().Be(new Plural("Ерофей, Андрей", "Трофимов, Земляной"));
     [Fact]
     public void PluralMixInsideLastNames() =>
         new RawAuthor(0, null, null, null, "Злотников Роман, Корнилов Антон", null, null)
-            .Classify()
-            .Should().Be(new PluralMix(0, "Злотников Роман, Корнилов Антон"));
+            .Classify().Payload
+            .Should().Be(new PluralMix("Злотников Роман, Корнилов Антон"));
     [Fact]
     public void PluralMixInsideFirstName() =>
         new RawAuthor(0, "Алексей Махров, Борис Орлов", null, null, null, null, null)
-            .Classify()
-            .Should().Be(new PluralMix(0, "Алексей Махров, Борис Орлов"));
+            .Classify().Payload
+            .Should().Be(new PluralMix("Алексей Махров, Борис Орлов"));
     [Fact]
     public void PluralMixInsideFirstNameDividedWithAnd() =>
         new RawAuthor(0, "Аркадий и Борис", null, null, null, null, "Стругацкий Аркадий, Стругацкий Борис")
-            .Classify()
-            .Should().Be(new PluralMix(0, "Стругацкий Аркадий, Стругацкий Борис"));
+            .Classify().Payload
+            .Should().Be(new PluralMix("Стругацкий Аркадий, Стругацкий Борис"));
     [Fact]
     public void SingleMixInsideFirstName() =>
         new RawAuthor(0, "Алексей Махров", null, null, null, null, null)
-            .Classify()
-            .Should().Be(new SingleMix(0, "Алексей Махров"));
+            .Classify().Payload
+            .Should().Be(new SingleMix("Алексей Махров"));
     [Fact]
     public void FirstNameDuplicateToPluralMix() =>
         new RawAuthor(0, "Владимир", null, null, null, null, "Кучеренко Владимир, Лис Ирина")
-            .Classify()
-            .Should().Be(new PluralMix(0, "Кучеренко Владимир, Лис Ирина"));
+            .Classify().Payload
+            .Should().Be(new PluralMix("Кучеренко Владимир, Лис Ирина"));
     [Fact]
     public void SingleFirstPluralLastMix() =>
         new RawAuthor(5651029, "Аркадий Натанович, Борис Натанович", null, null, "Стругацкие", null, null)
-            .Classify()
-            .Should().Be(new CommonLastMix(5651029, "Аркадий Натанович, Борис Натанович", "Стругацкие"));
+            .Classify().Payload
+            .Should().Be(new CommonLastMix("Аркадий Натанович, Борис Натанович", "Стругацкие"));
 }
