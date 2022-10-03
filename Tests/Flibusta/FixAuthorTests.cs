@@ -26,7 +26,8 @@ public sealed class FixAuthorTests
             .GroupBy(fl => new { fl.Payload.FirstName, fl.Payload.LastName })
             .Select(g => new
             {
-                g.Key.FirstName, g.Key.LastName,
+                g.Key.FirstName,
+                g.Key.LastName,
                 Topics = g.Select(fl => fl.TopicId).StrJoin()
             }));
     }
@@ -67,6 +68,20 @@ public static class AuthorFixerExt
 
     public static string Simplify(this string input) =>
         input.Replace('Ё', 'Е').Replace('ё', 'е');
+
+    public static string ReplaceLast(this string input, string needle, string value)
+    {
+        if (input.EndsWith(needle))
+            return input.Remove(input.Length - needle.Length) + value;
+        return input;
+    }
+
+    public static string Depluralize(this string input)
+    {
+        return input
+            .ReplaceLast("ие", "ий")
+            .ReplaceLast("вы", "в");
+    }
 }
 
 public sealed class AuthorFixer
@@ -91,16 +106,27 @@ public sealed class AuthorFixer
     public IEnumerable<PurifiedAuthor> Fix(FirstLast input)
     {
         var firstName = input.FirstName.Simplify();
-        var lastName = input.LastName.Simplify();
+        var lastName = input.LastName.Simplify().Depluralize();
         if (_byFirstName.Contains(firstName) &&
             _byLastName.Contains(lastName))
         {
             yield return input;
             yield break;
         }
+        //if (_byLastName.Contains(lastName))
+        //{
+        //    var result = _byLastName[lastName]
+        //        .Where(a => a.FirstName == firstName)
+        //        .ToList();
+        //    if (result.Count > 0)
+        //    {
+        //        yield return new FirstLast(result[0].FirstName!, result[0].LastName!);
+        //        yield break;
+        //    }
+        //}
 
-        if (_byFirstName.Contains(lastName) &&
-            _byLastName.Contains(firstName))
+        if (_byLastName.Contains(firstName) &&
+            _byFirstName.Contains(lastName))
         {
             yield return new FirstLast(input.LastName, input.FirstName);
             yield break;
@@ -122,50 +148,20 @@ public sealed class AuthorFixer
         if (firstName.Contains('.'))
         {
             var parts = firstName.Split('.', RemoveEmptyEntries);
-            if (parts.Length is >= 1 and <= 2 && parts.All(p => p.Length == 1))
+            foreach (var fix in ByPartialName(parts, lastName))
             {
-                var authors = _byLastName[lastName]
-                    .Where(a => a.FirstName?[0] == parts[0][0]);
-                if (parts.Length == 2)
-                    authors = authors.Where(a => a.MiddleName?[0] == parts[1][0]);
-                var select = authors.SingleOrDefault();
-                if (select?.MiddleName != null)
-                {
-                    yield return new ThreePartsName(
-                        select.FirstName!, select.MiddleName, input.LastName);
-                    yield break;
-                }
-
-                if (select != null)
-                {
-                    yield return new FirstLast(select.FirstName!, input.LastName);
-                    yield break;
-                }
+                yield return fix;
+                yield break;
             }
         }
 
         if (lastName.Contains('.'))
         {
             var parts = lastName.Split('.', RemoveEmptyEntries);
-            if (parts.Length is >= 1 and <= 2 && parts.All(p => p.Length == 1))
+            foreach (var fix in ByPartialName(parts, firstName))
             {
-                var authors = _byLastName[firstName]
-                    .Where(a => a.FirstName?[0] == parts[0][0]);
-                if (parts.Length == 2)
-                    authors = authors.Where(a => a.MiddleName?[0] == parts[1][0]);
-                var select = authors.SingleOrDefault();
-                if (select?.MiddleName != null)
-                {
-                    yield return new ThreePartsName(
-                        select.FirstName!, select.MiddleName, input.LastName);
-                    yield break;
-                }
-
-                if (select != null)
-                {
-                    yield return new FirstLast(select.FirstName!, input.LastName);
-                    yield break;
-                }
+                yield return fix;
+                yield break;
             }
         }
 
@@ -187,6 +183,31 @@ public sealed class AuthorFixer
             }
         }
         yield return new UnrecognizedFirstLast(input.FirstName, input.LastName);
+
+        IEnumerable<PurifiedAuthor> ByPartialName(string[] parts, string key)
+        {
+            if (parts.Length is < 1 or > 2 || parts.Any(p => p.Length != 1))
+                yield break;
+
+            var options = _byLastName[key]
+                .Where(a => a.FirstName?[0] == parts[0][0]);
+            if (parts.Length == 2)
+                options = options.Where(a => a.MiddleName?[0] == parts[1][0]);
+            var selected = options.ToList();
+            if (selected.Count == 0) yield break;
+            var isUndefined = selected.Select(x => x.FirstName).Distinct().Skip(1).Any();
+
+            var select = selected[0];
+            if (select?.MiddleName != null)
+            {
+                yield return new ThreePartsName(
+                    select.FirstName!, select.MiddleName, input.LastName);
+            }
+            else if (select != null)
+            {
+                yield return new FirstLast(select.FirstName!, input.LastName);
+            }
+        }
     }
 
     public IEnumerable<Only> Fix(Only input)

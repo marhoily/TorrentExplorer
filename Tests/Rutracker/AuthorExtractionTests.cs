@@ -67,7 +67,7 @@ public sealed class AuthorExtractionTests
         new Single("Роман", "Суржиков").WithHeader(0)
             .Extract().Should().Equal(
                 Flh(0, "Роман", "Суржиков"));
-
+ 
     [Fact]
     public void SingleUnderscore() =>
         new Single("Роман", "Суржиков_").WithHeader(0)
@@ -125,6 +125,14 @@ public sealed class AuthorExtractionTests
             .Extract().Should().Equal(
                 Flh(5852207, "Аркадий", "Стругацкие"),
                 Flh(5852207, "Борис", "Стругацкие"));
+  
+    [Fact]
+    public void CommonLastMixWithinSingle() =>
+        new Single("Александр Сергей", "Абрамовы")
+            .WithHeader(5133057)
+            .Extract().Should().Equal(
+                Flh(5133057, "Александр", "Абрамовы"),
+                Flh(5133057, "Сергей", "Абрамовы"));
 
     [Fact]
     public void DoubleLevelCommonLastMix() =>

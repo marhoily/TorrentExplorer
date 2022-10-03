@@ -93,7 +93,7 @@ public static class AuthorExtraction
             CommonLastMix mix => CommonLastMix(mix.FirstNames, mix.CommonLastName),
             Plural plural => Plural(plural.FirstNames, plural.LastNames),
             PluralMix pluralMix => PluralMix(pluralMix.Names),
-            Single single => new[] { Single(single.FirstName, single.LastName) },
+            Single single => Single(single.FirstName, single.LastName),
             SingleMix singleMix => SingleMix(singleMix.Name),
             _ => throw new ArgumentOutOfRangeException(nameof(author), author.ToString())
         };
@@ -106,25 +106,16 @@ public static class AuthorExtraction
             var idxOfAnd = Array.IndexOf(parts, "и");
             return (parts.Length, idxOfAnd) switch
             {
-                (2, _) => new[]
-                {
-                    Single(parts[1], parts[0])
-                },
-                (4, 1) => new[]
-                {
-                    Single(parts[0], parts[3]),
-                    Single(parts[2], parts[3])
-                },
-                (4, 2) => new[]
-                {
-                    Single(parts[1], parts[0]),
-                    Single(parts[3], parts[0])
-                },
-                (5, 2) => new[]
-                {
-                    Single(parts[1], parts[0]),
-                    Single(parts[4], parts[3])
-                },
+                (2, _) => Single(parts[1], parts[0]),
+                (4, 1) => 
+                    Single(parts[0], parts[3]).Concat(
+                    Single(parts[2], parts[3])).ToArray(),
+                (4, 2) =>
+                    Single(parts[1], parts[0]).Concat(
+                    Single(parts[3], parts[0])).ToArray(),
+                (5, 2) =>
+                    Single(parts[1], parts[0]).Concat(
+                    Single(parts[4], parts[3])).ToArray(),
                 (_, -1) => new PurifiedAuthor[]
                 {
                     new Only(name)
@@ -135,11 +126,12 @@ public static class AuthorExtraction
         PurifiedAuthor[] PluralMix(string name) =>
             ListSplit(name).SelectMany(SingleMix).ToArray();
 
-        PurifiedAuthor Single(string firstName, string lastName)
+        PurifiedAuthor[] Single(string firstName, string lastName)
         {
             if (firstName == lastName)
-                return new Only(firstName);
-            
+                return new PurifiedAuthor[]{ new Only(firstName) };
+            if (lastName.EndsWith("ы") && firstName.Contains(' '))
+                return CommonLastMix(firstName.Replace(" ", ","), lastName);
             static string Peel(string input)
             {
                 var tmp = input.Trim().TrimEnd('_');
@@ -156,10 +148,10 @@ public static class AuthorExtraction
                 var realName = SingleMix(arg);
                 if (realName.Length != 1)
                     throw new Exception("Double real name?");
-                return new WithMoniker(realName[0], 
-                    new FirstLast(firstName, lastName));
+                return new PurifiedAuthor[]{new WithMoniker(realName[0], 
+                    new FirstLast(firstName, lastName))};
             }
-            return new FirstLast(firstName, lastName);
+            return new PurifiedAuthor[]{new FirstLast(firstName, lastName)};
         }
 
         PurifiedAuthor[] Plural(string firstNames, string lastNames) =>
@@ -167,7 +159,7 @@ public static class AuthorExtraction
                 ? CommonLastMix(firstNames, lastNames)
                 : ListSplit(firstNames)
                     .Zip(ListSplit(lastNames))
-                    .Select(t => Single(t.First, t.Second))
+                    .SelectMany(t => Single(t.First, t.Second))
                     .ToArray();
 
         static IEnumerable<string> ListSplit(string input) =>
@@ -175,8 +167,7 @@ public static class AuthorExtraction
 
         PurifiedAuthor[] CommonLastMix(string firstNames, string commonLastName) =>
             ListSplit(firstNames.Replace(" и ", ","))
-                .Select(firstName => new FirstLast(firstName, commonLastName))
-                .OfType<PurifiedAuthor>()
+                .SelectMany(firstName => Single(firstName, commonLastName))
                 .ToArray();
     }
 }
