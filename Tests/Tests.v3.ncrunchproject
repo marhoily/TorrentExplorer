@@ -95,14 +95,26 @@
         <TestName>Tests.Flibusta.InpxTests.PurgeLocalAuthors</TestName>
       </NamedTestSelector>
       <NamedTestSelector>
-        <TestName>Tests.Flibusta.FixAuthorTests.FixAuthors</TestName>
+        <TestName>Tests.Flibusta.InpxTests.CollapseAuthors</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Tests.Flibusta.RussianNamesTests.FactMethodName</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Tests.Flibusta.RussianNamesTests.Save</TestName>
       </NamedTestSelector>
       <NamedTestSelector>
         <TestName>Tests.Flibusta.InpxTests.ExtractAuthors</TestName>
       </NamedTestSelector>
       <NamedTestSelector>
-        <TestName>Tests.Flibusta.InpxTests.CollapseAuthors</TestName>
+        <TestName>Tests.Flibusta.InpxTests.ExtractFlibusta</TestName>
       </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Tests.Flibusta.InpxTests.ExtractLibRusEc</TestName>
+      </NamedTestSelector>
+      <FixtureTestSelector>
+        <FixtureName>Tests.Flibusta.RussianNamesTests</FixtureName>
+      </FixtureTestSelector>
     </IgnoredTests>
   </Settings>
 </ProjectConfiguration>

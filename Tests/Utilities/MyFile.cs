@@ -5,6 +5,16 @@ namespace Tests.Utilities;
 
 public static class MyFile
 {
+    public static string WithFileName(this string fullPath, Func<string, string> replace)
+    {
+        var directoryName = Path.GetDirectoryName(fullPath);
+        var fileNameWithoutExtension = Path.GetFileNameWithoutExtension(fullPath);
+        var extension = Path.GetExtension(fullPath);
+        var fileName = replace(fileNameWithoutExtension)+ extension;
+        return directoryName != null 
+            ? Path.Combine(directoryName, fileName)
+            : fileName;
+    }
     private static string CreateDirIfNeeded(this string file)
     {
         CreateIfNeeded(Path.GetDirectoryName(file));

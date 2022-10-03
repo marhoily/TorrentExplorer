@@ -7,14 +7,14 @@ namespace Tests.Flibusta;
 public sealed class FixAuthorTests
 {
     public const string Output = @"C:\temp\TorrentsExplorerData\Extract\Rutracker\authors-fixed.json";
-
+        
     public const string OutputUnrecognized =
         @"C:\temp\TorrentsExplorerData\Extract\Rutracker\authors-unrecognized.json";
 
     [Fact]
     public async Task FixAuthors()
     {
-        var fixData = await InpxTests.AuthorDataCollapsed.ReadJson<AuthorData[]>();
+        var fixData = await InpxTests.AuthorData.ReadJson<AuthorData[]>();
         var fixer = new AuthorFixer(fixData!);
 
         var rutracker = await AuthorExtractionTests
@@ -66,6 +66,7 @@ public static class AuthorFixerExt
         }
     }
 
+    //TODO: Й-И
     public static string Simplify(this string input) =>
         input.Replace('Ё', 'Е').Replace('ё', 'е');
 
@@ -92,15 +93,15 @@ public sealed class AuthorFixer
 
     public IEnumerable<PurifiedAuthor> Fix(FirstLast input)
     {
-        var result = Fix2(input.FirstName, input.LastName).ToList();
-        if (!result.All(r => r is UnrecognizedFirstLast))
-            return result;
-        var reverse = Fix2(input.LastName, input.FirstName).ToList();
-        if (!reverse.All(r => r is UnrecognizedFirstLast))
-            return reverse;
-        return result;
+        var (q1, m1) = Fix2(input.FirstName, input.LastName);
+        var (q2, m2) = Fix2(input.LastName, input.FirstName);
+        var result = q1 >= q2 ? m1 : m2;
+        return result ?? new PurifiedAuthor[]
+        {
+            new UnrecognizedFirstLast(input.FirstName, input.LastName)
+        };
     }
-    public IEnumerable<PurifiedAuthor> Fix2(string originalFirstName, string originalLastName)
+    public (int Quality, PurifiedAuthor[]? Matches) Fix2(string originalFirstName, string originalLastName)
     {
         var firstName = originalFirstName.Simplify();
         var lastName = originalLastName.Simplify().Depluralize();
@@ -113,12 +114,10 @@ public sealed class AuthorFixer
             {
                 var xx = Fix(new FirstLast(aa[0], aa[1]))
                     .Concat(Fix(new FirstLast(bb[0], bb[1])))
-                    .ToList();
+                    .ToArray();
                 if (xx.Any(x => x is not UnrecognizedFirstLast))
                 {
-                    foreach (var purifiedAuthor in xx)
-                        yield return purifiedAuthor;
-                    yield break;
+                    return (3, xx);
                 }
             }
         }
@@ -127,8 +126,7 @@ public sealed class AuthorFixer
 
         if (!sameLastName.Any())
         {
-            yield return new UnrecognizedFirstLast(originalFirstName, originalLastName);
-            yield break;
+            return (0, null);
         }
 
         var sameFirstAndLast = sameLastName
@@ -136,8 +134,8 @@ public sealed class AuthorFixer
             .ToList();
         if (sameFirstAndLast.Count > 0)
         {
-            yield return new FirstLast(sameFirstAndLast[0].FirstName!, sameFirstAndLast[0].LastName!);
-            yield break;
+            return (3, new PurifiedAuthor[]{new FirstLast(
+                sameFirstAndLast[0].FirstName!, sameFirstAndLast[0].LastName!)});
         }
 
 
@@ -147,9 +145,8 @@ public sealed class AuthorFixer
             if (_byFirstName.Contains(parts[0]) &&
                 _byMiddleName.Contains(parts[1]))
             {
-                yield return new ThreePartsName(
-                    parts[0], parts[1], originalLastName);
-                yield break;
+                return (4, new PurifiedAuthor[]{new ThreePartsName(
+                    parts[0], parts[1], originalLastName)});
             }
         }
 
@@ -158,17 +155,16 @@ public sealed class AuthorFixer
             var parts = firstName.Split('.', RemoveEmptyEntries);
             foreach (var fix in ByPartialName(parts, lastName))
             {
-                yield return fix;
-                yield break;
+                return (2, new[] { fix });
             }
         }
 
         if (_byFirstName.Contains(firstName))
         {
-            yield return new FirstLast(originalFirstName, originalLastName);
-            yield break;
+            return (1, new PurifiedAuthor[]{
+                new FirstLast(originalFirstName, originalLastName)});
         }
-        yield return new UnrecognizedFirstLast(originalFirstName, originalLastName);
+        return (0, null);
 
         IEnumerable<PurifiedAuthor> ByPartialName(string[] parts, string key)
         {
