@@ -80,6 +80,7 @@ public static class AuthorFixerExt
     {
         return input
             .ReplaceLast("ие", "ий")
+            .ReplaceLast("ны", "н")
             .ReplaceLast("вы", "в");
     }
 }
@@ -115,6 +116,8 @@ public sealed class AuthorFixer
     }
     public IEnumerable<PurifiedAuthor> Fix2(string originalFirstName, string originalLastName)
     {
+        if (originalLastName == "Первушины")
+            1.ToString();
         var firstName = originalFirstName.Simplify();
         var lastName = originalLastName.Simplify().Depluralize();
 
