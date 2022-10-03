@@ -40,12 +40,9 @@
       <FixtureTestSelector>
         <FixtureName>Tests.Kinozal.Step1</FixtureName>
       </FixtureTestSelector>
-      <FixtureTestSelector>
-        <FixtureName>Tests.Flibusta.FixAuthorTests</FixtureName>
-      </FixtureTestSelector>
-      <FixtureTestSelector>
-        <FixtureName>Tests.Flibusta.InpxTests</FixtureName>
-      </FixtureTestSelector>
+      <NamedTestSelector>
+        <TestName>Tests.Flibusta.InpxTests.ExtractAuthors</TestName>
+      </NamedTestSelector>
       <FixtureTestSelector>
         <FixtureName>Tests.BookUnification.Search</FixtureName>
       </FixtureTestSelector>
@@ -64,6 +61,153 @@
       <FixtureTestSelector>
         <FixtureName>Tests.Rutracker.Step3</FixtureName>
       </FixtureTestSelector>
+      <NamedTestSelector>
+        <TestName>Tests.Rutracker.AuthorClassificationTests.SaveRaw</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Tests.Rutracker.AuthorClassificationTests.ClassifyAuthors</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Tests.Rutracker.AuthorExtractionTests.SingleWithMoniker</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Tests.Rutracker.AuthorExtractionTests.ClassifyAuthors</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Tests.Utilities.StringExtTests.ExtractRoundBraceArgument("a()", "a", "")</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Tests.Rutracker.AuthorClassificationTests.Single</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Tests.Rutracker.AuthorExtractionTests.Single</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Tests.Rutracker.AuthorExtractionTests.SingleMixWith3Words</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Tests.Utilities.StringExtTests.ExtractRoundBraceArgument("a(b)!", "a(b)!", (null))</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Tests.Rutracker.AuthorClassificationTests.Plural</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Tests.Rutracker.AuthorClassificationTests.FullDuplicateSingle</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Tests.Rutracker.AuthorClassificationTests.SingleFirstPluralLastMix</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Tests.Utilities.StringExtTests.ExtractRoundBraceArgument("", "", (null))</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Tests.Rutracker.AuthorExtractionTests.Plural</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Tests.Rutracker.AuthorClassificationTests.FirstNameDuplicateToPluralMix</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Tests.Rutracker.AuthorClassificationTests.Empty</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Tests.Rutracker.AuthorClassificationTests.SingleMixInsideFirstName</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Tests.Rutracker.AuthorExtractionTests.SingleMixOnlyLast</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Tests.Rutracker.AuthorExtractionTests.PluralMix</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Tests.Rutracker.AuthorExtractionTests.CommonLastMix</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Tests.Rutracker.AuthorExtractionTests.SingleMixWithAndIn3RdPosition</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Tests.Rutracker.AuthorClassificationTests.PluralWithDuplicateWithinSingle</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Tests.Rutracker.AuthorExtractionTests.PluralWithDuplicate</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Tests.Rutracker.AuthorClassificationTests.SemicolonWithinPluralMix</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Tests.Rutracker.AuthorExtractionTests.SingleMixWithAndSeparatedNames</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Tests.Rutracker.AuthorExtractionTests.SingleMixWithAndIn2RdPosition</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Tests.Rutracker.AuthorClassificationTests.PluralMixInsideFirstName</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Tests.Rutracker.AuthorClassificationTests.CommonLastMixWithinSingle</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Tests.Rutracker.AuthorClassificationTests.PluralWithinSingleWithSemicolon</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Tests.Rutracker.AuthorExtractionTests.SingleMix</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Tests.Rutracker.AuthorClassificationTests.PluralMixInsideLastNames</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Tests.Rutracker.AuthorClassificationTests.PluralMixInsideFirstNameDividedWithAnd</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Tests.Rutracker.AuthorClassificationTests.SingleMix</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Tests.Rutracker.AuthorClassificationTests.CommonLastMixWithinSingleDividedByAnd</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Tests.Rutracker.AuthorClassificationTests.PluralWithinSingle</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Tests.Rutracker.AuthorClassificationTests.PluralMixInsideLastName</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Tests.Rutracker.AuthorClassificationTests.PluralMix</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Tests.Rutracker.AuthorClassificationTests.PluralMixWithinSingleMix</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Tests.Rutracker.AuthorClassificationTests.SingleMixInsideLastName</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Tests.Utilities.StringExtTests.ExtractRoundBraceArgument("()", "", "")</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Tests.Utilities.StringExtTests.ExtractRoundBraceArgument("a ()", "a", "")</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Tests.Utilities.StringExtTests.ExtractRoundBraceArgument("a( b )", "a", "b")</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Tests.Utilities.StringExtTests.ExtractRoundBraceArgument("a(b )", "a", "b")</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Tests.Utilities.StringExtTests.ExtractRoundBraceArgument(" a b (c)", "a b", "c")</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Tests.Utilities.StringExtTests.ExtractRoundBraceArgument("a( b)", "a", "b")</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Tests.Utilities.StringExtTests.ExtractRoundBraceArgument("a(b)", "a", "b")</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Tests.Utilities.StringExtTests.ExtractRoundBraceArgument("a(b) ", "a", "b")</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Tests.Flibusta.InpxTests.PurgeLocalAuthors</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Tests.Flibusta.InpxTests.CollapseAuthors</TestName>
+      </NamedTestSelector>
     </IgnoredTests>
   </Settings>
 </ProjectConfiguration>

@@ -1,5 +1,6 @@
 ﻿using Tests.Rutracker;
 using Tests.Utilities;
+using static System.StringSplitOptions;
 
 namespace Tests.Flibusta;
 
@@ -13,8 +14,7 @@ public sealed class FixAuthorTests
     [Fact]
     public async Task FixAuthors()
     {
-        var fixData = await @"c:\temp\TorrentsExplorerData\Extract\AuthorData.json"
-            .ReadJson<AuthorData[]>();
+        var fixData = await InpxTests.AuthorDataCollapsed.ReadJson<AuthorData[]>();
         var fixer = new AuthorFixer(fixData!);
 
         var rutracker = await AuthorExtractionTests
@@ -27,7 +27,7 @@ public sealed class FixAuthorTests
             .Select(g => new
             {
                 g.Key.FirstName, g.Key.LastName,
-                Topics = g.Select(fl => fl.TopicId).ToArray()
+                Topics = g.Select(fl => fl.TopicId).StrJoin()
             }));
     }
 }
@@ -107,14 +107,41 @@ public sealed class AuthorFixer
                     parts[0], parts[1], input.LastName);
         }
 
-        /* {
-    "$type": "Tests.Rutracker.FirstLast, Tests",
-    "FirstName": "Г.А.",
-    "LastName": "Зотов",
-    "TopicId": 2713291
-  }*/
-        if (input.LastName == "Зотов")
-            1.ToString();
+        if (firstName.Contains('.'))
+        {
+            var parts = firstName.Split('.', RemoveEmptyEntries);
+            if (parts.Length is >= 1 and <= 2 && parts.All(p => p.Length == 1))
+            {
+                var authors = _byLastName[lastName]
+                    .Where(a => a.FirstName?[0] == parts[0][0]);
+                if (parts.Length == 2)
+                    authors = authors.Where(a => a.MiddleName?[0] == parts[1][0]);
+                var select = authors.SingleOrDefault();
+                if (select?.MiddleName != null)
+                    return new ThreePartsName(
+                        select.FirstName!, select.MiddleName, input.LastName);
+                if (select != null)
+                    return new FirstLast(select.FirstName!, input.LastName);
+            }
+        }
+
+        if (lastName.Contains('.'))
+        {
+            var parts = lastName.Split('.', RemoveEmptyEntries);
+            if (parts.Length is >= 1 and <= 2 && parts.All(p => p.Length == 1))
+            {
+                var authors = _byLastName[firstName]
+                    .Where(a => a.FirstName?[0] == parts[0][0]);
+                if (parts.Length == 2)
+                    authors = authors.Where(a => a.MiddleName?[0] == parts[1][0]);
+                var select = authors.SingleOrDefault();
+                if (select?.MiddleName != null)
+                    return new ThreePartsName(
+                        select.FirstName!, select.MiddleName, input.LastName);
+                if (select != null)
+                    return new FirstLast(select.FirstName!, input.LastName);
+            }
+        }
 
         return new UnrecognizedFirstLast(input.FirstName, input.LastName);
     }
