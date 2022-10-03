@@ -69,6 +69,18 @@ public sealed class AuthorExtractionTests
                 Flh(0,"Роман", "Суржиков"));
 
     [Fact]
+    public void SingleUnderscore() =>
+        new Single("Роман", "Суржиков_").WithHeader(0)
+            .Extract().Should().Equal(
+                Flh(0,"Роман", "Суржиков"));
+
+    [Fact]
+    public void InclusionWithoutSpace() =>
+        new Single("Макс", "Максимов").WithHeader(0)
+            .Extract().Should().Equal(
+                Flh(0,"Макс", "Максимов"));
+
+    [Fact]
     public void SingleWithMoniker() =>
         new Single("Б.", "Беломор (Борис Батыршин)")
             .WithHeader(6253789).Extract().Should().Equal(

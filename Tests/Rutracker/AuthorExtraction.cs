@@ -139,8 +139,8 @@ public static class AuthorExtraction
         {
             if (firstName == lastName)
                 return new Only(firstName);
-            lastName = lastName.Replace(firstName, "").Trim().TrimEnd('_');
-            firstName = firstName.Replace(lastName, "").Trim().TrimEnd('_');
+            lastName = lastName.Replace(firstName + " ", "").Trim().TrimEnd('_');
+            firstName = firstName.Replace(lastName + " ", "").Trim().TrimEnd('_');
             (lastName, var arg) = lastName.ExtractRoundBraceArgument();
             if (arg != null)
             {
@@ -150,8 +150,6 @@ public static class AuthorExtraction
                 return new WithMoniker(realName[0], 
                     new FirstLast(firstName, lastName));
             }
-          // if (firstName.Contains('.'))
-          //     1.ToString();
             return new FirstLast(firstName, lastName);
         }
 
