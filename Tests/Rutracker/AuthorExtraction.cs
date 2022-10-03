@@ -139,8 +139,8 @@ public static class AuthorExtraction
         {
             if (firstName == lastName)
                 return new Only(firstName);
-            lastName = lastName.Replace(firstName, "").Trim();
-            firstName = firstName.Replace(lastName, "").Trim();
+            lastName = lastName.Replace(firstName, "").Trim().TrimEnd('_');
+            firstName = firstName.Replace(lastName, "").Trim().TrimEnd('_');
             (lastName, var arg) = lastName.ExtractRoundBraceArgument();
             if (arg != null)
             {
