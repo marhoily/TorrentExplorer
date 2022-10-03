@@ -154,19 +154,20 @@ public static class AuthorExtraction
         }
 
         PurifiedAuthor[] Plural(string firstNames, string lastNames) =>
-            ListSplit(firstNames)
-                .Zip(ListSplit(lastNames))
-                .Select(t => Single(t.First, t.Second))
-                .ToArray();
+            firstNames.Contains(" и ")
+                ? CommonLastMix(firstNames, lastNames)
+                : ListSplit(firstNames)
+                    .Zip(ListSplit(lastNames))
+                    .Select(t => Single(t.First, t.Second))
+                    .ToArray();
 
         static IEnumerable<string> ListSplit(string input) =>
             input.Split(',').Select(x => x.Trim());
 
         PurifiedAuthor[] CommonLastMix(string firstNames, string commonLastName) =>
-            ListSplit(firstNames)
+            ListSplit(firstNames.Replace(" и ", ","))
                 .Select(firstName => new FirstLast(firstName, commonLastName))
                 .OfType<PurifiedAuthor>()
                 .ToArray();
     }
-
 }
