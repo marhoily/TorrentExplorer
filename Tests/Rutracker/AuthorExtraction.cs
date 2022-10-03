@@ -106,24 +106,24 @@ public static class AuthorExtraction
             var idxOfAnd = Array.IndexOf(parts, "и");
             return (parts.Length, idxOfAnd) switch
             {
-                (2, _) => new PurifiedAuthor[]
+                (2, _) => new[]
                 {
-                    new FirstLast(parts[1], parts[0])
+                    Single(parts[1], parts[0])
                 },
-                (4, 1) => new PurifiedAuthor[]
+                (4, 1) => new[]
                 {
-                    new FirstLast(parts[0], parts[3]),
-                    new FirstLast(parts[2], parts[3])
+                    Single(parts[0], parts[3]),
+                    Single(parts[2], parts[3])
                 },
-                (4, 2) => new PurifiedAuthor[]
+                (4, 2) => new[]
                 {
-                    new FirstLast(parts[1], parts[0]),
-                    new FirstLast(parts[3], parts[0])
+                    Single(parts[1], parts[0]),
+                    Single(parts[3], parts[0])
                 },
-                (5, 2) => new PurifiedAuthor[]
+                (5, 2) => new[]
                 {
-                    new FirstLast(parts[1], parts[0]),
-                    new FirstLast(parts[4], parts[3])
+                    Single(parts[1], parts[0]),
+                    Single(parts[4], parts[3])
                 },
                 (_, -1) => new PurifiedAuthor[]
                 {
@@ -139,8 +139,17 @@ public static class AuthorExtraction
         {
             if (firstName == lastName)
                 return new Only(firstName);
-            lastName = lastName.Replace(firstName + " ", "").Trim().TrimEnd('_');
-            firstName = firstName.Replace(lastName + " ", "").Trim().TrimEnd('_');
+            
+            static string Peel(string input)
+            {
+                var tmp = input.Trim().TrimEnd('_');
+                return tmp.Length > 2 && tmp[^3] is not (' ' or '.') 
+                    ? tmp.TrimEnd('.') 
+                    : tmp;
+            }
+
+            lastName = Peel(lastName.Replace(firstName + " ", ""));
+            firstName = Peel(firstName.Replace(lastName + " ", ""));
             (lastName, var arg) = lastName.ExtractRoundBraceArgument();
             if (arg != null)
             {
