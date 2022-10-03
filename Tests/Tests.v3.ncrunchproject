@@ -97,9 +97,6 @@
       <NamedTestSelector>
         <TestName>Tests.Flibusta.InpxTests.PurgeLocalAuthors</TestName>
       </NamedTestSelector>
-      <NamedTestSelector>
-        <TestName>Tests.Flibusta.InpxTests.CollapseAuthors</TestName>
-      </NamedTestSelector>
     </IgnoredTests>
   </Settings>
 </ProjectConfiguration>

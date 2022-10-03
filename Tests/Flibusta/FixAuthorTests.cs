@@ -69,20 +69,6 @@ public static class AuthorFixerExt
     public static string Simplify(this string input) =>
         input.Replace('Ё', 'Е').Replace('ё', 'е');
 
-    public static string ReplaceLast(this string input, string needle, string value)
-    {
-        if (input.EndsWith(needle))
-            return input.Remove(input.Length - needle.Length) + value;
-        return input;
-    }
-
-    public static string Depluralize(this string input)
-    {
-        return input
-            .ReplaceLast("ие", "ий")
-            .ReplaceLast("ны", "н")
-            .ReplaceLast("вы", "в");
-    }
 }
 
 public sealed class AuthorFixer
@@ -116,8 +102,6 @@ public sealed class AuthorFixer
     }
     public IEnumerable<PurifiedAuthor> Fix2(string originalFirstName, string originalLastName)
     {
-        if (originalLastName == "Первушины")
-            1.ToString();
         var firstName = originalFirstName.Simplify();
         var lastName = originalLastName.Simplify().Depluralize();
 

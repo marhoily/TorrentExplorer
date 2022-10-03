@@ -22,15 +22,38 @@ public sealed class InpxTests
     [Fact]
     public async Task CollapseAuthors()
     {
-
         var input = await AuthorData.ReadJson<AuthorData[]>();
             
         await AuthorDataCollapsed.SaveJson(input!
+            .SelectMany(Split)
             .GroupBy(a => a.LastName)
             .SelectMany(Collapse)
             .OrderBy(a => a.LastName)
             .ThenBy(a => a.FirstName)
             .ThenBy(a => a.MiddleName));
+        
+        static IEnumerable<AuthorData> Split(AuthorData a)
+        {
+            if (!string.IsNullOrEmpty(a.MiddleName) || 
+                a.FirstName?.Contains(" и ") != true ||
+                string.IsNullOrEmpty(a.LastName))
+            {
+                yield return a;
+                yield break;
+            }
+
+            var parts = a.FirstName.Split(" и ");
+            if (parts.Length != 2 || parts.Any(p => p.Contains(' ')))
+            {
+                yield return a;
+                yield break;
+            }
+
+            var aLastName = a.LastName.Depluralize();
+            yield return new AuthorData(parts[0], null, aLastName);
+            yield return new AuthorData(parts[1], null, aLastName);
+        }
+
         AuthorData? Match(AuthorData a, AuthorData b)
         {
             var f = Subsume(a.FirstName, b.FirstName);

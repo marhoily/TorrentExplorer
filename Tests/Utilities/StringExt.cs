@@ -6,6 +6,20 @@ namespace Tests.Utilities;
 
 public static class StringExt
 {
+    public static string ReplaceLast(this string input, string needle, string value)
+    {
+        if (input.EndsWith(needle))
+            return input.Remove(input.Length - needle.Length) + value;
+        return input;
+    }
+
+    public static string Depluralize(this string input)
+    {
+        return input
+            .ReplaceLast("ие", "ий")
+            .ReplaceLast("ны", "н")
+            .ReplaceLast("вы", "в");
+    }
     public static string StrJoin<T>(this IEnumerable<T> values, string separator = ", ")
     {
         return string.Join(separator, values);
