@@ -11,13 +11,19 @@ public sealed class InpxTests
     [Fact]
     public async Task ExtractAuthors()
     {
-        var bookRecords = InpxFormat
+        var a = InpxFormat
             .ReadInpx(@"C:\Users\marho\Downloads\fb2.Flibusta.Net\flibusta_fb2_local.inpx")
             .ToList();
-        bookRecords.Count.Should().Be(547939);
+        a.Count.Should().Be(547939);
+        var b = InpxFormat
+            .ReadInpx(@"C:\Users\marho\Downloads\_Lib.rus.ec - Официальная\librusec_local_fb2.inpx")
+            .ToList();
+        b.Count.Should().Be(482865);
+
         await AuthorData.SaveJson(
-            bookRecords.SelectMany(b => b.Authors).Distinct());
+            a.Concat(b).SelectMany(x => x.Authors).Distinct());
     }
+ 
 
     [Fact]
     public async Task CollapseAuthors()

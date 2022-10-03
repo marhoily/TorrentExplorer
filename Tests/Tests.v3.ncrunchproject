@@ -40,9 +40,6 @@
       <FixtureTestSelector>
         <FixtureName>Tests.Kinozal.Step1</FixtureName>
       </FixtureTestSelector>
-      <NamedTestSelector>
-        <TestName>Tests.Flibusta.InpxTests.ExtractAuthors</TestName>
-      </NamedTestSelector>
       <FixtureTestSelector>
         <FixtureName>Tests.BookUnification.Search</FixtureName>
       </FixtureTestSelector>
@@ -96,6 +93,15 @@
       </NamedTestSelector>
       <NamedTestSelector>
         <TestName>Tests.Flibusta.InpxTests.PurgeLocalAuthors</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Tests.Flibusta.FixAuthorTests.FixAuthors</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Tests.Flibusta.InpxTests.ExtractAuthors</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Tests.Flibusta.InpxTests.CollapseAuthors</TestName>
       </NamedTestSelector>
     </IgnoredTests>
   </Settings>
