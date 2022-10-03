@@ -118,41 +118,6 @@ public sealed class AuthorFixer
         var firstName = originalFirstName.Simplify();
         var lastName = originalLastName.Simplify().Depluralize();
 
-        if (_byLastName.Contains(lastName))
-        {
-            var result = _byLastName[lastName]
-                .Where(a => a.FirstName == firstName)
-                .ToList();
-            if (result.Count > 0)
-            {
-                yield return new FirstLast(result[0].FirstName!, result[0].LastName!);
-                yield break;
-            }
-        }
-
-        if (firstName.Contains(' '))
-        {
-            var parts = firstName.Split(' ');
-            if (_byFirstName.Contains(parts[0]) &&
-                _byMiddleName.Contains(parts[1]) &&
-                _byLastName.Contains(lastName))
-            {
-                yield return new ThreePartsName(
-                    parts[0], parts[1], originalLastName);
-                yield break;
-            }
-        }
-
-        if (firstName.Contains('.'))
-        {
-            var parts = firstName.Split('.', RemoveEmptyEntries);
-            foreach (var fix in ByPartialName(parts, lastName))
-            {
-                yield return fix;
-                yield break;
-            }
-        }
-
         if (firstName.Contains(' ') && lastName.Contains(' '))
         {
             var aa = firstName.Split(' ');
@@ -171,7 +136,47 @@ public sealed class AuthorFixer
             }
         }
 
-        if (_byFirstName.Contains(firstName) && _byLastName.Contains(lastName))
+        var sameLastName = _byLastName[lastName].ToList();
+
+        if (!sameLastName.Any())
+        {
+            yield return new UnrecognizedFirstLast(originalFirstName, originalLastName);
+            yield break;
+        }
+
+        var sameFirstAndLast = sameLastName
+            .Where(a => a.FirstName == firstName)
+            .ToList();
+        if (sameFirstAndLast.Count > 0)
+        {
+            yield return new FirstLast(sameFirstAndLast[0].FirstName!, sameFirstAndLast[0].LastName!);
+            yield break;
+        }
+
+
+        if (firstName.Contains(' '))
+        {
+            var parts = firstName.Split(' ');
+            if (_byFirstName.Contains(parts[0]) &&
+                _byMiddleName.Contains(parts[1]))
+            {
+                yield return new ThreePartsName(
+                    parts[0], parts[1], originalLastName);
+                yield break;
+            }
+        }
+
+        if (firstName.Contains('.'))
+        {
+            var parts = firstName.Split('.', RemoveEmptyEntries);
+            foreach (var fix in ByPartialName(parts, lastName))
+            {
+                yield return fix;
+                yield break;
+            }
+        }
+
+        if (_byFirstName.Contains(firstName))
         {
             yield return new FirstLast(originalFirstName, originalLastName);
             yield break;
