@@ -116,13 +116,16 @@
         <FixtureName>Tests.Rutracker.AuthorExtractionTests</FixtureName>
       </FixtureTestSelector>
       <NamedTestSelector>
-        <TestName>Tests.Flibusta.RussianNamesTests.ReadJFirstNames</TestName>
+        <TestName>Tests.Flibusta.FixAuthorTests.FixAuthors</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Tests.Flibusta.InpxTests.Clean("c:\\temp\\TorrentsExplorerData\\Extract\\Flibusta.json", "1086", "8492")</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Tests.Flibusta.InpxTests.Clean("c:\\temp\\TorrentsExplorerData\\Extract\\LibRusEc.json", "1001", "8024")</TestName>
       </NamedTestSelector>
       <NamedTestSelector>
         <TestName>Tests.Flibusta.InpxTests.Merge</TestName>
-      </NamedTestSelector>
-      <NamedTestSelector>
-        <TestName>Tests.Flibusta.FixAuthorTests.FixAuthors</TestName>
       </NamedTestSelector>
     </IgnoredTests>
   </Settings>

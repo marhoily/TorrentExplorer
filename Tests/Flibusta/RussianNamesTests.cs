@@ -23,11 +23,12 @@ public sealed class RussianNamesTests
         string Surname, string Sex,
         int PeoplesCount,
         string WhenPeoplesCount, string Source);
-    public sealed record JFirstName(string Text, int Count, string[] Ethnic, char Gender);
+    public sealed record JFirstName(string Text, int Count, 
+        string[]? Ethnic, char Gender);
     public sealed record JLastName(
-        string Text, string FName,
+        string Text, string? FName,
         [JsonProperty("f_form")]
-        string FForm,
+        string? FForm,
         int Count, char Gender);
 
     [Fact]
@@ -89,6 +90,7 @@ public sealed class RussianNamesTests
                     g.Key,
                     Value = g.MaxBy(n => n.Count)!.Text.ToLowerInvariant().ToPascalCase(),
                     Count = g.Sum(x => x.Count),
+                    Extra = g.Any(x => x.Ethnic?.Any() == true || x.Gender != 0),
                     T = "F"
                 });
         var ll = lastNames
@@ -98,6 +100,7 @@ public sealed class RussianNamesTests
                     g.Key,
                     Value = g.MaxBy(n => n.Count)!.Text.ToLowerInvariant().ToPascalCase(),
                     Count = g.Sum(x => x.Count),
+                    Extra = g.Any(x => x.FForm != null || x.FName != null),
                     T = "L"
                 });
         var lookup = ff.Concat(ll)
@@ -108,6 +111,8 @@ public sealed class RussianNamesTests
                 if (l.Count == 1) return l[0];
                 if (l.Count == 2)
                 {
+                    if (l[0].Extra && !l[1].Extra)return l[0];
+                    if (!l[0].Extra && l[1].Extra)return l[1];
                     if (l[0].Count * 3 < l[1].Count) return l[1];
                     if (l[1].Count * 3 < l[0].Count) return l[0];
                     return null;
@@ -118,11 +123,19 @@ public sealed class RussianNamesTests
             .WhereNotNull()
             .ToLookup(x => x.T, x => x.Value);
 
+        await Known.SaveJson(new
+        {
+            FirstNames = C(lookup["F"]),
+            LastNames = C(lookup["L"])
+        });
 
-        await Known.SaveJson(new KnownNames(
-            new HashSet<string>(lookup["F"]),
-            new HashSet<string>(lookup["L"])));
+    }
 
+    private static IEnumerable<string> C(IEnumerable<string> enumerable)
+    {
+        return enumerable
+            .Where(x => x.All(char.IsLetter))
+            .OrderBy(x => x);
     }
 
     private static List<T> JRead<T>(string path)
