@@ -6,6 +6,19 @@ namespace Tests.Utilities;
 
 public static class StringExt
 {
+    public static bool IsInitials(this string? name)
+    {
+        if (name == null) return false;
+        if (name.Length == 1) return false;
+        if (!name.Contains('.')) return false;
+        var parts = name
+            .Split('.', StringSplitOptions.RemoveEmptyEntries)
+            .Select(x => x.Trim())
+            .ToList();
+        return parts.All(p => p.Length == 1) && 
+               parts.Count is 1 or 2;
+    }
+
     public static string ReplaceLast(this string input, string needle, string value)
     {
         if (input.EndsWith(needle))
