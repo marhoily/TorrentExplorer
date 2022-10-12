@@ -11,6 +11,9 @@ public sealed class FixAuthorTests
     public const string OutputUnrecognized =
         @"C:\temp\TorrentsExplorerData\Extract\Rutracker\authors-unrecognized.json";
 
+    public const string OutputOnly =
+        @"C:\temp\TorrentsExplorerData\Extract\Rutracker\authors-only.json";
+
     [Fact]
     public async Task FixAuthors()
     {
@@ -28,6 +31,14 @@ public sealed class FixAuthorTests
             {
                 g.Key.FirstName,
                 g.Key.LastName,
+                Topics = g.Select(fl => fl.TopicId).StrJoin()
+            }));
+        await OutputOnly.SaveTypedJson(result
+            .OfType<PurifiedAuthor, Only>()
+            .GroupBy(fl => new { fl.Payload.Name })
+            .Select(g => new
+            {
+                g.Key.Name,
                 Topics = g.Select(fl => fl.TopicId).StrJoin()
             }));
     }
@@ -203,8 +214,28 @@ public sealed class AuthorFixer
         }
     }
 
-    public IEnumerable<Only> Fix(Only input)
+    public IEnumerable<PurifiedAuthor> Fix(Only input)
     {
+        var parts = input.Name.Split(' ', RemoveEmptyEntries);
+        if (parts.Length == 3)
+        {
+            yield return (S(parts[0]), S(parts[1]), S(parts[2])) switch
+            {
+                (1, 2, 3) => new ThreePartsName(parts[0], parts[1], parts[2]),
+                var t => throw new ArgumentOutOfRangeException(t.ToString())
+            };
+        }
         yield return input;
+
+        int S(string s)
+        {
+            if (_byFirstName.Contains(s))
+                return 1;
+            if (_byMiddleName.Contains(s))
+                return 2;
+            if (_byLastName.Contains(s))
+                return 3;
+            return 0;
+        }
     }
 }

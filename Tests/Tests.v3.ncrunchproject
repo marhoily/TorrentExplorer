@@ -127,6 +127,9 @@
       <NamedTestSelector>
         <TestName>Tests.Flibusta.InpxTests.Merge</TestName>
       </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Tests.Flibusta.RussianNamesTests.ReadJFirstNames</TestName>
+      </NamedTestSelector>
     </IgnoredTests>
   </Settings>
 </ProjectConfiguration>

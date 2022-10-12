@@ -53,9 +53,9 @@ public sealed class InpxTests
          
     }
     [Theory]
-    [InlineData(Flibusta, 1086, 8492)]
-    [InlineData(LibRusEc, 1001, 8024)]
-    public async Task Clean(string library, int s1, int s2)
+    [InlineData(Flibusta)]
+    [InlineData(LibRusEc)]
+    public async Task Clean(string library)
     {
         var knownNames = (await RussianNamesTests.Known.ReadJson<KnownNames>())!;
 
