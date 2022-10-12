@@ -6,7 +6,7 @@ namespace Tests.Rutracker;
 
 public class Step0
 {
-    public const string Output = @"C:\temp\TorrentsExplorerData\Extract\Rutracker\step-0.xml";
+    public const string Output = @"C:\temp\TorrentsExplorerData\Extract\Rutracker-En\step-0.xml";
 
     [Fact]
     public async Task DownloadRawHtml()
@@ -14,7 +14,7 @@ public class Step0
         Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
         var htmlCache = new HtmlCache(CacheLocation.Temp, CachingStrategy.Normal);
         var http = new Http(htmlCache, Encoding.GetEncoding(1251));
-        var headerPages = await Task.WhenAll(Enumerable.Range(0, 60)
+        var headerPages = await Task.WhenAll(Enumerable.Range(0, 127)
             .Select(async i =>
             {
                 var page = await http.DownloadRussianFantasyHeaders(i);

@@ -7,7 +7,7 @@ namespace Tests.Rutracker;
 
 public class Step2
 {
-    public const string Output = @"C:\temp\TorrentsExplorerData\Extract\Rutracker\step-2.json";
+    public const string Output = @"C:\temp\TorrentsExplorerData\Extract\Rutracker-En\step-2.json";
 
     [Fact]
     public async Task WallParse()

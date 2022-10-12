@@ -26,9 +26,6 @@
         <TestName>Tests.Kinozal.Step0.DownloadRawHtml</TestName>
       </NamedTestSelector>
       <NamedTestSelector>
-        <TestName>Tests.Rutracker.Step2.WallParse</TestName>
-      </NamedTestSelector>
-      <NamedTestSelector>
         <TestName>Tests.BookUnification.Search.Do</TestName>
       </NamedTestSelector>
       <FixtureTestSelector>

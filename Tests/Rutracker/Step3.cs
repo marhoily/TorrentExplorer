@@ -5,7 +5,7 @@ namespace Tests.Rutracker;
 
 public sealed class Step3
 {
-    public const string Output = @"C:\temp\TorrentsExplorerData\Extract\Rutracker\step-3.json";
+    public const string Output = @"C:\temp\TorrentsExplorerData\Extract\Rutracker-En\step-3.json";
 
     [Fact]
     public async Task CherryPickParse()
