@@ -13,7 +13,10 @@ public class Step1
         void Fix(XElement element)
         {
             element.Name = "span";
-            element.Value = element.Attributes().Select(a => a.Name + "=" + a.Value).StrJoin();
+            var value = element.Attributes().Select(a => a.Name + "=" + a.Value).StrJoin();
+            element.Value = value == "class=postImg, title=https://static.t-ru.org/ranks/rg_poliglot.png" 
+                ? "Полиглот" 
+                : value;
             foreach (var xAttribute in element.Attributes().ToList())
             {
                 xAttribute.Remove();
