@@ -23,7 +23,8 @@ public sealed record Story(
     string? Series,
     string? NumberInSeries,
     string? Genre,
-    string? PlayTime);
+    string? PlayTime,
+    string? ReleaseGroup);
 
 public static class Parser
 {
@@ -56,6 +57,7 @@ public static class Parser
         var numberInSeries = post.FindTag("Номер книги") ?? num;
         var genre = post.FindTag("Жанр");
         var playTime = post.FindTag("Время звучания");
+        var releaseGroup = post.FindTag("Релиз группы");
         var title = GetTitle(post, series, firstName, lastName);
         if (title == null)
             return null;
@@ -64,7 +66,7 @@ public static class Parser
         return new Story(topicId,
             $"https://rutracker.org/forum/viewtopic.php?t={topicId}",
             title, author, performer, year, series, numberInSeries,
-            genre, playTime);
+            genre, playTime, releaseGroup);
     }
 
     private static string? GetTitle(JObject post, string? series, string? firstName, string? secondName)
