@@ -1,4 +1,5 @@
-﻿using Tests.Utilities;
+﻿using System.Collections.Immutable;
+using Tests.Utilities;
 using Xunit.Abstractions;
 
 namespace Tests.Rutracker;
@@ -45,19 +46,18 @@ public sealed class Step4
             .Where(NotInBlacklist)
             .WhereNotNull()
             .Select(Clean)
-            .SelectMany(x => x.Split(new[]
-                {
-                    "\\", "/", ",", "&", " > ", " - ", "–", " and ",
-                    "(", ")", "--", "\"", ".", "{", "}", "|", " и ", "+", ":", ";"
-                },
-                StringSplitOptions.RemoveEmptyEntries))
-            .Select(x => x.Trim())
-            .Select(Translate)
-            .Distinct()
-            .OrderBy(x => x));
+            .SelectMany(x => x
+                .Split(new[] { "\\", "/", ",", "&", " > ", " - ", "–", " and ", "(", ")", "--", "\"", ".", "{", "}", "|", " и ", "+", ":", ";" }, StringSplitOptions.RemoveEmptyEntries)
+                .Select(y => y.Trim())
+                .Select(Translate)
+                .Select(y => (Full: x, Atom: y)))
+            .GroupBy(t => t.Atom)
+            .ToImmutableSortedDictionary(
+                g => g.Key,
+                g => g.Select(i => i.Full).Distinct().OrderBy(x => x)));
 
         bool NotInBlacklist(string? g) =>
-            !string.IsNullOrWhiteSpace(g) && 
+            !string.IsNullOrWhiteSpace(g) &&
             blacklist.All(sample => !g.Contains(sample));
     }
 
@@ -77,9 +77,9 @@ public sealed class Step4
         ["эротика"] = "erotic",
         ["фантастика"] = "sci-fi",
         ["фантастический роман"] = "sci-fi",
-       // ["трагедия"] = "tragedy",
+        // ["трагедия"] = "tragedy",
     };
-    static string Translate(string input) => 
+    static string Translate(string input) =>
         Translation.TryGetValue(input, out var result) ? result : input;
 
     static string Clean(string g)
