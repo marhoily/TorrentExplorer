@@ -51,8 +51,34 @@ public sealed class Step4
                 .SelectMany(y => y.Split(new []{' ', ','}, StringSplitOptions.RemoveEmptyEntries))
                 .Where(y => !BlacklistedAtoms.Contains(y))
                 .Select(Translate)
+                .SelectMany(MultiplyAtoms)
                 .Select(y => (Full: x, Atom: y));
 
+        IEnumerable<string> MultiplyAtoms(string input)
+        {
+            if (input == "иронический_детектив")
+            {
+                yield return "humor";
+                yield return "detective";
+            }
+            else if (input == "историко-приключенческий")
+            {
+                yield return "history";
+                yield return "adventure";
+            }
+            else if (input == "сказка-классика-приключения")
+            {
+                yield return "fairytale";
+                yield return "classic";
+                yield return "adventure";
+            }
+            else if (input == "fiction-suspense")
+            {
+                yield return "fiction";
+                yield return "suspense";
+            }
+            else yield return input;
+        }
         await @"C:\temp\TorrentsExplorerData\Extract\Rutracker-En\step-4-non.json".SaveJson(posts!
             .Select(p => p.Genre?.ToLowerInvariant())
             .Where(NotInBlacklist)
@@ -110,25 +136,30 @@ public sealed class Step4
         "case","cast","channeling","genre","hard-boiled","high","soft","weird",
         "культовая","капиталистическая","века","заданную","люди","против","с",
         "тему","cross-genre","epistolary","traditional","domestic","full",
-        "магов","realism","realistic"
+        "магов","realism","realistic","элементами"
 
     };
     private static readonly Dictionary<string, string> Translation = new()
     {
+        ["эпос"] = "epic",
         ["fairy_tale"] = "fairytale",
         ["бит"] = "bit",
         ["аллегория"] = "allegory",
+        ["женский"] = "women",
         ["античная"] = "antiquity",
         ["авантюрно-криминальный"] = "crime",
         ["контркультура"] = "counterculture",
         ["модернизм"] = "modernism",
         ["мокьюментари"] = "mockumentary",
-        ["альтернативная_история"] = "alt-history",
+        ["альтернативная_история"] = "alternate_history",
         ["fairy_tales"] = "fairytale",
         ["martial_arts"] = "martial-arts",
         ["nonfiction"] = "non-fiction",
         ["остросюжетный"] = "thriller",
+        ["социальная"] = "social",
+        ["фарс"] = "farce",
         ["пародия"] = "parody",
+        ["плутовской"] = "humor",
         ["полицейский"] = "police",
         ["пост-киберпанк"] = "post-cyberpunk",
         ["ритрит"] = "retreat",
@@ -145,10 +176,10 @@ public sealed class Step4
         ["комедия-фарс"] = "comedy",
         ["комедия"] = "comedy",
         ["киберпанк"] = "cyberpunk",
-        ["мифы"] = "myth",
-        ["мифология"] = "myth",
-        ["легенды"] = "myth",
-        ["legends"] = "myth",
+        ["мифы"] = "mythology",
+        ["мифология"] = "mythology",
+        ["легенды"] = "mythology",
+        ["legends"] = "mythology",
         ["сага"] = "saga",
         ["пираты"] = "pirates",
         ["морские"] = "marine",
@@ -276,7 +307,7 @@ public sealed class Step4
         ["научно-фантастический"] = "sci-fi",
         ["научная_фантастика"] = "sci-fi",
         ["si-fi"] = "sci-fi",
-        ["остросюжетная"] = "остросюжетный",
+        ["остросюжетная"] = "thriller",
         ["юмористическое"] = "humor",
         ["юмористический"] = "humor",
         ["юмористические"] = "humor",
