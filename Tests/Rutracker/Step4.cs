@@ -48,7 +48,7 @@ public sealed class Step4
                 .Select(y => y.Trim())
                 .Where(y => !BlacklistedAtoms.Contains(y))
                 .Select(ReplaceKnownAtoms)
-                .SelectMany(y => y.Split(' ', StringSplitOptions.RemoveEmptyEntries))
+                .SelectMany(y => y.Split(new []{' ', ','}, StringSplitOptions.RemoveEmptyEntries))
                 .Where(y => !BlacklistedAtoms.Contains(y))
                 .Select(Translate)
                 .Select(y => (Full: x, Atom: y));
@@ -109,12 +109,29 @@ public sealed class Step4
         "literary","life","international","hard","general","audio","books","british",
         "case","cast","channeling","genre","hard-boiled","high","soft","weird",
         "культовая","капиталистическая","века","заданную","люди","против","с",
-        "тему","cross-genre","epistolary","traditional"
+        "тему","cross-genre","epistolary","traditional","domestic","full",
+        "магов","realism","realistic"
+
     };
     private static readonly Dictionary<string, string> Translation = new()
     {
         ["fairy_tale"] = "fairytale",
+        ["бит"] = "bit",
+        ["аллегория"] = "allegory",
+        ["античная"] = "antiquity",
+        ["авантюрно-криминальный"] = "crime",
+        ["контркультура"] = "counterculture",
+        ["модернизм"] = "modernism",
+        ["мокьюментари"] = "mockumentary",
+        ["альтернативная_история"] = "alt-history",
         ["fairy_tales"] = "fairytale",
+        ["martial_arts"] = "martial-arts",
+        ["nonfiction"] = "non-fiction",
+        ["остросюжетный"] = "thriller",
+        ["пародия"] = "parody",
+        ["полицейский"] = "police",
+        ["пост-киберпанк"] = "post-cyberpunk",
+        ["ритрит"] = "retreat",
         ["инфотейнмент"] = "infotainment",
         ["инфотэйнмент"] = "infotainment",
         ["дневник"] = "diary",
@@ -134,7 +151,14 @@ public sealed class Step4
         ["legends"] = "myth",
         ["сага"] = "saga",
         ["пираты"] = "pirates",
-        ["морские"] = "sea",
+        ["морские"] = "marine",
+        ["sea"] = "marine",
+        ["космическая"] = "space",
+        ["магический_реализм"] = "magic",
+        ["боевые_единоборства"] = "martial-arts",
+        ["боевые_искусства"] = "martial-arts",
+        ["нанопанк"] = "nanopunk",
+        ["комиксы"] = "comics",
         ["утопия"] = "utopia",
         ["трагикомедия"] = "tragicomedy",
         ["супергерои"] = "superheroes",
@@ -151,6 +175,7 @@ public sealed class Step4
         ["criminals"] = "criminal",
         ["comical"] = "comedy",
         ["dystopian"] = "dystopia",
+        ["distopia"] = "dystopia",
         ["постапокалипсис"] = "post-apocalypse",
         ["post_apocalyptic"] = "post-apocalypse",
         ["non_fiction"] = "non-fiction",
@@ -244,6 +269,8 @@ public sealed class Step4
         ["триллер"] = "thriller",
         ["шпионский"] = "thriller",
         ["эротика"] = "erotic",
+        ["sf"] = "sci-fi",
+        ["romantic"] = "romance",
         ["фантастика"] = "sci-fi",
         ["фантастический"] = "sci-fi",
         ["научно-фантастический"] = "sci-fi",
