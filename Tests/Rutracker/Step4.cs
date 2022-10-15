@@ -37,6 +37,7 @@ public sealed class Step4
     {
         var blacklist = await File.ReadAllLinesAsync(@"C:\temp\bad-genres.txt");
         var posts = await Step3.Output.ReadJson<Story[]>();
+        var knownAtoms = KnownAtoms.ToDictionary(x => x, x => x.Replace(" ", "_")+",");
         _testOutputHelper.WriteLine(posts!
             .Where(p => p.Genre == "\"")
             .Select(p => p.Url)
@@ -46,6 +47,7 @@ public sealed class Step4
             x.Split(new[] { "\\", "/", ",", "&", " > ", " - ", "–", " and ", "(", ")", "--", "\"", ".", "{", "}", "|", " и ", "+", ":", ";" }, StringSplitOptions.RemoveEmptyEntries)
                 .Select(y => y.Trim())
                 .Where(y => !BlacklistedAtoms.Contains(y))
+                .Select(ReplaceKnownAtoms)
                 .Select(Translate)
                 .Select(y => (Full: x, Atom: y));
 
@@ -63,7 +65,19 @@ public sealed class Step4
         bool NotInBlacklist(string? g) =>
             !string.IsNullOrWhiteSpace(g) &&
             blacklist.All(sample => !g.Contains(sample));
+        string ReplaceKnownAtoms(string input) => knownAtoms
+            .Aggregate(input, (current, a) => current.Replace(a.Key, a.Value))
+            .Replace(",,", ",")
+            .TrimEnd(',');
     }
+
+
+    private static readonly string[] KnownAtoms =
+    {
+        "19th century","young adult","adult fiction","alternate history",
+        "ancient history","asian literature","black humor","chick lit","cultural asia",
+
+    };
 
     private static readonly HashSet<string> BlacklistedAtoms = new()
     {
