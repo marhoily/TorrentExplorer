@@ -37,17 +37,19 @@ public sealed class Step4
     {
         var blacklist = await File.ReadAllLinesAsync(@"C:\temp\bad-genres.txt");
         var posts = await Step3.Output.ReadJson<Story[]>();
-        var knownAtoms = KnownAtoms.ToDictionary(x => x, x => x.Replace(" ", "_")+",");
+        var knownAtoms = KnownAtoms.ToDictionary(x => x, x => x.Replace(" ", "_") + ",");
         _testOutputHelper.WriteLine(posts!
             .Where(p => p.Genre == "\"")
             .Select(p => p.Url)
             .StrJoin(Environment.NewLine));
 
-        IEnumerable<(string Full, string Atom)> CollectionSelector(string x) =>
+        IEnumerable<(string Full, string Atom)> SplitPunctuation(string x) =>
             x.Split(new[] { "\\", "/", ",", "&", " > ", " - ", "–", " and ", "(", ")", "--", "\"", ".", "{", "}", "|", " и ", "+", ":", ";" }, StringSplitOptions.RemoveEmptyEntries)
                 .Select(y => y.Trim())
                 .Where(y => !BlacklistedAtoms.Contains(y))
                 .Select(ReplaceKnownAtoms)
+                .SelectMany(y => y.Split(' ', StringSplitOptions.RemoveEmptyEntries))
+                .Where(y => !BlacklistedAtoms.Contains(y))
                 .Select(Translate)
                 .Select(y => (Full: x, Atom: y));
 
@@ -56,7 +58,7 @@ public sealed class Step4
             .Where(NotInBlacklist)
             .WhereNotNull()
             .Select(Clean)
-            .SelectMany(CollectionSelector)
+            .SelectMany(SplitPunctuation)
             .GroupBy(t => t.Atom)
             .ToImmutableSortedDictionary(
                 g => g.Key,
@@ -74,8 +76,15 @@ public sealed class Step4
 
     private static readonly string[] KnownAtoms =
     {
-        "19th century","young adult","adult fiction","alternate history",
-        "ancient history","asian literature","black humor","chick lit","cultural asia",
+        "19th century", "young adult", "adult fiction", "alternate history",
+        "ancient history", "asian literature", "black humor",
+        "chick lit", "cultural asia", "new age", "иронический детектив",
+        "юношеская проза", "черный юмор","критический реализм","проза",
+        "научная фантастика","путевые заметки",
+        "боевые искусства","альтернативная история","магический реализм",
+        "post apocalyptic","prisoners of war","non fiction","new adult",
+        "space opera","боевые единоборства","martial arts","fairy tales",
+        "fairy tale","forgotten realms","time travel"
 
     };
 
@@ -90,11 +99,137 @@ public sealed class Step4
         "в дополнении", "др", "см", "сказки венского леса", "современная версия артуровских легенд",
         "экранизированный бестселлер", "a novel", "eng", "english audiobook",
         "english language", "language", "literature", "novel", "novella", "prose",
-        "science", "sequel","канады","литература сша","литература на английском языке",
-        "русский"
+        "science", "sequel", "канады", "литература сша", "литература на английском языке",
+        "русский", "интеллектуальный", "художественный", "художественная",
+        "худлжественная", "романы", "роман", "afternoon drama", "повесть", "о", "новелла",
+        "на","мировая","зарубежный","зарубежная","записки","беллетристика","аудио",
+        "английская","английской","американская","научная","литературы",
+        "литература","книга","для","бестселлер","публицистика","публицистический","проза",
+        "bbc","dramatisation","dramatization","dramatizations","novell","music",
+        "literary","life","international","hard","general","audio","books","british",
+        "case","cast","channeling","genre","hard-boiled","high","soft","weird",
+        "культовая","капиталистическая","века","заданную","люди","против","с",
+        "тему","cross-genre","epistolary","traditional"
     };
     private static readonly Dictionary<string, string> Translation = new()
     {
+        ["fairy_tale"] = "fairytale",
+        ["fairy_tales"] = "fairytale",
+        ["инфотейнмент"] = "infotainment",
+        ["инфотэйнмент"] = "infotainment",
+        ["дневник"] = "diary",
+        ["драма"] = "drama",
+        ["боевик"] = "action",
+        ["готический"] = "gothic",
+        ["криминальная"] = "crime",
+        ["героическая"] = "heroic",
+        ["криминальный"] = "crime",
+        ["комический"] = "comedy",
+        ["комедия-фарс"] = "comedy",
+        ["комедия"] = "comedy",
+        ["киберпанк"] = "cyberpunk",
+        ["мифы"] = "myth",
+        ["мифология"] = "myth",
+        ["легенды"] = "myth",
+        ["legends"] = "myth",
+        ["сага"] = "saga",
+        ["пираты"] = "pirates",
+        ["морские"] = "sea",
+        ["утопия"] = "utopia",
+        ["трагикомедия"] = "tragicomedy",
+        ["супергерои"] = "superheroes",
+        ["стимпанк"] = "steampunk",
+        ["треш"] = "trash",
+        ["футуристика"] = "futurism",
+        ["чиклит"] = "chick_lit",
+        ["espionage"] = "spy",
+        ["эпопея"] = "epic",
+        ["technothriller"] = "techno-thriller",
+        ["teen"] = "teenager",
+        ["ghost"] = "ghosts",
+        ["comic"] = "comics",
+        ["criminals"] = "criminal",
+        ["comical"] = "comedy",
+        ["dystopian"] = "dystopia",
+        ["постапокалипсис"] = "post-apocalypse",
+        ["post_apocalyptic"] = "post-apocalypse",
+        ["non_fiction"] = "non-fiction",
+        ["постапокалиптика"] = "post-apocalypse",
+        ["постапокалиптическая"] = "post-apocalypse",
+        ["путешествия"] = "travel",
+        ["психология"] = "psychology",
+        ["psychologic"] = "psychology",
+        ["psychological"] = "psychology",
+        ["психологический"] = "psychology",
+        ["психологическая"] = "psychology",
+        ["путешественника"] = "travel",
+        ["путевые_заметки"] = "travel",
+        ["эпическое"] = "epic",
+        ["черный_юмор"] = "black_humor",
+        ["трагедия"] = "tragedy",
+        ["техно-триллер"] = "techno-thriller",
+        ["технотриллер"] = "techno-thriller",
+        ["вампирский"] = "vampires",
+        ["вампирах"] = "vampires",
+        ["wartime"] = "war",
+        ["военный"] = "war",
+        ["военная"] = "war",
+        ["вестерн"] = "western",
+        ["historical"] = "history",
+        ["исторический"] = "history",
+        ["historical"] = "history",
+        ["историческая"] = "history",
+        ["историчесикй"] = "history",
+        ["историчесий"] = "history",
+        ["история"] = "history",
+        ["классический"] = "classic",
+        ["классическая"] = "classic",
+        ["классика"] = "classic",
+        ["любовная"] = "romance",
+        ["любовный"] = "romance",
+        ["мистика"] = "mystical",
+        ["magical"] = "magic",
+        ["мистицизм"] = "mystical",
+        ["мистический"] = "mystical",
+        ["mysteries"] = "mystery",
+        ["mistery"] = "mystery",
+        ["mystic"] = "mystical",
+        ["антиутопия"] = "dystopia",
+        ["мелодрамма"] = "melodrama",
+        ["xix"] = "19th_century",
+        ["мелодрама"] = "melodrama",
+        ["нуар"] = "noir",
+        ["семейный"] = "family",
+        ["сатира"] = "satire",
+        ["сатирический"] = "satire",
+        ["юношеская_проза"] = "young_adult",
+        ["juvenile"] = "young_adult",
+        ["triller"] = "thriller",
+        ["триллера"] = "thriller",
+        ["ситком"] = "sitcom",
+        ["подростковая"] = "young_adult",
+        ["подростковое"] = "young_adult",
+        ["подростковый"] = "young_adult",
+        ["молодёжная"] = "young_adult",
+        ["молодежный"] = "young_adult",
+        ["политический"] = "politics",
+        ["political"] = "politics",
+        ["политеческий"] = "politics",
+        ["политика"] = "politics",
+        ["приключения"] = "adventure",
+        ["приключенческий"] = "adventure",
+        ["adventures"] = "adventure",
+        ["современный"] = "contemporary",
+        ["modern"] = "contemporary",
+        ["love"] = "romance",
+        ["романтическое"] = "romance",
+        ["романтический"] = "romance",
+        ["романтическая"] = "romance",
+        ["романтика"] = "romance",
+        ["сказки"] = "fairytale",
+        ["сказка"] = "fairytale",
+        ["саспенс"] = "suspense",
+        ["современная"] = "contemporary",
         ["шутки юмора"] = "humor",
         ["шутки"] = "humor",
         ["юмор"] = "humor",
@@ -104,14 +239,32 @@ public sealed class Step4
         ["фентези"] = "fantasy",
         ["хоррор"] = "fantasy",
         ["ужас"] = "fantasy",
+        ["ужасов"] = "fantasy",
+        ["спорт"] = "sport",
         ["триллер"] = "thriller",
         ["шпионский"] = "thriller",
         ["эротика"] = "erotic",
         ["фантастика"] = "sci-fi",
-        ["фантастический роман"] = "sci-fi",
-        //["a novel"] = "novel",
+        ["фантастический"] = "sci-fi",
+        ["научно-фантастический"] = "sci-fi",
+        ["научная_фантастика"] = "sci-fi",
+        ["si-fi"] = "sci-fi",
+        ["остросюжетная"] = "остросюжетный",
+        ["юмористическое"] = "humor",
+        ["юмористический"] = "humor",
+        ["юмористические"] = "humor",
+        ["юмористическая"] = "humor",
+        ["юмористичекий"] = "humor",
+        ["юмористичекая"] = "humor",
+        ["юмора"] = "humor",
+        ["фикция"] = "fiction",
+        ["детективная"] = "detective",
+        ["детективный"] = "detective",
+        ["детектив"] = "detective",
+        ["detectiv"] = "detective",
     };
-    static string Translate(string input) =>
+
+    private static string Translate(string input) =>
         Translation.TryGetValue(input, out var result) ? result : input;
 
     static string Clean(string g)
