@@ -127,6 +127,21 @@
       <NamedTestSelector>
         <TestName>Tests.Flibusta.RussianNamesTests.ReadJFirstNames</TestName>
       </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Tests.Flibusta.InpxTests.Clean("c:\\temp\\TorrentsExplorerData\\Extract\\LibRusEc.json")</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Tests.Flibusta.InpxTests.Clean("c:\\temp\\TorrentsExplorerData\\Extract\\Flibusta.json")</TestName>
+      </NamedTestSelector>
+      <FixtureTestSelector>
+        <FixtureName>Tests.Rutracker.RdbTests</FixtureName>
+      </FixtureTestSelector>
+      <NamedTestSelector>
+        <TestName>Tests.Rutracker.Step4.SelectPoliglot</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Tests.Rutracker.Step2.WallParse</TestName>
+      </NamedTestSelector>
     </IgnoredTests>
   </Settings>
 </ProjectConfiguration>
