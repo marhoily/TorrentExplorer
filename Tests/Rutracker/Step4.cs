@@ -45,7 +45,7 @@ public sealed class Step4
         IEnumerable<(string Full, string Atom)> CollectionSelector(string x) =>
             x.Split(new[] { "\\", "/", ",", "&", " > ", " - ", "–", " and ", "(", ")", "--", "\"", ".", "{", "}", "|", " и ", "+", ":", ";" }, StringSplitOptions.RemoveEmptyEntries)
                 .Select(y => y.Trim())
-                .Where(y => y != "")
+                .Where(y => !BlacklistedAtoms.Contains(y))
                 .Select(Translate)
                 .Select(y => (Full: x, Atom: y));
 
@@ -65,6 +65,20 @@ public sealed class Step4
             blacklist.All(sample => !g.Contains(sample));
     }
 
+    private static readonly HashSet<string> BlacklistedAtoms = new()
+    {
+        "", "abridged", "audiobook", "classic literature with classical music",
+        "story", "tale", "tales", "unabridged", "unabridged audiobook",
+        "unadridged audiobook", "английский", "английский язык",
+        "аудио книга на английском языке", "аудио книга с распечаткой",
+        "аудио книги", "аудиокнига", "аудиокнига двух языках",
+        "аудиокнига на английском", "аудиокнига на английском языке", "без сокращений",
+        "в дополнении", "др", "см", "сказки венского леса", "современная версия артуровских легенд",
+        "экранизированный бестселлер", "a novel", "eng", "english audiobook",
+        "english language", "language", "literature", "novel", "novella", "prose",
+        "science", "sequel","канады","литература сша","литература на английском языке",
+        "русский"
+    };
     private static readonly Dictionary<string, string> Translation = new()
     {
         ["шутки юмора"] = "humor",
@@ -81,7 +95,7 @@ public sealed class Step4
         ["эротика"] = "erotic",
         ["фантастика"] = "sci-fi",
         ["фантастический роман"] = "sci-fi",
-        // ["трагедия"] = "tragedy",
+        //["a novel"] = "novel",
     };
     static string Translate(string input) =>
         Translation.TryGetValue(input, out var result) ? result : input;
@@ -90,9 +104,13 @@ public sealed class Step4
     {
         return g
             .Replace("si,fi", "sci-fi")
+            .Replace("si-fi", "sci-fi")
+            .Replace("sience fiction", "sci-fi")
             .Replace("sci fi", "sci-fi")
             .Replace("sci-fic", "sci-fi")
+            .Replace("ya", "young adult")
             .Replace("si-fi", "sci-fi")
+            .Replace("thrillers", "thriller")
             .Replace("приключение", "приключения")
             .Replace("science fiction", "sci-fi")
             .Replace("science-fiction", "sci-fi")
