@@ -41,16 +41,20 @@ public sealed class Step4
             .Where(p => p.Genre == "\"")
             .Select(p => p.Url)
             .StrJoin(Environment.NewLine));
+
+        IEnumerable<(string Full, string Atom)> CollectionSelector(string x) =>
+            x.Split(new[] { "\\", "/", ",", "&", " > ", " - ", "–", " and ", "(", ")", "--", "\"", ".", "{", "}", "|", " и ", "+", ":", ";" }, StringSplitOptions.RemoveEmptyEntries)
+                .Select(y => y.Trim())
+                .Where(y => y != "")
+                .Select(Translate)
+                .Select(y => (Full: x, Atom: y));
+
         await @"C:\temp\TorrentsExplorerData\Extract\Rutracker-En\step-4-non.json".SaveJson(posts!
             .Select(p => p.Genre?.ToLowerInvariant())
             .Where(NotInBlacklist)
             .WhereNotNull()
             .Select(Clean)
-            .SelectMany(x => x
-                .Split(new[] { "\\", "/", ",", "&", " > ", " - ", "–", " and ", "(", ")", "--", "\"", ".", "{", "}", "|", " и ", "+", ":", ";" }, StringSplitOptions.RemoveEmptyEntries)
-                .Select(y => y.Trim())
-                .Select(Translate)
-                .Select(y => (Full: x, Atom: y)))
+            .SelectMany(CollectionSelector)
             .GroupBy(t => t.Atom)
             .ToImmutableSortedDictionary(
                 g => g.Key,
