@@ -1,34 +1,34 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-    <PropertyGroup>
-        <TargetFramework>net6.0</TargetFramework>
-        <ImplicitUsings>enable</ImplicitUsings>
-        <Nullable>enable</Nullable>
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
 
-        <IsPackable>false</IsPackable>
-    </PropertyGroup>
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
 
-    <ItemGroup>
-        <PackageReference Include="CsvHelper" Version="28.0.1" />
-        <PackageReference Include="JetBrains.Annotations" Version="2022.1.0" />
-        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.1.0" />
-        <PackageReference Include="RegExtract" Version="1.0.18" />
-        <PackageReference Include="ServiceStack.OrmLite.Sqlite" Version="6.3.0" />
-        <PackageReference Include="SharpCompress" Version="0.32.2" />
-        <PackageReference Include="xunit" Version="2.4.1" />
-        <PackageReference Include="xunit.runner.visualstudio" Version="2.4.3">
-            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-            <PrivateAssets>all</PrivateAssets>
-        </PackageReference>
-        <PackageReference Include="coverlet.collector" Version="3.1.2">
-            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-            <PrivateAssets>all</PrivateAssets>
-        </PackageReference>
+  <ItemGroup>
+    <PackageReference Include="CsvHelper" Version="30.0.1" />
+    <PackageReference Include="JetBrains.Annotations" Version="2022.3.1" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.4.0" />
+    <PackageReference Include="RegExtract" Version="1.0.18" />
+    <PackageReference Include="ServiceStack.OrmLite.Sqlite" Version="6.4.0" />
+    <PackageReference Include="SharpCompress" Version="0.32.2" />
+    <PackageReference Include="xunit" Version="2.4.2" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.4.5">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="coverlet.collector" Version="3.2.0">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
 
-        <PackageReference Include="FluentAssertions" Version="6.7.0" />
-        <PackageReference Include="HtmlAgilityPack" Version="1.11.45" />
-        <PackageReference Include="Newtonsoft.Json" Version="13.0.2-beta2" />
-        <PackageReference Include="YAXLib" Version="4.0.0-pre.1" />        
-    </ItemGroup>
+    <PackageReference Include="FluentAssertions" Version="6.8.0" />
+    <PackageReference Include="HtmlAgilityPack" Version="1.11.46" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.2-beta2" />
+    <PackageReference Include="YAXLib" Version="4.0.0" />
+  </ItemGroup>
 
 </Project>
