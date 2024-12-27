@@ -12,14 +12,15 @@ public class Step1
     {
         void Fix(XElement element)
         {
-            element.Name = "span";
             var value = element.Attributes().Select(a => a.Name + "=" + a.Value).StrJoin();
-            element.Value = value == "class=postImg, title=https://static.t-ru.org/ranks/rg_poliglot.png" 
-                ? "Полиглот" 
-                : value;
-            foreach (var xAttribute in element.Attributes().ToList())
+            if (value == "class=postImg, title=https://static.t-ru.org/ranks/rg_poliglot.png")
             {
-                xAttribute.Remove();
+                element.Name = "span";
+                element.Value = "Полиглот";
+                foreach (var xAttribute in element.Attributes().ToList())
+                {
+                    xAttribute.Remove();
+                }
             }
         }
 

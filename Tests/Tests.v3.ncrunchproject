@@ -17,9 +17,6 @@
         <TestName>Tests.Rutracker.Search.Do</TestName>
       </NamedTestSelector>
       <NamedTestSelector>
-        <TestName>Tests.Rutracker.Step0.DownloadRawHtml</TestName>
-      </NamedTestSelector>
-      <NamedTestSelector>
         <TestName>Tests.Kinozal.Step1.Convert</TestName>
       </NamedTestSelector>
       <NamedTestSelector>
@@ -48,9 +45,6 @@
       </FixtureTestSelector>
       <FixtureTestSelector>
         <FixtureName>Tests.Utilities.TrieSetTests</FixtureName>
-      </FixtureTestSelector>
-      <FixtureTestSelector>
-        <FixtureName>Tests.Rutracker.Step1</FixtureName>
       </FixtureTestSelector>
       <FixtureTestSelector>
         <FixtureName>Tests.Rutracker.Step3</FixtureName>
@@ -141,6 +135,12 @@
       </NamedTestSelector>
       <NamedTestSelector>
         <TestName>Tests.Rutracker.Step2.WallParse</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Tests.Rutracker.Step1.LanguageMixFix</TestName>
+      </NamedTestSelector>
+      <NamedTestSelector>
+        <TestName>Tests.Rutracker.Step0.DownloadRawHtml</TestName>
       </NamedTestSelector>
     </IgnoredTests>
   </Settings>

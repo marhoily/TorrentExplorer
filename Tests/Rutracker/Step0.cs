@@ -17,7 +17,7 @@ public class Step0
         var headerPages = await Task.WhenAll(Enumerable.Range(0, 127)
             .Select(async i =>
             {
-                var page = await http.DownloadRussianFantasyHeaders(i);
+                var page = await http.DownloadEnglishFantasyHeaders(i);
                 return page.ParseRussianFantasyHeaders();
             }));
 

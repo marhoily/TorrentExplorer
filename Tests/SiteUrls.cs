@@ -17,6 +17,13 @@ public static class SiteUrls
         return html.ParseHtml();
     }
 
+    public static async Task<HtmlNode> DownloadEnglishFantasyHeaders(this Http http, int page)
+    {
+        var html = await http.Get(
+            $"rutracker/headers-en/{page:D3}",
+            $"https://rutracker.org/forum/viewforum.php?f=1501&start={page * 50}");
+        return html.ParseHtml();
+    }
     public static async Task<HtmlNode> DownloadRussianFantasyHeaders(this Http http, int page)
     {
         var html = await http.Get(
